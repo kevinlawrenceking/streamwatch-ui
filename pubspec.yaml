@@ -1,0 +1,36 @@
+name: streamwatch_frontend
+description: Flutter app for StreamWatch - Video processing with real-time updates
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP client for API requests
+  http: ^1.1.0
+
+  # File picker for video uploads
+  file_picker: ^10.0.0
+
+  # WebSocket support for real-time updates
+  web_socket_channel: ^2.4.0
+
+  # State management
+  provider: ^6.1.1
+
+  # URL launcher for opening download links
+  url_launcher: ^6.2.0
+
+  # Video player for media playback
+  video_player: ^2.8.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

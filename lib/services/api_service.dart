@@ -1,17 +1,22 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import '../config/app_config.dart';
 
 class ApiService {
   final String baseUrl;
 
-  ApiService({this.baseUrl = 'http://localhost:8080'});
+  /// Creates an ApiService instance.
+  /// Uses [AppConfig.apiBaseUrl] by default, which can be configured via
+  /// --dart-define=API_BASE_URL=... at build time.
+  ApiService({String? baseUrl}) : baseUrl = baseUrl ?? AppConfig.apiBaseUrl;
 
   /// Create a job from a URL
   Future<Map<String, dynamic>> createJobFromUrl({
     required String url,
     String? title,
     String? description,
+    String? transcriptionEngine,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/v1/jobs'),
@@ -21,6 +26,7 @@ class ApiService {
         'source_url': url,
         if (title != null) 'title': title,
         if (description != null) 'description': description,
+        if (transcriptionEngine != null) 'transcription_engine': transcriptionEngine,
       }),
     );
 
@@ -38,6 +44,7 @@ class ApiService {
     required String fileName,
     String? title,
     String? description,
+    String? transcriptionEngine,
   }) async {
     var request = http.MultipartRequest(
       'POST',
@@ -60,6 +67,7 @@ class ApiService {
 
     if (title != null) request.fields['title'] = title;
     if (description != null) request.fields['description'] = description;
+    if (transcriptionEngine != null) request.fields['transcription_engine'] = transcriptionEngine;
 
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);

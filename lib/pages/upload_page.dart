@@ -11,7 +11,7 @@ class UploadPage extends StatefulWidget {
 }
 
 class _UploadPageState extends State<UploadPage> {
-  final ApiService _apiService = ApiService(baseUrl: 'http://localhost:8080');
+  final ApiService _apiService = ApiService();
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -21,6 +21,7 @@ class _UploadPageState extends State<UploadPage> {
   String? _selectedFileName;
   PlatformFile? _selectedFile;
   String _uploadMode = 'url'; // 'url' or 'file'
+  String _transcriptionEngine = 'aws'; // 'aws' or 'gemini' - default to AWS
 
   @override
   void dispose() {
@@ -71,6 +72,7 @@ class _UploadPageState extends State<UploadPage> {
           url: _urlController.text.trim(),
           title: _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
           description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+          transcriptionEngine: _transcriptionEngine,
         );
       } else {
         response = await _apiService.createJobFromFile(
@@ -79,6 +81,7 @@ class _UploadPageState extends State<UploadPage> {
           fileName: _selectedFileName!,
           title: _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
           description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+          transcriptionEngine: _transcriptionEngine,
         );
       }
 
@@ -216,6 +219,35 @@ class _UploadPageState extends State<UploadPage> {
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Transcription Engine selector
+                DropdownButtonFormField<String>(
+                  value: _transcriptionEngine,
+                  decoration: const InputDecoration(
+                    labelText: 'Transcription Engine',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.mic),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'aws',
+                      child: Text('AWS Transcribe (Recommended)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'gemini',
+                      child: Text('Google Gemini'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _transcriptionEngine = value;
+                      });
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 32),

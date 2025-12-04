@@ -10,7 +10,7 @@ class JobsListPage extends StatefulWidget {
 }
 
 class _JobsListPageState extends State<JobsListPage> {
-  final ApiService _apiService = ApiService(baseUrl: 'http://localhost:8080');
+  final ApiService _apiService = ApiService();
 
   List<Job> _jobs = [];
   bool _isLoading = true;

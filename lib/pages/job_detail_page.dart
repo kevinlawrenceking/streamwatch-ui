@@ -16,7 +16,7 @@ class JobDetailPage extends StatefulWidget {
 }
 
 class _JobDetailPageState extends State<JobDetailPage> {
-  final ApiService _apiService = ApiService(baseUrl: 'http://localhost:8080');
+  final ApiService _apiService = ApiService();
 
   Job? _job;
   List<Chunk> _chunks = [];
@@ -86,25 +86,57 @@ class _JobDetailPageState extends State<JobDetailPage> {
     });
 
     final type = event['type'];
-    final payload = event['payload'];
+    final payload = event['payload'] ?? <String, dynamic>{};
 
     switch (type) {
+      // Progress updates
+      case 'job_started':
+      case 'job_update':
+      case 'transcription_started':
+      case 'transcription_progress':
+      case 'metadata_ready':
+        _updateJobStatus(payload);
+        break;
+
+      // Chunk completed - add new segment in real-time
+      case 'chunk_completed':
+        _addChunkFromEvent(payload);
+        break;
+
+      // Summary updates (streaming)
+      case 'summarization_started':
+      case 'summarization_completed':
+        _updateStreamingSummary(payload);
+        break;
+
+      // Job completed
+      case 'job_completed':
+        _updateJobStatus({'status': 'completed', 'progress_pct': 100});
+        // Mark summary as final when job completes
+        setState(() {
+          _summaryIsFinal = true;
+        });
+        // Reload final data to ensure we have everything
+        _loadJobDetails();
+        break;
+
+      // Job failed
+      case 'job_failed':
+        _showError(payload['error_message'] ?? 'Job failed');
+        break;
+
+      // Legacy event names (for backwards compatibility)
       case 'job.update':
         _updateJobStatus(payload);
         break;
       case 'chunk.ready':
         _addChunk(payload);
         break;
-      case 'summary.update':
-        _updateStreamingSummary(payload);
-        break;
       case 'job.done':
         _updateJobStatus({'status': 'completed', 'progress_pct': 100});
-        // Mark summary as final when job completes
         setState(() {
           _summaryIsFinal = true;
         });
-        // Reload final chunks to ensure we have everything
         _loadJobDetails();
         break;
       case 'error':
@@ -158,12 +190,65 @@ class _JobDetailPageState extends State<JobDetailPage> {
     }
   }
 
-  void _updateStreamingSummary(Map<String, dynamic> payload) {
-    debugPrint('summary.update event received');
+  void _addChunkFromEvent(Map<String, dynamic> payload) {
+    // Create chunk directly from WebSocket event for instant UI update
+    debugPrint('chunk_completed event received: $payload');
+
+    final chunkIndex = payload['chunk_index'] as int? ?? _chunks.length;
+    final chunkId = payload['chunk_id'] as String? ?? '${widget.jobId}_C_${chunkIndex.toString().padLeft(4, '0')}';
+    final startMs = payload['start_ms'] as int? ?? 0;
+    final endMs = payload['end_ms'] as int? ?? 0;
+    final transcript = payload['transcript'] as String?;
+    final summary = payload['summary'] as String?;
+
+    // Create new chunk from event data
+    final newChunk = Chunk(
+      chunkId: chunkId,
+      jobId: widget.jobId,
+      orderNo: chunkIndex + 1,
+      startMs: startMs,
+      endMs: endMs,
+      transcript: transcript,
+      summary: summary,
+      createdAt: DateTime.now(),
+    );
+
     setState(() {
-      _streamingSummary = payload['summary_text'] as String?;
-      _segmentsCompleted = payload['segments_completed'] as int? ?? 0;
-      _segmentsTotal = payload['segments_total'] as int? ?? 0;
+      // Check if chunk already exists (by chunkId)
+      final existingIndex = _chunks.indexWhere((c) => c.chunkId == chunkId);
+      if (existingIndex >= 0) {
+        // Update existing chunk
+        _chunks[existingIndex] = newChunk;
+        debugPrint('Updated existing chunk at index $existingIndex');
+      } else {
+        // Add new chunk
+        _chunks.add(newChunk);
+        // Sort by orderNo to maintain correct order
+        _chunks.sort((a, b) => a.orderNo.compareTo(b.orderNo));
+        debugPrint('Added new chunk, total: ${_chunks.length}');
+      }
+    });
+
+    // Update job progress if provided
+    final progressPct = payload['progress_pct'] as int?;
+    if (progressPct != null && _job != null) {
+      _updateJobStatus({'progress_pct': progressPct, 'completed_chunks': _chunks.length});
+    }
+  }
+
+  void _updateStreamingSummary(Map<String, dynamic> payload) {
+    debugPrint('summarization event received: $payload');
+    setState(() {
+      // Handle both legacy and new payload formats
+      _streamingSummary = payload['summary_text'] as String? ??
+                          payload['summary'] as String? ??
+                          _streamingSummary;
+      _segmentsCompleted = payload['segments_completed'] as int? ??
+                           payload['completed_chunks'] as int? ??
+                           _chunks.length;
+      _segmentsTotal = payload['segments_total'] as int? ??
+                       payload['estimated_chunks'] as int? ??
+                       _segmentsTotal;
       _summaryIsFinal = payload['is_final'] as bool? ?? false;
     });
   }
@@ -702,12 +787,32 @@ class _JobDetailPageState extends State<JobDetailPage> {
 
   IconData _getEventIcon(String type) {
     switch (type) {
+      case 'job_started':
+        return Icons.play_arrow;
+      case 'job_update':
       case 'job.update':
         return Icons.update;
+      case 'metadata_ready':
+        return Icons.info_outline;
+      case 'transcription_started':
+        return Icons.mic;
+      case 'transcription_progress':
+        return Icons.hearing;
+      case 'transcription_completed':
+        return Icons.mic_none;
+      case 'chunk_completed':
       case 'chunk.ready':
         return Icons.check_circle;
+      case 'summarization_started':
+        return Icons.auto_awesome;
+      case 'summarization_completed':
+        return Icons.summarize;
+      case 'thumbnail_ready':
+        return Icons.image;
+      case 'job_completed':
       case 'job.done':
         return Icons.done_all;
+      case 'job_failed':
       case 'error':
         return Icons.error;
       default:

@@ -264,7 +264,9 @@ class JobDataSource implements IJobDataSource {
             final job = JobModel.fromJsonDto(jobObject);
 
             // Parse celebrities defensively - empty list if missing/invalid
-            final celebrities = parseCelebrities(data['celebrities']);
+            // Create mutable copy since parseCelebrities may return const []
+            final celebrities =
+                List<CelebrityModel>.from(parseCelebrities(data['celebrities']));
 
             // Stable sort: confidence desc (null last), then by name for ties
             celebrities.sort((a, b) {

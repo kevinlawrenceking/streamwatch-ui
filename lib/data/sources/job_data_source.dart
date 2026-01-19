@@ -53,6 +53,22 @@ abstract class IJobDataSource {
   /// Gets the worker log file for a job.
   Future<Either<Failure, String>> getJobLog(String jobId, {int? tailLines});
 
+  /// Updates the flag status of a job.
+  Future<Either<Failure, JobModel>> updateJobFlag({
+    required String jobId,
+    required bool isFlagged,
+    String? flagNote,
+  });
+
+  /// Requests a job to pause processing.
+  Future<Either<Failure, JobModel>> pauseJob(String jobId);
+
+  /// Resumes a paused job.
+  Future<Either<Failure, JobModel>> resumeJob(String jobId);
+
+  /// Soft deletes a job.
+  Future<Either<Failure, void>> deleteJob(String jobId);
+
   // URL generators (no auth needed - these just build URLs)
   String getWebSocketUrl(String jobId);
   String getVideoStreamUrl(String jobId);
@@ -361,6 +377,111 @@ class JobDataSource implements IJobDataSource {
             }
 
             return Right(response.body);
+          },
+        );
+      })();
+
+  @override
+  Future<Either<Failure, JobModel>> updateJobFlag({
+    required String jobId,
+    required bool isFlagged,
+    String? flagNote,
+  }) =>
+      ExceptionHandler<JobModel>(() async {
+        final tokenResult = await _auth.getAuthToken();
+
+        return tokenResult.fold(
+          (failure) => Left(failure),
+          (authToken) async {
+            final body = <String, dynamic>{
+              'is_flagged': isFlagged,
+              if (flagNote != null) 'flag_note': flagNote,
+            };
+
+            final response = await _client.patch(
+              endPoint: '/api/v1/jobs/$jobId/flag',
+              authToken: authToken,
+              body: body,
+            );
+
+            if (response.statusCode != HttpStatus.ok) {
+              return Left(HttpFailure.fromResponse(response));
+            }
+
+            final data = json.decode(response.body) as Map<String, dynamic>;
+            final jobObject = data['job'] as Map<String, dynamic>? ?? data;
+            return Right(JobModel.fromJsonDto(jobObject));
+          },
+        );
+      })();
+
+  @override
+  Future<Either<Failure, JobModel>> pauseJob(String jobId) =>
+      ExceptionHandler<JobModel>(() async {
+        final tokenResult = await _auth.getAuthToken();
+
+        return tokenResult.fold(
+          (failure) => Left(failure),
+          (authToken) async {
+            final response = await _client.post(
+              endPoint: '/api/v1/jobs/$jobId/pause',
+              authToken: authToken,
+            );
+
+            if (response.statusCode != HttpStatus.ok) {
+              return Left(HttpFailure.fromResponse(response));
+            }
+
+            final data = json.decode(response.body) as Map<String, dynamic>;
+            final jobObject = data['job'] as Map<String, dynamic>? ?? data;
+            return Right(JobModel.fromJsonDto(jobObject));
+          },
+        );
+      })();
+
+  @override
+  Future<Either<Failure, JobModel>> resumeJob(String jobId) =>
+      ExceptionHandler<JobModel>(() async {
+        final tokenResult = await _auth.getAuthToken();
+
+        return tokenResult.fold(
+          (failure) => Left(failure),
+          (authToken) async {
+            final response = await _client.post(
+              endPoint: '/api/v1/jobs/$jobId/resume',
+              authToken: authToken,
+            );
+
+            if (response.statusCode != HttpStatus.ok) {
+              return Left(HttpFailure.fromResponse(response));
+            }
+
+            final data = json.decode(response.body) as Map<String, dynamic>;
+            final jobObject = data['job'] as Map<String, dynamic>? ?? data;
+            return Right(JobModel.fromJsonDto(jobObject));
+          },
+        );
+      })();
+
+  @override
+  Future<Either<Failure, void>> deleteJob(String jobId) =>
+      ExceptionHandler<void>(() async {
+        final tokenResult = await _auth.getAuthToken();
+
+        return tokenResult.fold(
+          (failure) => Left(failure),
+          (authToken) async {
+            final response = await _client.delete(
+              endPoint: '/api/v1/jobs/$jobId',
+              authToken: authToken,
+            );
+
+            if (response.statusCode != HttpStatus.ok &&
+                response.statusCode != HttpStatus.noContent) {
+              return Left(HttpFailure.fromResponse(response));
+            }
+
+            return const Right(null);
           },
         );
       })();

@@ -74,6 +74,7 @@ abstract class IJobDataSource {
   String getVideoStreamUrl(String jobId);
   String getTranscriptDownloadUrl(String jobId, {bool cleaned = true});
   String getSummaryDownloadUrl(String jobId);
+  String getSrtDownloadUrl(String jobId);
   String getJobThumbnailUrl(String jobId);
   String getChunkThumbnailUrl(String jobId, String chunkId);
 }
@@ -507,6 +508,11 @@ class JobDataSource implements IJobDataSource {
   @override
   String getSummaryDownloadUrl(String jobId) {
     return '$_baseUrl/api/v1/jobs/$jobId/download/summary';
+  }
+
+  @override
+  String getSrtDownloadUrl(String jobId) {
+    return '$_baseUrl/api/v1/jobs/$jobId/download/srt';
   }
 
   @override

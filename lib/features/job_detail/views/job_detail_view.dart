@@ -482,6 +482,9 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                         case 'transcript_raw':
                           _launchDownload(context, dataSource.getTranscriptDownloadUrl(widget.job.jobId, cleaned: false));
                           break;
+                        case 'srt':
+                          _launchDownload(context, dataSource.getSrtDownloadUrl(widget.job.jobId));
+                          break;
                         case 'summary':
                           _launchDownload(context, dataSource.getSummaryDownloadUrl(widget.job.jobId));
                           break;
@@ -504,6 +507,16 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                           leading: Icon(Icons.description_outlined),
                           title: Text('Transcript (Raw)'),
                           subtitle: Text('Original transcription'),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'srt',
+                        child: ListTile(
+                          leading: Icon(Icons.subtitles, color: AppColors.primary),
+                          title: Text('Subtitles (SRT)'),
+                          subtitle: Text('For video players'),
                           contentPadding: EdgeInsets.zero,
                           dense: true,
                         ),
@@ -553,6 +566,8 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                       _SourceRow(job: widget.job),
                       if (widget.job.sourceProvider != null)
                         _ProviderRow(label: 'Platform', provider: widget.job.sourceProvider!),
+                      if (widget.job.typeCode != null)
+                        _TypeRow(typeCode: widget.job.typeCode!, confidence: widget.job.typeConfidence),
                       if (widget.job.description != null)
                         _InfoRow(label: 'Description', value: widget.job.description!),
                       _InfoRow(label: 'Created', value: _formatDateTime(widget.job.createdAt)),
@@ -927,6 +942,53 @@ class _ProviderRow extends StatelessWidget {
                 label: Text(displayName),
                 avatar: const Icon(Icons.play_circle, size: 18),
                 backgroundColor: AppColors.primary.withOpacity(0.1),
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Row widget for displaying type classification with a chip
+class _TypeRow extends StatelessWidget {
+  final String typeCode;
+  final double? confidence;
+
+  const _TypeRow({required this.typeCode, this.confidence});
+
+  @override
+  Widget build(BuildContext context) {
+    // Format type code: replace underscores with spaces and title case
+    final displayName = typeCode
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) => word.isNotEmpty
+            ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+            : '')
+        .join(' ');
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              'Type:',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Chip(
+                label: Text(displayName),
+                avatar: const Icon(Icons.category, size: 18),
+                backgroundColor: AppColors.info.withOpacity(0.1),
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),

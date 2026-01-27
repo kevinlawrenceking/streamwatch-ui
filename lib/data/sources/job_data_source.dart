@@ -19,6 +19,7 @@ abstract class IJobDataSource {
     required String url,
     String? title,
     String? description,
+    String? celebrities, // Comma/newline separated celebrity names
     String? transcriptionEngine,
     int? segmentDuration, // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
     bool isLive = false, // Whether this is a live stream capture
@@ -32,6 +33,7 @@ abstract class IJobDataSource {
     required String fileName,
     String? title,
     String? description,
+    String? celebrities, // Comma/newline separated celebrity names
     String? transcriptionEngine,
     int? segmentDuration, // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
   });
@@ -98,6 +100,7 @@ class JobDataSource implements IJobDataSource {
     required String url,
     String? title,
     String? description,
+    String? celebrities,
     String? transcriptionEngine,
     int? segmentDuration,
     bool isLive = false,
@@ -121,6 +124,7 @@ class JobDataSource implements IJobDataSource {
               'source_url': url,
               if (title != null) 'title': title,
               if (description != null) 'description': description,
+              if (celebrities != null) 'celebrities_manual': celebrities,
               if (transcriptionEngine != null)
                 'transcription_engine': transcriptionEngine,
               if (segmentDuration != null)

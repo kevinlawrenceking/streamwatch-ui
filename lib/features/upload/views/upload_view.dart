@@ -30,6 +30,7 @@ class _UploadBodyState extends State<_UploadBody> {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _celebritiesController = TextEditingController();
 
   String? _selectedFilePath;
   String? _selectedFileName;
@@ -45,6 +46,7 @@ class _UploadBodyState extends State<_UploadBody> {
     _urlController.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
+    _celebritiesController.dispose();
     super.dispose();
   }
 
@@ -83,6 +85,9 @@ class _UploadBodyState extends State<_UploadBody> {
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
+        celebrities: _celebritiesController.text.trim().isEmpty
+            ? null
+            : _celebritiesController.text.trim(),
         transcriptionEngine: _transcriptionEngine,
         segmentDuration: _segmentDuration,
         isLive: _isLive,
@@ -104,6 +109,9 @@ class _UploadBodyState extends State<_UploadBody> {
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
+        celebrities: _celebritiesController.text.trim().isEmpty
+            ? null
+            : _celebritiesController.text.trim(),
         transcriptionEngine: _transcriptionEngine,
         segmentDuration: _segmentDuration,
       ));
@@ -115,8 +123,18 @@ class _UploadBodyState extends State<_UploadBody> {
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
+        action: SnackBarAction(
+          label: 'Dismiss',
+          textColor: Colors.white,
+          onPressed: () {},
+        ),
       ),
     );
+  }
+
+  void _retryUpload() {
+    final bloc = context.read<UploadBloc>();
+    bloc.add(const ResetUploadEvent());
   }
 
   @override
@@ -162,24 +180,32 @@ class _UploadBodyState extends State<_UploadBody> {
                   const SizedBox(height: 32),
 
                   // Ingest mode selector
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(
-                        value: 'url',
-                        label: Text('URL'),
-                        icon: Icon(Icons.link),
-                      ),
-                      ButtonSegment(
-                        value: 'file',
-                        label: Text('File'),
-                        icon: Icon(Icons.upload_file),
-                      ),
-                    ],
-                    selected: {_uploadMode},
-                    onSelectionChanged: (Set<String> newSelection) {
-                      setState(() {
-                        _uploadMode = newSelection.first;
-                      });
+                  BlocBuilder<UploadBloc, UploadState>(
+                    builder: (context, state) {
+                      final isUploading = state is UploadSubmitting ||
+                          state is FileUploadInProgress;
+                      return SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment(
+                            value: 'url',
+                            label: Text('URL'),
+                            icon: Icon(Icons.link),
+                          ),
+                          ButtonSegment(
+                            value: 'file',
+                            label: Text('File'),
+                            icon: Icon(Icons.upload_file),
+                          ),
+                        ],
+                        selected: {_uploadMode},
+                        onSelectionChanged: isUploading
+                            ? null
+                            : (Set<String> newSelection) {
+                                setState(() {
+                                  _uploadMode = newSelection.first;
+                                });
+                              },
+                      );
                     },
                   ),
                   const SizedBox(height: 24),
@@ -252,20 +278,22 @@ class _UploadBodyState extends State<_UploadBody> {
                       ),
                     ],
                   ] else ...[
-                    OutlinedButton.icon(
-                      onPressed: _pickFile,
-                      icon: const Icon(Icons.folder_open),
-                      label: Text(_selectedFileName ?? 'Select Video File'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.all(16),
-                      ),
+                    BlocBuilder<UploadBloc, UploadState>(
+                      builder: (context, state) {
+                        final isUploading = state is FileUploadInProgress;
+                        return OutlinedButton.icon(
+                          onPressed: isUploading ? null : _pickFile,
+                          icon: const Icon(Icons.folder_open),
+                          label: Text(_selectedFileName ?? 'Select Video File'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.all(16),
+                          ),
+                        );
+                      },
                     ),
                     if (_selectedFileName != null) ...[
                       const SizedBox(height: 8),
-                      Text(
-                        'Selected: $_selectedFileName',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
+                      _buildFileInfo(),
                     ],
                   ],
 
@@ -292,6 +320,22 @@ class _UploadBodyState extends State<_UploadBody> {
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Celebrities (optional)
+                  TextField(
+                    controller: _celebritiesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Celebrities (optional)',
+                      hintText: 'Kim Kardashian, Pete Davidson, ...',
+                      border: OutlineInputBorder(),
+                      helperText:
+                          'Comma or newline separated names. If provided, AI celebrity detection is skipped.',
+                      helperMaxLines: 2,
+                    ),
+                    maxLines: 2,
                   ),
 
                   const SizedBox(height: 16),
@@ -332,7 +376,8 @@ class _UploadBodyState extends State<_UploadBody> {
                       labelText: 'Chunk Duration',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.timer),
-                      helperText: 'Shorter chunks = faster initial results, more updates',
+                      helperText:
+                          'Shorter chunks = faster initial results, more updates',
                       helperMaxLines: 2,
                     ),
                     items: const [
@@ -376,26 +421,76 @@ class _UploadBodyState extends State<_UploadBody> {
 
                   const SizedBox(height: 32),
 
+                  // Upload progress indicator for file uploads
+                  BlocBuilder<UploadBloc, UploadState>(
+                    builder: (context, state) {
+                      if (state is FileUploadInProgress) {
+                        return _buildUploadProgress(state);
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+
                   // Submit button
                   BlocBuilder<UploadBloc, UploadState>(
                     builder: (context, state) {
                       final isSubmitting = state is UploadSubmitting;
+                      final uploadProgress = state is FileUploadInProgress ? state : null;
+                      final isUploading = uploadProgress != null;
+                      final isError = state is UploadError;
+
+                      if (isError && state.canRetry) {
+                        return Column(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _retryUpload,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Try Again'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.all(16),
+                                backgroundColor: Colors.orange,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Error: ${state.failure.message}',
+                              style: const TextStyle(
+                                  color: Colors.red, fontSize: 12),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        );
+                      }
 
                       return ElevatedButton(
-                        onPressed: isSubmitting ? null : _submitJob,
+                        onPressed:
+                            (isSubmitting || isUploading) ? null : _submitJob,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.all(16),
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.textOnPrimary,
                         ),
-                        child: isSubmitting
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
+                        child: (isSubmitting || isUploading)
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  if (uploadProgress != null) ...[
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      uploadProgress.statusMessage,
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                ],
                               )
                             : const Text(
                                 'Start Processing',
@@ -404,13 +499,201 @@ class _UploadBodyState extends State<_UploadBody> {
                       );
                     },
                   ),
-
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  /// Build file info display with size.
+  Widget _buildFileInfo() {
+    final file = _selectedFile;
+    if (file == null) return const SizedBox.shrink();
+
+    final sizeInMB = (file.size / (1024 * 1024)).toStringAsFixed(1);
+    final isLarge = file.size > 10 * 1024 * 1024; // >10MB
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Selected: $_selectedFileName',
+          style: TextStyle(color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Icon(
+              isLarge ? Icons.cloud_upload : Icons.upload_file,
+              size: 16,
+              color: isLarge ? Colors.blue : Colors.grey[600],
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$sizeInMB MB${isLarge ? ' (direct S3 upload)' : ''}',
+              style: TextStyle(
+                color: isLarge ? Colors.blue : Colors.grey[600],
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Build upload progress indicator.
+  Widget _buildUploadProgress(FileUploadInProgress state) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildPhaseIcon(state.phase),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      state.statusMessage,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (state.uploadId != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Upload ID: ${state.uploadId}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (state.phase == UploadPhase.uploadingToS3 &&
+              state.totalBytes != null &&
+              state.totalBytes! > 0) ...[
+            const SizedBox(height: 12),
+            LinearProgressIndicator(
+              value: state.bytesUploaded != null
+                  ? state.bytesUploaded! / state.totalBytes!
+                  : null,
+              backgroundColor: Colors.grey[300],
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ],
+          const SizedBox(height: 8),
+          _buildPhaseSteps(state.phase),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhaseIcon(UploadPhase phase) {
+    IconData icon;
+    Color color;
+
+    switch (phase) {
+      case UploadPhase.requestingPresign:
+        icon = Icons.security;
+        color = Colors.orange;
+        break;
+      case UploadPhase.uploadingToS3:
+        icon = Icons.cloud_upload;
+        color = Colors.blue;
+        break;
+      case UploadPhase.finalizing:
+        icon = Icons.check_circle;
+        color = Colors.green;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, color: color, size: 24),
+    );
+  }
+
+  Widget _buildPhaseSteps(UploadPhase currentPhase) {
+    return Row(
+      children: [
+        _buildStepIndicator(
+          'Prepare',
+          currentPhase.index >= UploadPhase.requestingPresign.index,
+          currentPhase == UploadPhase.requestingPresign,
+        ),
+        Expanded(child: _buildStepLine(currentPhase.index > 0)),
+        _buildStepIndicator(
+          'Upload',
+          currentPhase.index >= UploadPhase.uploadingToS3.index,
+          currentPhase == UploadPhase.uploadingToS3,
+        ),
+        Expanded(child: _buildStepLine(currentPhase.index > 1)),
+        _buildStepIndicator(
+          'Finalize',
+          currentPhase.index >= UploadPhase.finalizing.index,
+          currentPhase == UploadPhase.finalizing,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepIndicator(String label, bool completed, bool active) {
+    return Column(
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: completed ? AppColors.primary : Colors.grey[300],
+            border: active
+                ? Border.all(color: AppColors.primary, width: 2)
+                : null,
+          ),
+          child: completed
+              ? const Icon(Icons.check, size: 14, color: Colors.white)
+              : null,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: completed ? AppColors.primary : Colors.grey[600],
+            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepLine(bool completed) {
+    return Container(
+      height: 2,
+      color: completed ? AppColors.primary : Colors.grey[300],
     );
   }
 }

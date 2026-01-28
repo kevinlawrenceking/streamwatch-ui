@@ -6,6 +6,42 @@ import 'package:file_picker/file_picker.dart';
 import '../../../themes/app_theme.dart';
 import '../bloc/upload_bloc.dart';
 
+/// Parses celebrity names from input text, handling comma and newline separators.
+/// Returns deduplicated list preserving first-seen casing.
+/// [input] - Raw text potentially containing multiple names
+/// [existing] - Already-added chips to check for duplicates
+/// Returns tuple: (new chips to add, duplicate names found)
+({List<String> added, List<String> duplicates}) parseCelebrityInput(
+  String input,
+  List<String> existing,
+) {
+  // Split on comma or newline, trim whitespace
+  final tokens = input
+      .split(RegExp(r'[,\n]'))
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
+
+  // Build lowercase set of existing names for dedupe
+  final existingLower = existing.map((e) => e.toLowerCase()).toSet();
+
+  final added = <String>[];
+  final duplicates = <String>[];
+  final seenInBatch = <String>{};
+
+  for (final token in tokens) {
+    final lower = token.toLowerCase();
+    if (existingLower.contains(lower) || seenInBatch.contains(lower)) {
+      duplicates.add(token);
+    } else {
+      added.add(token);
+      seenInBatch.add(lower);
+    }
+  }
+
+  return (added: added, duplicates: duplicates);
+}
+
 /// Upload page using BLoC pattern.
 class UploadView extends StatelessWidget {
   const UploadView({super.key});
@@ -30,7 +66,13 @@ class _UploadBodyState extends State<_UploadBody> {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _celebritiesController = TextEditingController();
+  final TextEditingController _celebrityInputController = TextEditingController();
+
+  /// List of celebrity names as chips (case-preserved, deduplicated)
+  List<String> _celebrityChips = [];
+
+  /// Transient message for duplicate feedback
+  String? _celebrityFeedback;
 
   String? _selectedFilePath;
   String? _selectedFileName;
@@ -46,7 +88,7 @@ class _UploadBodyState extends State<_UploadBody> {
     _urlController.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
-    _celebritiesController.dispose();
+    _celebrityInputController.dispose();
     super.dispose();
   }
 
@@ -69,6 +111,9 @@ class _UploadBodyState extends State<_UploadBody> {
 
   void _submitJob() {
     final bloc = context.read<UploadBloc>();
+    // Emit celebrities as comma-separated string (existing backend contract)
+    final celebritiesValue =
+        _celebrityChips.isEmpty ? null : _celebrityChips.join(', ');
 
     if (_uploadMode == 'url') {
       final url = _urlController.text.trim();
@@ -85,9 +130,7 @@ class _UploadBodyState extends State<_UploadBody> {
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-        celebrities: _celebritiesController.text.trim().isEmpty
-            ? null
-            : _celebritiesController.text.trim(),
+        celebrities: celebritiesValue,
         transcriptionEngine: _transcriptionEngine,
         segmentDuration: _segmentDuration,
         isLive: _isLive,
@@ -109,9 +152,7 @@ class _UploadBodyState extends State<_UploadBody> {
         description: _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-        celebrities: _celebritiesController.text.trim().isEmpty
-            ? null
-            : _celebritiesController.text.trim(),
+        celebrities: celebritiesValue,
         transcriptionEngine: _transcriptionEngine,
         segmentDuration: _segmentDuration,
       ));
@@ -135,6 +176,139 @@ class _UploadBodyState extends State<_UploadBody> {
   void _retryUpload() {
     final bloc = context.read<UploadBloc>();
     bloc.add(const ResetUploadEvent());
+  }
+
+  /// Adds celebrity names from the input field to chips.
+  /// Handles comma/newline separators and deduplication.
+  void _addCelebritiesFromInput() {
+    final input = _celebrityInputController.text;
+    if (input.trim().isEmpty) return;
+
+    final result = parseCelebrityInput(input, _celebrityChips);
+
+    setState(() {
+      _celebrityChips = [..._celebrityChips, ...result.added];
+      _celebrityInputController.clear();
+
+      // Show feedback for duplicates
+      if (result.duplicates.isNotEmpty) {
+        _celebrityFeedback =
+            'Duplicate${result.duplicates.length > 1 ? 's' : ''} ignored: ${result.duplicates.join(', ')}';
+      } else {
+        _celebrityFeedback = null;
+      }
+    });
+
+    // Clear feedback after 3 seconds
+    if (_celebrityFeedback != null) {
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _celebrityFeedback = null;
+          });
+        }
+      });
+    }
+  }
+
+  /// Removes a celebrity chip by index.
+  void _removeCelebrityChip(int index) {
+    setState(() {
+      _celebrityChips = List.from(_celebrityChips)..removeAt(index);
+      _celebrityFeedback = null;
+    });
+  }
+
+  /// Builds the celebrity chips input widget.
+  Widget _buildCelebrityChipsInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Label
+        Text(
+          'Celebrities (optional)',
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).hintColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Chips + input field in a container
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade400),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Chips wrap
+              if (_celebrityChips.isNotEmpty)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: _celebrityChips.asMap().entries.map((entry) {
+                    return InputChip(
+                      label: Text(entry.value),
+                      deleteIcon: const Icon(Icons.close, size: 18),
+                      onDeleted: () => _removeCelebrityChip(entry.key),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    );
+                  }).toList(),
+                ),
+              if (_celebrityChips.isNotEmpty) const SizedBox(height: 8),
+
+              // Input field for adding new celebrities
+              TextField(
+                controller: _celebrityInputController,
+                decoration: InputDecoration(
+                  hintText: _celebrityChips.isEmpty
+                      ? 'Kim Kardashian, Pete Davidson, ...'
+                      : 'Add another name...',
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                onSubmitted: (_) => _addCelebritiesFromInput(),
+                onChanged: (value) {
+                  // Auto-tokenize on comma or newline
+                  if (value.contains(',') || value.contains('\n')) {
+                    _addCelebritiesFromInput();
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+
+        // Helper text
+        Padding(
+          padding: const EdgeInsets.only(top: 8, left: 12),
+          child: Text(
+            'Type names and press Enter, or separate with commas. If provided, AI celebrity detection is skipped.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).hintColor,
+            ),
+          ),
+        ),
+
+        // Feedback message (duplicates)
+        if (_celebrityFeedback != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 12),
+            child: Text(
+              _celebrityFeedback!,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.orange,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -324,19 +498,8 @@ class _UploadBodyState extends State<_UploadBody> {
 
                   const SizedBox(height: 16),
 
-                  // Celebrities (optional)
-                  TextField(
-                    controller: _celebritiesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Celebrities (optional)',
-                      hintText: 'Kim Kardashian, Pete Davidson, ...',
-                      border: OutlineInputBorder(),
-                      helperText:
-                          'Comma or newline separated names. If provided, AI celebrity detection is skipped.',
-                      helperMaxLines: 2,
-                    ),
-                    maxLines: 2,
-                  ),
+                  // Celebrities (optional) - Chip input
+                  _buildCelebrityChipsInput(),
 
                   const SizedBox(height: 16),
 

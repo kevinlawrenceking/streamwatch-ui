@@ -77,6 +77,7 @@ class _UploadBodyState extends State<_UploadBody> {
   String? _selectedFilePath;
   String? _selectedFileName;
   PlatformFile? _selectedFile;
+  bool _isPickingFile = false;
   String _uploadMode = 'url';
   String _transcriptionEngine = 'aws';
   int _segmentDuration = 180; // Default: 3 minutes
@@ -93,18 +94,30 @@ class _UploadBodyState extends State<_UploadBody> {
   }
 
   Future<void> _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.video,
-      allowMultiple: false,
-      withData: kIsWeb,
-    );
+    // Show loading immediately when user selects a file
+    // (file bytes take time to load on web)
+    setState(() {
+      _isPickingFile = true;
+    });
 
-    if (result != null && result.files.isNotEmpty) {
-      final file = result.files.single;
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.video,
+        allowMultiple: false,
+        withData: kIsWeb,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.single;
+        setState(() {
+          _selectedFile = file;
+          _selectedFilePath = kIsWeb ? null : file.path;
+          _selectedFileName = file.name;
+        });
+      }
+    } finally {
       setState(() {
-        _selectedFile = file;
-        _selectedFilePath = kIsWeb ? null : file.path;
-        _selectedFileName = file.name;
+        _isPickingFile = false;
       });
     }
   }
@@ -455,17 +468,26 @@ class _UploadBodyState extends State<_UploadBody> {
                     BlocBuilder<UploadBloc, UploadState>(
                       builder: (context, state) {
                         final isUploading = state is FileUploadInProgress;
+                        final isDisabled = isUploading || _isPickingFile;
                         return OutlinedButton.icon(
-                          onPressed: isUploading ? null : _pickFile,
-                          icon: const Icon(Icons.folder_open),
-                          label: Text(_selectedFileName ?? 'Select Video File'),
+                          onPressed: isDisabled ? null : _pickFile,
+                          icon: _isPickingFile
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.folder_open),
+                          label: Text(_isPickingFile
+                              ? 'Loading file...'
+                              : (_selectedFileName ?? 'Select Video File')),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.all(16),
                           ),
                         );
                       },
                     ),
-                    if (_selectedFileName != null) ...[
+                    if (_selectedFileName != null && !_isPickingFile) ...[
                       const SizedBox(height: 8),
                       _buildFileInfo(),
                     ],

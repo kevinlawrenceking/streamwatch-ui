@@ -78,6 +78,7 @@ class _UploadBodyState extends State<_UploadBody> {
   String? _selectedFileName;
   PlatformFile? _selectedFile;
   bool _isPickingFile = false;
+  bool _isSubmitting = false;
   String _uploadMode = 'url';
   String _transcriptionEngine = 'aws';
   int _segmentDuration = 180; // Default: 3 minutes
@@ -123,6 +124,9 @@ class _UploadBodyState extends State<_UploadBody> {
   }
 
   void _submitJob() {
+    // Prevent double-submission
+    if (_isSubmitting) return;
+
     final bloc = context.read<UploadBloc>();
     // Emit celebrities as comma-separated string (existing backend contract)
     final celebritiesValue =
@@ -135,6 +139,7 @@ class _UploadBodyState extends State<_UploadBody> {
         return;
       }
 
+      setState(() => _isSubmitting = true);
       bloc.add(SubmitUrlJobEvent(
         url: url,
         title: _titleController.text.trim().isEmpty
@@ -155,6 +160,7 @@ class _UploadBodyState extends State<_UploadBody> {
         return;
       }
 
+      setState(() => _isSubmitting = true);
       bloc.add(SubmitFileJobEvent(
         filePath: _selectedFilePath,
         fileBytes: _selectedFile?.bytes,
@@ -187,6 +193,7 @@ class _UploadBodyState extends State<_UploadBody> {
   }
 
   void _retryUpload() {
+    setState(() => _isSubmitting = false);
     final bloc = context.read<UploadBloc>();
     bloc.add(const ResetUploadEvent());
   }
@@ -619,10 +626,12 @@ class _UploadBodyState extends State<_UploadBody> {
                   // Submit button
                   BlocBuilder<UploadBloc, UploadState>(
                     builder: (context, state) {
-                      final isSubmitting = state is UploadSubmitting;
+                      final blocSubmitting = state is UploadSubmitting;
                       final uploadProgress = state is FileUploadInProgress ? state : null;
                       final isUploading = uploadProgress != null;
                       final isError = state is UploadError;
+                      // Disable if local flag OR bloc state indicates submission
+                      final isDisabled = _isSubmitting || blocSubmitting || isUploading;
 
                       if (isError && state.canRetry) {
                         return Column(
@@ -649,14 +658,13 @@ class _UploadBodyState extends State<_UploadBody> {
                       }
 
                       return ElevatedButton(
-                        onPressed:
-                            (isSubmitting || isUploading) ? null : _submitJob,
+                        onPressed: isDisabled ? null : _submitJob,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.all(16),
                           backgroundColor: AppColors.primary,
                           foregroundColor: AppColors.textOnPrimary,
                         ),
-                        child: (isSubmitting || isUploading)
+                        child: isDisabled
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

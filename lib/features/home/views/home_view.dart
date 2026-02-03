@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -769,7 +771,7 @@ class _JobGridCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Expanded(
                         child: Text(
-                          _truncateSummary(_getSummary(job)!, 150),
+                          _truncateSummary(_getSummary(job)!, 500),
                           style: TmzTextStyles.caption.copyWith(
                             fontSize: 10,
                             color: TmzColors.textSecondary,
@@ -794,7 +796,22 @@ class _JobGridCard extends StatelessWidget {
   }
 
   String? _getSummary(JobModel job) {
-    return job.finalSummary ?? job.summaryText;
+    final raw = job.finalSummary ?? job.summaryText;
+    if (raw == null) return null;
+
+    // Try to parse as JSON and extract executive_summary
+    if (raw.trimLeft().startsWith('{')) {
+      try {
+        final parsed = jsonDecode(raw) as Map<String, dynamic>;
+        final execSummary = parsed['executive_summary'] as String?;
+        if (execSummary != null && execSummary.isNotEmpty) {
+          return execSummary;
+        }
+      } catch (_) {
+        // Not valid JSON, fall through to return raw
+      }
+    }
+    return raw;
   }
 
   String _truncateSummary(String summary, int maxLength) {

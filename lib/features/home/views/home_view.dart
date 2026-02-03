@@ -253,7 +253,7 @@ class _HomeBodyState extends State<_HomeBody> {
           padding: const EdgeInsets.all(16).copyWith(bottom: 80),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.38,
+            childAspectRatio: 0.52,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),

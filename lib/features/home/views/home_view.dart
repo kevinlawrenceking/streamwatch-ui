@@ -253,7 +253,7 @@ class _HomeBodyState extends State<_HomeBody> {
           padding: const EdgeInsets.all(16).copyWith(bottom: 80),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.55,
+            childAspectRatio: 0.38,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
@@ -735,7 +735,7 @@ class _JobGridCard extends StatelessWidget {
             ),
             // Content area
             Expanded(
-              flex: 4,
+              flex: 5,
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Column(
@@ -766,18 +766,18 @@ class _JobGridCard extends StatelessWidget {
                           _SourceLinkButton(url: job.sourceUrl!),
                       ],
                     ),
-                    // Summary preview (if available)
+                    // Summary (scrollable if needed)
                     if (_getSummary(job) != null) ...[
                       const SizedBox(height: 4),
                       Expanded(
-                        child: Text(
-                          _getSummary(job)!,
-                          style: TmzTextStyles.caption.copyWith(
-                            fontSize: 10,
-                            color: TmzColors.textSecondary,
+                        child: SingleChildScrollView(
+                          child: Text(
+                            _getSummary(job)!,
+                            style: TmzTextStyles.caption.copyWith(
+                              fontSize: 10,
+                              color: TmzColors.textSecondary,
+                            ),
                           ),
-                          maxLines: 10,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

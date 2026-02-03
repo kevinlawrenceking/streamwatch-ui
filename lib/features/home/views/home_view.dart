@@ -771,12 +771,11 @@ class _JobGridCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Expanded(
                         child: Text(
-                          _truncateSummary(_getSummary(job)!, 500),
+                          _getSummary(job)!,
                           style: TmzTextStyles.caption.copyWith(
                             fontSize: 10,
                             color: TmzColors.textSecondary,
                           ),
-                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

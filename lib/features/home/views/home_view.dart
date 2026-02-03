@@ -253,7 +253,7 @@ class _HomeBodyState extends State<_HomeBody> {
           padding: const EdgeInsets.all(16).copyWith(bottom: 80),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.85,
+            childAspectRatio: 0.55,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
           ),
@@ -735,7 +735,7 @@ class _JobGridCard extends StatelessWidget {
             ),
             // Content area
             Expanded(
-              flex: 3,
+              flex: 4,
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Column(
@@ -776,6 +776,7 @@ class _JobGridCard extends StatelessWidget {
                             fontSize: 10,
                             color: TmzColors.textSecondary,
                           ),
+                          maxLines: 10,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),

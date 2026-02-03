@@ -774,7 +774,7 @@ class _JobGridCard extends StatelessWidget {
                           child: Text(
                             _getSummary(job)!,
                             style: TmzTextStyles.caption.copyWith(
-                              fontSize: 10,
+                              fontSize: 11,
                               color: TmzColors.textSecondary,
                             ),
                           ),

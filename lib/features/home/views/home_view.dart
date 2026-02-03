@@ -733,36 +733,52 @@ class _JobGridCard extends StatelessWidget {
             ),
             // Content area
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Title
-                    Expanded(
-                      child: Text(
-                        job.title ?? 'Job ${job.jobId.substring(0, 8)}...',
-                        style: TmzTextStyles.bodyBold.copyWith(fontSize: 13),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    Text(
+                      job.title ?? 'Job ${job.jobId.substring(0, 8)}...',
+                      style: TmzTextStyles.bodyBold.copyWith(fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    // Date and source link button
+                    // Type badge and date row
                     Row(
                       children: [
+                        if (job.typeCode != null) ...[
+                          _TypeBadge(typeCode: job.typeCode!),
+                          const SizedBox(width: 6),
+                        ],
                         Expanded(
                           child: Text(
                             _formatDateTime(job.createdAt),
-                            style: TmzTextStyles.caption.copyWith(fontSize: 11),
+                            style: TmzTextStyles.caption.copyWith(fontSize: 10),
                           ),
                         ),
-                        // Source link button instead of full URL
                         if (job.source == 'url' && job.sourceUrl != null)
                           _SourceLinkButton(url: job.sourceUrl!),
                       ],
                     ),
+                    // Summary preview (if available)
+                    if (_getSummary(job) != null) ...[
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: Text(
+                          _truncateSummary(_getSummary(job)!, 150),
+                          style: TmzTextStyles.caption.copyWith(
+                            fontSize: 10,
+                            color: TmzColors.textSecondary,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -775,6 +791,63 @@ class _JobGridCard extends StatelessWidget {
 
   String _formatDateTime(DateTime dt) {
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+
+  String? _getSummary(JobModel job) {
+    return job.finalSummary ?? job.summaryText;
+  }
+
+  String _truncateSummary(String summary, int maxLength) {
+    if (summary.length <= maxLength) return summary;
+    return '${summary.substring(0, maxLength).trim()}...';
+  }
+}
+
+/// Type badge for content classification.
+class _TypeBadge extends StatelessWidget {
+  final String typeCode;
+
+  const _TypeBadge({required this.typeCode});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: _getTypeColor(typeCode).withAlpha(40),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: _getTypeColor(typeCode), width: 1),
+      ),
+      child: Text(
+        typeCode.toUpperCase(),
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          color: _getTypeColor(typeCode),
+        ),
+      ),
+    );
+  }
+
+  Color _getTypeColor(String code) {
+    switch (code.toLowerCase()) {
+      case 'interview':
+        return Colors.blue;
+      case 'news':
+        return Colors.orange;
+      case 'documentary':
+        return Colors.purple;
+      case 'podcast':
+        return Colors.green;
+      case 'press':
+        return Colors.teal;
+      case 'sports':
+        return Colors.red;
+      case 'entertainment':
+        return Colors.pink;
+      default:
+        return TmzColors.gray50;
+    }
   }
 }
 

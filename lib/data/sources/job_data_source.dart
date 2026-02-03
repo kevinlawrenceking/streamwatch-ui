@@ -49,8 +49,8 @@ abstract class IJobDataSource {
   /// Gets chunks for a job.
   Future<Either<Failure, List<ChunkModel>>> getJobChunks(String jobId);
 
-  /// Gets recent jobs.
-  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20});
+  /// Gets recent jobs with optional status filter.
+  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20, String? status});
 
   /// Gets the worker log file for a job.
   Future<Either<Failure, String>> getJobLog(String jobId, {int? tailLines});
@@ -163,6 +163,7 @@ class JobDataSource implements IJobDataSource {
     required String fileName,
     String? title,
     String? description,
+    String? celebrities,
     String? transcriptionEngine,
     int? segmentDuration,
   }) =>
@@ -327,17 +328,21 @@ class JobDataSource implements IJobDataSource {
       })();
 
   @override
-  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20}) =>
+  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20, String? status}) =>
       ExceptionHandler<List<JobModel>>(() async {
         final tokenResult = await _auth.getAuthToken();
 
         return tokenResult.fold(
           (failure) => Left(failure),
           (authToken) async {
+            final queryParams = <String, String>{'limit': limit.toString()};
+            if (status != null && status.isNotEmpty) {
+              queryParams['status'] = status;
+            }
             final response = await _client.get(
               endPoint: '/api/v1/jobs',
               authToken: authToken,
-              queryParams: {'limit': limit.toString()},
+              queryParams: queryParams,
             );
 
             if (response.statusCode != HttpStatus.ok) {

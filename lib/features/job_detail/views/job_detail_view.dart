@@ -14,6 +14,7 @@ import '../../../data/sources/job_data_source.dart';
 import '../../../models/cast.dart';
 import '../../../themes/app_theme.dart';
 import '../../../utils/config.dart';
+import '../../video_player/views/video_player_view.dart';
 import '../bloc/job_detail_bloc.dart';
 
 /// Job detail page using BLoC pattern with HTTP polling for updates.
@@ -391,21 +392,118 @@ class _JobInfoCardState extends State<_JobInfoCard> {
     return null;
   }
 
+  bool _isS3Url(String? url) {
+    if (url == null) return false;
+    return url.contains('.s3.amazonaws.com/') || url.contains('.s3.us-east-1.amazonaws.com/');
+  }
+
+  bool _isExternalVideoUrl(String? url) {
+    if (url == null) return false;
+    // URLs that can't be played in-app (require their own players)
+    return url.contains('youtube.com') ||
+        url.contains('youtu.be') ||
+        url.contains('vimeo.com') ||
+        url.contains('dailymotion.com') ||
+        url.contains('twitch.tv');
+  }
+
+  Future<String?> _getPresignedVideoUrl() async {
+    final dataSource = GetIt.instance<IJobDataSource>();
+    final streamUrl = dataSource.getVideoStreamUrl(widget.job.jobId);
+
+    try {
+      // Make request without following redirects to get the presigned URL
+      final client = http.Client();
+      final request = http.Request('GET', Uri.parse(streamUrl));
+      request.followRedirects = false;
+
+      final response = await client.send(request);
+      client.close();
+
+      if (response.statusCode == 303 || response.statusCode == 302) {
+        // Get the redirect location (presigned URL)
+        return response.headers['location'];
+      } else if (response.statusCode == 200) {
+        // Direct stream, use the original URL
+        return streamUrl;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting presigned URL: $e');
+      return null;
+    }
+  }
+
+  bool _isWebPlayableFormat(String? filename) {
+    if (filename == null) return true; // Assume playable if unknown
+    final lower = filename.toLowerCase();
+    // Web-playable formats (h.264/h.265 in mp4/webm containers)
+    if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.m4v')) {
+      return true;
+    }
+    // Formats that often don't play in browser (ProRes, etc)
+    if (lower.endsWith('.mov') || lower.endsWith('.avi') || lower.endsWith('.mkv') || lower.endsWith('.wmv')) {
+      return false;
+    }
+    return true; // Default to trying in-app
+  }
+
   void _playVideo() async {
-    // For URL-based jobs with source URL, open in browser
-    // (YouTube etc. videos are downloaded for processing but original is on web)
-    if (_hasSourceUrl()) {
+    // For external video platforms (YouTube, etc), open in browser
+    if (_hasSourceUrl() && _isExternalVideoUrl(widget.job.sourceUrl)) {
       _openSourceUrl();
       return;
     }
 
-    // For uploaded files (no source URL), download the video file
-    // This works for S3-stored uploads which redirect to presigned URLs
+    // Simple approach: open streaming URL directly in browser
+    // Browser follows the 303 redirect to the presigned S3 URL
     final dataSource = GetIt.instance<IJobDataSource>();
-    final videoUrl = dataSource.getVideoStreamUrl(widget.job.jobId);
-    final uri = Uri.parse(videoUrl);
+    final streamUrl = dataSource.getVideoStreamUrl(widget.job.jobId);
+    final uri = Uri.parse(streamUrl);
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  // Future: in-app Chewie player (disabled for now due to CORS/redirect issues)
+  void _playVideoInAppFuture() async {
+    if (_hasSourceUrl() && _isExternalVideoUrl(widget.job.sourceUrl)) {
+      _openSourceUrl();
+      return;
+    }
+
+    final presignedUrl = await _getPresignedVideoUrl();
+
+    if (presignedUrl == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not load video. Try again later.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!_isWebPlayableFormat(widget.job.filename)) {
+      final uri = Uri.parse(presignedUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return;
+    }
+
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => VideoPlayerView(
+            videoUrl: presignedUrl,
+            title: widget.job.title ?? widget.job.filename ?? 'Video',
+          ),
+        ),
+      );
     }
   }
 

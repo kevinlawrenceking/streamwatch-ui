@@ -86,7 +86,9 @@ class _JobDetailPageState extends State<JobDetailPage> {
     });
 
     final type = event['type'];
-    final payload = event['payload'] ?? <String, dynamic>{};
+    // Safely extract payload - handle case where it might not be a Map
+    final rawPayload = event['payload'];
+    final payload = rawPayload is Map<String, dynamic> ? rawPayload : <String, dynamic>{};
 
     switch (type) {
       // Progress updates
@@ -435,12 +437,17 @@ class _JobDetailPageState extends State<JobDetailPage> {
   Widget _buildChunkTile(Chunk chunk) {
     final thumbnailUrl = _apiService.getChunkThumbnailUrl(widget.jobId, chunk.chunkId);
 
+    // Larger thumbnail dimensions to match segment card height
+    const double thumbnailWidth = 160;
+    const double thumbnailHeight = 120;
+
     return ExpansionTile(
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(8),
         child: SizedBox(
-          width: 80,
-          height: 45,
+          width: thumbnailWidth,
+          height: thumbnailHeight,
           child: Image.network(
             thumbnailUrl,
             fit: BoxFit.cover,
@@ -449,7 +456,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 color: Colors.grey[300],
                 child: Icon(
                   Icons.videocam,
-                  size: 24,
+                  size: 40,
                   color: Colors.grey[500],
                 ),
               );
@@ -460,8 +467,8 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 color: Colors.grey[200],
                 child: const Center(
                   child: SizedBox(
-                    width: 16,
-                    height: 16,
+                    width: 24,
+                    height: 24,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
@@ -470,25 +477,30 @@ class _JobDetailPageState extends State<JobDetailPage> {
           ),
         ),
       ),
-      title: Text('Segment ${chunk.orderNo}'),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      title: Row(
         children: [
           Text(
-            chunk.formattedTimeRange,
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            'Segment ${chunk.orderNo}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          if (chunk.summary != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              chunk.summary!,
-              style: const TextStyle(fontSize: 14),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          const SizedBox(width: 12),
+          Text(
+            chunk.formattedTimeRange,
+            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+          ),
         ],
       ),
+      subtitle: chunk.summary != null
+          ? Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                chunk.summary!,
+                style: const TextStyle(fontSize: 14, height: 1.4),
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+            )
+          : null,
       children: [
         if (chunk.transcript != null)
           Padding(

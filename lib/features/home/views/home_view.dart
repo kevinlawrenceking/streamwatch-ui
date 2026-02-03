@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:tmz_ui/tmz_ui.dart' as tmz_ui;
+import 'package:url_launcher/url_launcher.dart';
 import '../../../data/models/job_model.dart';
 import '../../../data/sources/job_data_source.dart';
 import '../../../themes/app_theme.dart';
@@ -245,17 +244,29 @@ class _HomeBodyState extends State<_HomeBody> {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Responsive grid: more columns on wider screens
+        // Responsive grid: 2 columns on narrow, scales up on wider screens
         final width = constraints.maxWidth;
-        final crossAxisCount = width > 1200 ? 4 : (width > 800 ? 3 : 2);
+        final crossAxisCount = width > 1400
+            ? 5
+            : width > 1100
+                ? 4
+                : width > 800
+                    ? 3
+                    : width > 500
+                        ? 2
+                        : 1;
 
+        // Card height: thumbnail (16:9 aspect) + content area (~120px)
+        // For a 200px wide card: thumbnail = 112.5px, content = 120px, total = 232.5px
+        // childAspectRatio = width / height = 200 / 232.5 = 0.86
+        // Adjusted for new compact design: ~0.75 to give more room
         return GridView.builder(
           padding: const EdgeInsets.all(16).copyWith(bottom: 80),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.52,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            childAspectRatio: 0.72,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
           ),
           itemCount: jobs.length,
           itemBuilder: (context, index) {
@@ -294,7 +305,7 @@ class _HomeBodyState extends State<_HomeBody> {
                 ),
                 Text(
                   'Video Transcription',
-                  style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -601,7 +612,9 @@ class _JobCard extends StatelessWidget {
   }
 }
 
-/// Job card for grid view - vertical layout with image, title, status.
+/// Professional grid card for media library view.
+/// Shows: thumbnail with status badge, title (2 lines), compact metadata rows, action icons.
+/// No transcript/summary text - that belongs on the details screen.
 class _JobGridCard extends StatelessWidget {
   final JobModel job;
   final bool isActionInFlight;
@@ -620,19 +633,24 @@ class _JobGridCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
+      elevation: 2,
+      color: TmzColors.gray90,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: InkWell(
         onTap: () {
           Navigator.pushNamed(context, '/job', arguments: job.jobId);
         },
+        hoverColor: TmzColors.gray80.withValues(alpha: 0.5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail - takes up most of the card
-            Expanded(
-              flex: 3,
+            // Thumbnail with fixed 16:9 aspect ratio
+            AspectRatio(
+              aspectRatio: 16 / 9,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
+                  // Thumbnail image
                   Image.network(
                     thumbnailUrl,
                     fit: BoxFit.cover,
@@ -641,32 +659,23 @@ class _JobGridCard extends StatelessWidget {
                         color: TmzColors.gray80,
                         child: Icon(
                           Icons.videocam,
-                          size: 48,
+                          size: 40,
                           color: TmzColors.gray50,
                         ),
                       );
                     },
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
-                      return Container(
-                        color: TmzColors.gray80,
-                        child: const Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                      );
+                      return _ThumbnailSkeleton();
                     },
                   ),
-                  // Status badge overlay
+                  // Status badge - top right
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: tmz_ui.TmzStatusBadge(status: job.status),
+                    child: _CompactStatusBadge(status: job.status),
                   ),
-                  // Flag indicator overlay
+                  // Flag indicator - top left
                   if (job.isFlagged)
                     Positioned(
                       top: 8,
@@ -674,12 +683,12 @@ class _JobGridCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(4),
+                          color: Colors.black.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                         child: const Icon(
                           Icons.flag,
-                          size: 16,
+                          size: 14,
                           color: Colors.orange,
                         ),
                       ),
@@ -691,21 +700,19 @@ class _JobGridCard extends StatelessWidget {
                       left: 0,
                       right: 0,
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            color: Colors.black54,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            color: Colors.black.withValues(alpha: 0.7),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const SizedBox(
-                                  width: 12,
-                                  height: 12,
+                                  width: 10,
+                                  height: 10,
                                   child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                    strokeWidth: 1.5,
                                     color: Colors.white,
                                   ),
                                 ),
@@ -714,7 +721,7 @@ class _JobGridCard extends StatelessWidget {
                                   '${job.progressPct}%',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -723,9 +730,9 @@ class _JobGridCard extends StatelessWidget {
                           ),
                           LinearProgressIndicator(
                             value: job.progressPct / 100,
-                            minHeight: 3,
+                            minHeight: 2,
                             backgroundColor: Colors.black38,
-                            valueColor: AlwaysStoppedAnimation<Color>(TmzColors.tmzRed),
+                            valueColor: const AlwaysStoppedAnimation<Color>(TmzColors.tmzRed),
                           ),
                         ],
                       ),
@@ -733,54 +740,69 @@ class _JobGridCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Content area
+            // Content area - fixed height with consistent spacing
             Expanded(
-              flex: 5,
               child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title
+                    // Title - 2 lines max
                     Text(
-                      job.title ?? 'Job ${job.jobId.substring(0, 8)}...',
-                      style: TmzTextStyles.bodyBold.copyWith(fontSize: 13),
-                      maxLines: 1,
+                      job.title ?? 'Video ${job.jobId.substring(0, 8)}',
+                      style: TmzTextStyles.bodyBold.copyWith(
+                        fontSize: 13,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    // Type badge and date row
+                    const SizedBox(height: 8),
+                    // Metadata row 1: Date + Type
                     Row(
                       children: [
-                        if (job.typeCode != null) ...[
-                          _TypeBadge(typeCode: job.typeCode!),
-                          const SizedBox(width: 6),
-                        ],
-                        Expanded(
-                          child: Text(
-                            _formatDateTime(job.createdAt),
-                            style: TmzTextStyles.caption.copyWith(fontSize: 10),
-                          ),
+                        Icon(
+                          Icons.calendar_today,
+                          size: 11,
+                          color: TmzColors.textSecondary,
                         ),
-                        if (job.source == 'url' && job.sourceUrl != null)
-                          _SourceLinkButton(url: job.sourceUrl!),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDate(job.createdAt),
+                          style: TmzTextStyles.caption.copyWith(fontSize: 10),
+                        ),
+                        if (job.typeCode != null) ...[
+                          const SizedBox(width: 8),
+                          _CompactTypeBadge(typeCode: job.typeCode!),
+                        ],
                       ],
                     ),
-                    // Summary (scrollable if needed)
-                    if (_getSummary(job) != null) ...[
-                      const SizedBox(height: 4),
-                      Expanded(
-                        child: SingleChildScrollView(
+                    const SizedBox(height: 4),
+                    // Metadata row 2: Source
+                    Row(
+                      children: [
+                        Icon(
+                          job.source == 'url' ? Icons.link : Icons.upload_file,
+                          size: 11,
+                          color: TmzColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
                           child: Text(
-                            _getSummary(job)!,
-                            style: TmzTextStyles.caption.copyWith(
-                              fontSize: 11,
-                              color: TmzColors.textSecondary,
-                            ),
+                            job.source == 'url'
+                                ? _extractDomain(job.sourceUrl)
+                                : (job.filename ?? 'File'),
+                            style: TmzTextStyles.caption.copyWith(fontSize: 10),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    const Spacer(),
+                    // Action row - bottom aligned
+                    const Divider(height: 12, thickness: 1, color: TmzColors.gray70),
+                    _GridCardActionRow(job: job),
                   ],
                 ),
               ),
@@ -791,56 +813,70 @@ class _JobGridCard extends StatelessWidget {
     );
   }
 
-  String _formatDateTime(DateTime dt) {
-    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  String _formatDate(DateTime dt) {
+    return '${dt.month.toString().padLeft(2, '0')}/${dt.day.toString().padLeft(2, '0')}/${dt.year}';
   }
 
-  String? _getSummary(JobModel job) {
-    final raw = job.finalSummary ?? job.summaryText;
-    if (raw == null) return null;
-
-    // Try to parse as JSON and extract executive_summary
-    if (raw.trimLeft().startsWith('{')) {
-      try {
-        final parsed = jsonDecode(raw) as Map<String, dynamic>;
-        final execSummary = parsed['executive_summary'] as String?;
-        if (execSummary != null && execSummary.isNotEmpty) {
-          return execSummary;
-        }
-      } catch (_) {
-        // Not valid JSON, fall through to return raw
-      }
+  String _extractDomain(String? url) {
+    if (url == null) return 'URL';
+    try {
+      final uri = Uri.parse(url);
+      return uri.host.replaceFirst('www.', '');
+    } catch (_) {
+      return 'URL';
     }
-    return raw;
-  }
-
-  String _truncateSummary(String summary, int maxLength) {
-    if (summary.length <= maxLength) return summary;
-    return '${summary.substring(0, maxLength).trim()}...';
   }
 }
 
-/// Type badge for content classification.
-class _TypeBadge extends StatelessWidget {
-  final String typeCode;
+/// Compact status badge for grid thumbnails.
+class _CompactStatusBadge extends StatelessWidget {
+  final String status;
 
-  const _TypeBadge({required this.typeCode});
+  const _CompactStatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
+    final color = getJobStatusColor(status);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: _getTypeColor(typeCode).withAlpha(40),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: _getTypeColor(typeCode), width: 1),
+        color: color,
+        borderRadius: BorderRadius.circular(2),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          color: TmzColors.white,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact type badge for grid cards.
+class _CompactTypeBadge extends StatelessWidget {
+  final String typeCode;
+
+  const _CompactTypeBadge({required this.typeCode});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _getTypeColor(typeCode);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(2),
       ),
       child: Text(
         typeCode.toUpperCase(),
         style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.bold,
-          color: _getTypeColor(typeCode),
+          fontSize: 8,
+          fontWeight: FontWeight.w600,
+          color: color,
         ),
       ),
     );
@@ -848,71 +884,152 @@ class _TypeBadge extends StatelessWidget {
 
   Color _getTypeColor(String code) {
     switch (code.toLowerCase()) {
-      case 'interview':
+      case 'tv_clip':
         return Colors.blue;
+      case 'interview':
+        return Colors.cyan;
       case 'news':
         return Colors.orange;
-      case 'documentary':
-        return Colors.purple;
       case 'podcast':
         return Colors.green;
       case 'press':
         return Colors.teal;
-      case 'sports':
-        return Colors.red;
-      case 'entertainment':
-        return Colors.pink;
+      case 'documentary':
+        return Colors.purple;
+      case 'commercial':
+        return Colors.amber;
       default:
         return TmzColors.gray50;
     }
   }
 }
 
-/// Compact link button that opens the source URL.
-class _SourceLinkButton extends StatelessWidget {
-  final String url;
+/// Action row for grid cards with download and link icons.
+class _GridCardActionRow extends StatelessWidget {
+  final JobModel job;
 
-  const _SourceLinkButton({required this.url});
+  const _GridCardActionRow({required this.job});
+
+  Future<void> _downloadFile(BuildContext context, String url, String type) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not download $type'),
+              backgroundColor: TmzColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _openExternalLink(BuildContext context, String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null) {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not open link'),
+              backgroundColor: TmzColors.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dataSource = GetIt.instance<IJobDataSource>();
+    final isCompleted = job.isCompleted;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        // Summary download
+        _GridActionIcon(
+          icon: Icons.summarize_outlined,
+          tooltip: isCompleted ? 'Download Summary' : 'Summary not ready',
+          enabled: isCompleted,
+          onTap: () => _downloadFile(
+            context,
+            dataSource.getSummaryDownloadUrl(job.jobId),
+            'summary',
+          ),
+        ),
+        // SRT download
+        _GridActionIcon(
+          icon: Icons.subtitles_outlined,
+          tooltip: isCompleted ? 'Download SRT' : 'SRT not ready',
+          enabled: isCompleted,
+          onTap: () => _downloadFile(
+            context,
+            dataSource.getSrtDownloadUrl(job.jobId),
+            'SRT',
+          ),
+        ),
+        // External link (only for URL sources)
+        if (job.source == 'url' && job.sourceUrl != null)
+          _GridActionIcon(
+            icon: Icons.open_in_new,
+            tooltip: 'Open Source',
+            enabled: true,
+            onTap: () => _openExternalLink(context, job.sourceUrl!),
+          ),
+      ],
+    );
+  }
+}
+
+/// Individual action icon for grid card action row.
+class _GridActionIcon extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _GridActionIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.enabled,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: url,
+      message: tooltip,
       child: InkWell(
-        onTap: () async {
-          // Copy URL to clipboard and show feedback
-          // ignore: depend_on_referenced_packages
-          await Future.delayed(Duration.zero); // Allow the tap to complete
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.link, color: Colors.white, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        url,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
-        },
+        onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(4),
         child: Padding(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(6),
           child: Icon(
-            Icons.link,
+            icon,
             size: 16,
-            color: TmzColors.textSecondary,
+            color: enabled ? TmzColors.textSecondary : TmzColors.gray70,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Skeleton loader for thumbnail while loading.
+class _ThumbnailSkeleton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: TmzColors.gray80,
+      child: const Center(
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
     );

@@ -18,6 +18,10 @@ class Job {
   final DateTime? startedAt;
   final DateTime? completedAt;
 
+  // Speaker resolution fields
+  final int? speakerCount;        // Number of detected speakers
+  final bool speakersResolved;    // Whether speakers have been resolved to names
+
   Job({
     required this.jobId,
     required this.source,
@@ -37,6 +41,8 @@ class Job {
     required this.createdAt,
     this.startedAt,
     this.completedAt,
+    this.speakerCount,
+    this.speakersResolved = false,
   });
 
   factory Job.fromJson(Map<String, dynamic> json) {
@@ -59,6 +65,8 @@ class Job {
       createdAt: DateTime.parse(json['created_at']),
       startedAt: json['started_at'] != null ? DateTime.parse(json['started_at']) : null,
       completedAt: json['completed_at'] != null ? DateTime.parse(json['completed_at']) : null,
+      speakerCount: json['speaker_count'],
+      speakersResolved: json['speakers_resolved'] ?? false,
     );
   }
 
@@ -67,6 +75,9 @@ class Job {
   bool get isCompleted => status == 'completed';
   bool get isFailed => status == 'failed';
   bool get isCancelled => status == 'cancelled';
+
+  /// Whether this job has speaker diarization data available
+  bool get hasSpeakers => speakerCount != null && speakerCount! > 0;
 }
 
 class Chunk {
@@ -77,6 +88,7 @@ class Chunk {
   final int endMs;
   final String? transcript;
   final String? summary;
+  final String? speakersJson;  // JSON array of speaker segments from AWS Transcribe
   final DateTime createdAt;
 
   Chunk({
@@ -87,6 +99,7 @@ class Chunk {
     required this.endMs,
     this.transcript,
     this.summary,
+    this.speakersJson,
     required this.createdAt,
   });
 
@@ -99,9 +112,13 @@ class Chunk {
       endMs: json['end_ms'] ?? 0,
       transcript: json['transcript'],
       summary: json['summary'],
+      speakersJson: json['speakers_json'],
       createdAt: DateTime.parse(json['created_at']),
     );
   }
+
+  /// Whether this chunk has speaker diarization data
+  bool get hasSpeakers => speakersJson != null && speakersJson!.isNotEmpty;
 
   Duration get startTime => Duration(milliseconds: startMs);
   Duration get endTime => Duration(milliseconds: endMs);

@@ -1,5 +1,11 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../../shared/bloc/auth_session_bloc.dart';
 import '../../shared/errors/failures/failure.dart';
+import '../providers/rest_client.dart';
 
 /// Interface for authentication operations.
 ///
@@ -61,16 +67,141 @@ class DevAuthDataSource implements IAuthDataSource {
   }
 }
 
-// TODO: Implement ProdAuthDataSource when production auth is ready
-// This will use:
-// - FlutterSecureStorage for token persistence
-// - JWT decoding for token validation
-// - Real API calls for authentication
-//
-// class ProdAuthDataSource implements IAuthDataSource {
-//   final IRestClient _client;
-//   final FlutterSecureStorage _storage;
-//   String? _cachedToken;
-//
-//   // Implementation with real auth...
-// }
+/// Production implementation that authenticates against the StreamWatch API.
+///
+/// Uses FlutterSecureStorage for token persistence and JWT decoding for
+/// expiry checking. Login endpoint: POST /api/v1/auth with x-username
+/// and x-password headers.
+class ProdAuthDataSource implements IAuthDataSource {
+  final IRestClient _client;
+  final FlutterSecureStorage _storage;
+  final AuthSessionBloc _authSessionBloc;
+  String? _cachedToken;
+
+  static const _tokenKey = 'streamwatch_auth_token';
+
+  ProdAuthDataSource({
+    required IRestClient client,
+    required AuthSessionBloc authSessionBloc,
+    FlutterSecureStorage? storage,
+  })  : _client = client,
+        _authSessionBloc = authSessionBloc,
+        _storage = storage ?? const FlutterSecureStorage();
+
+  @override
+  Future<Either<Failure, String>> authenticate({
+    required String username,
+    required String password,
+  }) async {
+    try {
+      final response = await _client.post(
+        endPoint: '/api/v1/auth',
+        headers: {
+          'x-username': username,
+          'x-password': password,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final token = data['token'] as String;
+        _cachedToken = token;
+        await _storage.write(key: _tokenKey, value: token);
+        return Right(token);
+      }
+
+      if (response.statusCode == 401) {
+        final failure = HttpFailure.fromResponse(response);
+        return Left(AuthFailure(failure.message));
+      }
+
+      return Left(HttpFailure.fromResponse(response));
+    } catch (e) {
+      return Left(NetworkFailure('Login failed: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> getAuthToken() async {
+    // Try cached token first
+    if (_cachedToken != null && !_isTokenExpired(_cachedToken!)) {
+      return Right(_cachedToken!);
+    }
+
+    // Try stored token
+    final stored = await _storage.read(key: _tokenKey);
+    if (stored != null && stored.isNotEmpty && !_isTokenExpired(stored)) {
+      _cachedToken = stored;
+      return Right(stored);
+    }
+
+    // Token expired — try refresh
+    final tokenForRefresh = stored ?? _cachedToken;
+    if (tokenForRefresh != null && tokenForRefresh.isNotEmpty) {
+      final refreshResult = await _refreshToken(tokenForRefresh);
+      if (refreshResult != null) {
+        return Right(refreshResult);
+      }
+    }
+
+    // Refresh failed or no token — session expired
+    _cachedToken = null;
+    await _storage.delete(key: _tokenKey);
+    _authSessionBloc.add(const SessionExpiredEvent());
+    return const Left(SessionExpiredFailure());
+  }
+
+  @override
+  Future<Either<Failure, void>> logout() async {
+    _cachedToken = null;
+    await _storage.delete(key: _tokenKey);
+    return const Right(null);
+  }
+
+  @override
+  Future<bool> isAuthenticated() async {
+    final result = await getAuthToken();
+    return result.isRight();
+  }
+
+  /// Attempts to refresh the token via GET /api/v1/token.
+  /// Returns the new token on success, null on failure.
+  Future<String?> _refreshToken(String currentToken) async {
+    try {
+      final response = await _client.get(
+        endPoint: '/api/v1/token',
+        authToken: currentToken,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final newToken = data['token'] as String;
+        _cachedToken = newToken;
+        await _storage.write(key: _tokenKey, value: newToken);
+        return newToken;
+      }
+    } catch (_) {
+      // Refresh failed — will fall through to session expired
+    }
+    return null;
+  }
+
+  /// Checks if a JWT token is expired by decoding the payload.
+  bool _isTokenExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
+      final data = json.decode(payload) as Map<String, dynamic>;
+      final exp = data['exp'] as int?;
+      if (exp == null) return true;
+      final expiry = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+      // Treat as expired 30 seconds early to avoid edge-case race
+      return DateTime.now().isAfter(expiry.subtract(const Duration(seconds: 30)));
+    } catch (_) {
+      return true;
+    }
+  }
+}

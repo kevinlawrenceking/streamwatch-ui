@@ -45,6 +45,9 @@ dependencies:
   video_player: ^2.8.0
   chewie: ^1.13.0
 
+  # Secure token storage for authentication
+  flutter_secure_storage: ^9.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

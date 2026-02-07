@@ -98,12 +98,12 @@ class StreamTypeBadge extends StatelessWidget {
 }
 
 /// Celebrity chips row with overflow handling.
-/// Shows max 2 celebs + "+N" indicator.
-class StreamCelebsRow extends StatelessWidget {
+/// Shows max 2 celebs as chips + "+N" chip if more remain.
+class StreamCelebChips extends StatelessWidget {
   final List<String> celebs;
   final int maxVisible;
 
-  const StreamCelebsRow({
+  const StreamCelebChips({
     super.key,
     required this.celebs,
     this.maxVisible = 2,
@@ -116,25 +116,141 @@ class StreamCelebsRow extends StatelessWidget {
     final visible = celebs.take(maxVisible).toList();
     final overflow = celebs.length - maxVisible;
 
-    return Row(
+    return SizedBox(
+      height: 24,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: visible.length + (overflow > 0 ? 1 : 0),
+        separatorBuilder: (_, __) => const SizedBox(width: 4),
+        itemBuilder: (context, index) {
+          if (index < visible.length) {
+            return _CelebChip(label: visible[index]);
+          }
+          return _CelebChip(label: '+$overflow', isOverflow: true);
+        },
+      ),
+    );
+  }
+}
+
+/// Individual celeb pill/chip.
+class _CelebChip extends StatelessWidget {
+  final String label;
+  final bool isOverflow;
+
+  const _CelebChip({required this.label, this.isOverflow = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isOverflow
+            ? TmzColors.gray70.withValues(alpha: 0.6)
+            : TmzColors.gray70,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: isOverflow ? FontWeight.w400 : FontWeight.w600,
+          color: TmzColors.white,
+          height: 1.2,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+/// People list with icon rows and tap-to-expand overflow handling.
+/// Shows max 2 people rows by default + tappable "+N more" that expands inline.
+class StreamPeopleList extends StatefulWidget {
+  final List<String> people;
+  final int maxVisible;
+
+  const StreamPeopleList({
+    super.key,
+    required this.people,
+    this.maxVisible = 2,
+  });
+
+  @override
+  State<StreamPeopleList> createState() => _StreamPeopleListState();
+}
+
+class _StreamPeopleListState extends State<StreamPeopleList> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.people.isEmpty) return const SizedBox.shrink();
+
+    final showAll = _expanded || widget.people.length <= widget.maxVisible;
+    final visible = showAll ? widget.people : widget.people.take(widget.maxVisible).toList();
+    final overflow = widget.people.length - widget.maxVisible;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          Icons.person,
-          size: 12,
-          color: TmzColors.textSecondary,
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            visible.join(', ') + (overflow > 0 ? ' +$overflow' : ''),
-            style: TmzTextStyles.caption.copyWith(
-              fontSize: 11,
-              color: TmzColors.textSecondary,
+        for (final name in visible)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.person,
+                  size: 12,
+                  color: TmzColors.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: TmzColors.white,
+                      height: 1.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
+        // Show "+N more" tap target when collapsed, or "Show less" when expanded
+        if (overflow > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: GestureDetector(
+              onTap: () => setState(() => _expanded = !_expanded),
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                children: [
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    size: 12,
+                    color: TmzColors.tmzRed,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _expanded ? 'Show less' : '+$overflow more',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: TmzColors.tmzRed,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }

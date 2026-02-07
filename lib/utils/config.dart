@@ -3,14 +3,17 @@
 /// Configure at build time using:
 /// ```bash
 /// flutter run --dart-define=API_BASE_URL=http://localhost:8081 --dart-define=ENV=development
+/// flutter build web --dart-define=AUTH_REQUIRED=false  # disable auth gate
 /// ```
 class Config {
   final String apiBaseUrl;
   final String environment;
+  final bool authRequired;
 
   const Config._({
     required this.apiBaseUrl,
     required this.environment,
+    required this.authRequired,
   });
 
   static Config? _instance;
@@ -30,6 +33,10 @@ class Config {
       environment: String.fromEnvironment(
         'ENV',
         defaultValue: 'development',
+      ),
+      authRequired: bool.fromEnvironment(
+        'AUTH_REQUIRED',
+        defaultValue: true,
       ),
     );
   }

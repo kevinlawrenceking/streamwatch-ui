@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'data/providers/rest_client.dart';
 import 'data/sources/auth_data_source.dart';
 import 'shared/bloc/auth_session_bloc.dart';
 import 'themes/app_theme.dart';
+import 'utils/config.dart';
 import 'features/home/views/home_view.dart';
 import 'features/login/views/login_view.dart';
 import 'features/upload/views/upload_view.dart';
@@ -33,6 +35,7 @@ class StreamWatchApp extends StatefulWidget {
 class _StreamWatchAppState extends State<StreamWatchApp> {
   final _navigatorKey = GlobalKey<NavigatorState>();
   String? _initialRoute;
+  bool _authActive = false;
 
   @override
   void initState() {
@@ -41,14 +44,48 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
   }
 
   Future<void> _checkAuth() async {
+    // When auth is not required, skip login entirely
+    if (!Config.instance.authRequired) {
+      setState(() { _initialRoute = '/'; });
+      return;
+    }
+
     final auth = GetIt.instance<IAuthDataSource>();
     final isAuth = await auth.isAuthenticated();
     if (isAuth) {
       GetIt.instance<AuthSessionBloc>().add(const SessionRestoredEvent());
+      setState(() { _initialRoute = '/'; });
+      return;
     }
-    setState(() {
-      _initialRoute = isAuth ? '/' : '/login';
-    });
+
+    // Not authenticated — verify the API actually enforces auth before
+    // showing login. This prevents a dead-login screen when AUTH_ENABLED
+    // is false on the API or auth tables haven't been migrated yet.
+    final apiAuthLive = await _probeApiAuth();
+    if (!apiAuthLive) {
+      // API auth not enforced — bypass login, let requests through
+      setState(() { _initialRoute = '/'; });
+      return;
+    }
+
+    _authActive = true;
+    setState(() { _initialRoute = '/login'; });
+  }
+
+  /// Probes a protected API endpoint to check if auth middleware is active.
+  /// Returns true only if the API returns 401 (auth enforced).
+  /// Returns false for 200 (auth disabled), 500 (tables missing), or errors.
+  Future<bool> _probeApiAuth() async {
+    try {
+      final client = GetIt.instance<IRestClient>();
+      final response = await client.get(
+        endPoint: '/api/v1/jobs',
+        queryParams: {'limit': '1'},
+      );
+      return response.statusCode == 401;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -72,7 +109,9 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
       ],
       child: BlocListener<AuthSessionBloc, AuthSessionState>(
         listener: (context, state) {
-          if (state is AuthSessionExpired || state is AuthSessionUnauthenticated) {
+          // Only redirect to login when auth is actually active
+          if (_authActive &&
+              (state is AuthSessionExpired || state is AuthSessionUnauthenticated)) {
             _navigatorKey.currentState?.pushNamedAndRemoveUntil(
               '/login',
               (route) => false,

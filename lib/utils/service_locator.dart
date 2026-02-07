@@ -37,16 +37,32 @@ Future<void> initServiceLocator() async {
   // Auth Session BLoC - Global singleton for session state
   sl.registerSingleton(AuthSessionBloc());
 
-  // Auth Data Source - Dev bypass or production implementation
-  if (config.isDevelopment) {
-    sl.registerSingleton<IAuthDataSource>(DevAuthDataSource());
-  } else {
+  // Auth Data Source - gated by AUTH_REQUIRED flag with API guardrail.
+  // When authRequired=true, probe GET /api/v1/jobs to verify the API
+  // has auth middleware enabled. If the probe returns 401, auth is live.
+  // If 200 (no middleware), 500 (tables missing), or timeout, fall back
+  // to DevAuthDataSource to prevent the dead-login state.
+  bool useAuth = config.authRequired && !config.isDevelopment;
+  if (useAuth) {
+    try {
+      final response = await sl<IRestClient>()
+          .get(endPoint: '/api/v1/jobs', queryParams: {'limit': '1'})
+          .timeout(const Duration(seconds: 5));
+      useAuth = response.statusCode == 401;
+    } catch (_) {
+      useAuth = false;
+    }
+  }
+
+  if (useAuth) {
     sl.registerSingleton<IAuthDataSource>(
       ProdAuthDataSource(
         client: sl<IRestClient>(),
         authSessionBloc: sl<AuthSessionBloc>(),
       ),
     );
+  } else {
+    sl.registerSingleton<IAuthDataSource>(DevAuthDataSource());
   }
 
   // ============================================================================

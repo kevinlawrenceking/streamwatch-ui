@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
@@ -322,6 +324,34 @@ class JobModel extends Equatable {
 
   /// Returns true if the job can be deleted
   bool get canDelete => !isFlagged && !isProcessing;
+
+  /// Returns true if the job can be cancelled (queued or processing, not already terminal)
+  bool get canCancel => isQueued || isProcessing;
+
+  /// Extracts the participants list from finalSummary JSON.
+  /// Prefers "participants" (speakers/on-camera subjects only).
+  /// Falls back to "people" for jobs processed before the prompt update.
+  List<String> get people {
+    if (finalSummary == null || finalSummary!.isEmpty) return const [];
+    try {
+      final parsed = jsonDecode(finalSummary!);
+      if (parsed is Map<String, dynamic>) {
+        // Prefer participants (new contract: only speakers/on-camera)
+        final participants = parsed['participants'];
+        if (participants is List && participants.isNotEmpty) {
+          return participants.whereType<String>().toList();
+        }
+        // Fallback: use legacy "people" field (may include mentioned names)
+        final list = parsed['people'];
+        if (list is List) {
+          return list.whereType<String>().toList();
+        }
+      }
+    } catch (_) {
+      // finalSummary is not valid JSON or has no people/participants key
+    }
+    return const [];
+  }
 
   @override
   List<Object?> get props => [

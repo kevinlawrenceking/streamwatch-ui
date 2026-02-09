@@ -1,6 +1,8 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../data/models/user_profile_model.dart';
+
 // ============================================================================
 // Events
 // ============================================================================
@@ -33,6 +35,16 @@ class LoginSuccessEvent extends AuthSessionEvent {
   const LoginSuccessEvent();
 }
 
+/// Event fired when the user profile has been loaded from /api/v1/me.
+class UserProfileLoadedEvent extends AuthSessionEvent {
+  final UserProfileModel profile;
+
+  const UserProfileLoadedEvent(this.profile);
+
+  @override
+  List<Object?> get props => [profile];
+}
+
 // ============================================================================
 // States
 // ============================================================================
@@ -52,7 +64,12 @@ class AuthSessionInitial extends AuthSessionState {
 
 /// State when the user is authenticated.
 class AuthSessionAuthenticated extends AuthSessionState {
-  const AuthSessionAuthenticated();
+  final UserProfileModel? userProfile;
+
+  const AuthSessionAuthenticated({this.userProfile});
+
+  @override
+  List<Object?> get props => [userProfile];
 }
 
 /// State when the user's session has expired.
@@ -91,6 +108,7 @@ class AuthSessionBloc extends Bloc<AuthSessionEvent, AuthSessionState> {
     on<LogoutRequestedEvent>(_onLogoutRequested);
     on<SessionRestoredEvent>(_onSessionRestored);
     on<LoginSuccessEvent>(_onLoginSuccess);
+    on<UserProfileLoadedEvent>(_onUserProfileLoaded);
   }
 
   void _onSessionExpired(
@@ -119,5 +137,12 @@ class AuthSessionBloc extends Bloc<AuthSessionEvent, AuthSessionState> {
     Emitter<AuthSessionState> emit,
   ) {
     emit(const AuthSessionAuthenticated());
+  }
+
+  void _onUserProfileLoaded(
+    UserProfileLoadedEvent event,
+    Emitter<AuthSessionState> emit,
+  ) {
+    emit(AuthSessionAuthenticated(userProfile: event.profile));
   }
 }

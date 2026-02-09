@@ -6,11 +6,13 @@ import 'data/sources/auth_data_source.dart';
 import 'shared/bloc/auth_session_bloc.dart';
 import 'themes/app_theme.dart';
 import 'utils/config.dart';
+import 'data/sources/user_data_source.dart';
 import 'features/home/views/home_view.dart';
 import 'features/login/views/login_view.dart';
 import 'features/upload/views/upload_view.dart';
 import 'features/job_detail/views/job_detail_view.dart';
 import 'features/scheduler/views/scheduler_view.dart';
+import 'features/users/views/users_view.dart';
 import 'features/video_player/views/video_player_view.dart';
 
 /// Root application widget.
@@ -44,32 +46,57 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
   }
 
   Future<void> _checkAuth() async {
-    // When auth is not required, skip login entirely
-    if (!Config.instance.authRequired) {
-      setState(() { _initialRoute = '/'; });
-      return;
-    }
+    try {
+      // When auth is not required, skip login entirely
+      if (!Config.instance.authRequired) {
+        setState(() { _initialRoute = '/'; });
+        return;
+      }
 
-    final auth = GetIt.instance<IAuthDataSource>();
-    final isAuth = await auth.isAuthenticated();
-    if (isAuth) {
-      GetIt.instance<AuthSessionBloc>().add(const SessionRestoredEvent());
-      setState(() { _initialRoute = '/'; });
-      return;
-    }
+      final auth = GetIt.instance<IAuthDataSource>();
+      final isAuth = await auth.isAuthenticated();
+      if (isAuth) {
+        _authActive = true;
+        GetIt.instance<AuthSessionBloc>().add(const SessionRestoredEvent());
+        _loadUserProfile();
+        setState(() { _initialRoute = '/'; });
+        return;
+      }
 
-    // Not authenticated — verify the API actually enforces auth before
-    // showing login. This prevents a dead-login screen when AUTH_ENABLED
-    // is false on the API or auth tables haven't been migrated yet.
-    final apiAuthLive = await _probeApiAuth();
-    if (!apiAuthLive) {
-      // API auth not enforced — bypass login, let requests through
-      setState(() { _initialRoute = '/'; });
-      return;
-    }
+      // Not authenticated — verify the API actually enforces auth before
+      // showing login. This prevents a dead-login screen when AUTH_ENABLED
+      // is false on the API or auth tables haven't been migrated yet.
+      final apiAuthLive = await _probeApiAuth();
+      if (!apiAuthLive) {
+        // API auth not enforced — bypass login, let requests through
+        setState(() { _initialRoute = '/'; });
+        return;
+      }
 
-    _authActive = true;
-    setState(() { _initialRoute = '/login'; });
+      _authActive = true;
+      setState(() { _initialRoute = '/login'; });
+    } catch (_) {
+      // Safety net: if anything throws, show login rather than spin forever
+      _authActive = true;
+      setState(() { _initialRoute = '/login'; });
+    }
+  }
+
+  /// Loads the current user profile from GET /api/v1/me and dispatches
+  /// [UserProfileLoadedEvent] to the global auth session BLoC.
+  Future<void> _loadUserProfile() async {
+    try {
+      final userDS = GetIt.instance<IUserDataSource>();
+      final result = await userDS.getMe();
+      result.fold(
+        (_) {}, // Silently ignore errors - user can still use the app
+        (profile) {
+          GetIt.instance<AuthSessionBloc>().add(UserProfileLoadedEvent(profile));
+        },
+      );
+    } catch (_) {
+      // Best effort - profile display is non-critical
+    }
   }
 
   /// Probes a protected API endpoint to check if auth middleware is active.
@@ -109,6 +136,10 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
       ],
       child: BlocListener<AuthSessionBloc, AuthSessionState>(
         listener: (context, state) {
+          if (state is AuthSessionAuthenticated && state.userProfile == null) {
+            // Authenticated but no profile yet - load it
+            _loadUserProfile();
+          }
           // Only redirect to login when auth is actually active
           if (_authActive &&
               (state is AuthSessionExpired || state is AuthSessionUnauthenticated)) {
@@ -156,6 +187,11 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
         final jobId = settings.arguments as String;
         return MaterialPageRoute(
           builder: (context) => JobDetailView(jobId: jobId),
+        );
+      case '/users':
+        // Users management screen (admin-only)
+        return MaterialPageRoute(
+          builder: (context) => const UsersView(),
         );
       case '/scheduler':
         // Scheduler screen (coming soon placeholder)

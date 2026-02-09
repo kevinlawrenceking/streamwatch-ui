@@ -10,6 +10,7 @@ import 'package:video_player/video_player.dart';
 import '../../../data/models/job_model.dart';
 import '../../../data/models/chunk_model.dart';
 import '../../../data/models/celebrity_model.dart';
+import '../../../data/sources/auth_data_source.dart';
 import '../../../data/sources/job_data_source.dart';
 import '../../../models/cast.dart';
 import '../../../themes/app_theme.dart';
@@ -1548,10 +1549,18 @@ class _PeopleSectionState extends State<_PeopleSection> {
     try {
       final baseUrl = Config.instance.apiBaseUrl;
 
+      // Get auth token for authenticated requests
+      final headers = <String, String>{};
+      final auth = GetIt.instance<IAuthDataSource>();
+      final tokenResult = await auth.getAuthToken();
+      tokenResult.fold((_) {}, (token) {
+        if (token.isNotEmpty) headers['Authorization'] = 'Bearer $token';
+      });
+
       // Load both speakers and cast in parallel
       final results = await Future.wait([
-        http.get(Uri.parse('$baseUrl/api/v1/jobs/${widget.jobId}/speakers')),
-        http.get(Uri.parse('$baseUrl/api/v1/jobs/${widget.jobId}/cast')),
+        http.get(Uri.parse('$baseUrl/api/v1/jobs/${widget.jobId}/speakers'), headers: headers),
+        http.get(Uri.parse('$baseUrl/api/v1/jobs/${widget.jobId}/cast'), headers: headers),
       ]);
 
       final speakersResponse = results[0];

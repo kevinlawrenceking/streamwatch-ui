@@ -95,6 +95,26 @@ class ResumeJobEvent extends HomeEvent {
   List<Object?> get props => [jobId];
 }
 
+/// Cancel a processing or queued job.
+class CancelJobEvent extends HomeEvent {
+  final String jobId;
+
+  const CancelJobEvent(this.jobId);
+
+  @override
+  List<Object?> get props => [jobId];
+}
+
+/// Load videos from a specific collection.
+class LoadCollectionVideosEvent extends HomeEvent {
+  final String collectionId;
+
+  const LoadCollectionVideosEvent(this.collectionId);
+
+  @override
+  List<Object?> get props => [collectionId];
+}
+
 /// Toggle view mode between list and grid.
 class ToggleViewModeEvent extends HomeEvent {
   const ToggleViewModeEvent();

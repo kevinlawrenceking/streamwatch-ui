@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import '../../data/sources/auth_data_source.dart';
 import '../../data/sources/job_data_source.dart';
 import '../../data/sources/upload_data_source.dart';
 import 'bloc/upload_bloc.dart';
@@ -18,7 +19,7 @@ class ServiceLocator {
 
     // Register UploadDataSource for presigned S3 uploads
     sl.registerLazySingleton<IUploadDataSource>(
-      () => UploadDataSource(),
+      () => UploadDataSource(auth: sl<IAuthDataSource>()),
     );
 
     // BLoCs as factories - new instance per widget

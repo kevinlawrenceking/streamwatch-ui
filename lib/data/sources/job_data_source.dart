@@ -71,6 +71,9 @@ abstract class IJobDataSource {
   /// Soft deletes a job.
   Future<Either<Failure, void>> deleteJob(String jobId);
 
+  /// Cancels a processing or queued job.
+  Future<Either<Failure, JobModel>> cancelJob(String jobId);
+
   // URL generators (no auth needed - these just build URLs)
   String getWebSocketUrl(String jobId);
   String getVideoStreamUrl(String jobId);
@@ -494,6 +497,30 @@ class JobDataSource implements IJobDataSource {
             }
 
             return const Right(null);
+          },
+        );
+      })();
+
+  @override
+  Future<Either<Failure, JobModel>> cancelJob(String jobId) =>
+      ExceptionHandler<JobModel>(() async {
+        final tokenResult = await _auth.getAuthToken();
+
+        return tokenResult.fold(
+          (failure) => Left(failure),
+          (authToken) async {
+            final response = await _client.post(
+              endPoint: '/api/v1/jobs/$jobId/cancel',
+              authToken: authToken,
+            );
+
+            if (response.statusCode != HttpStatus.ok) {
+              return Left(HttpFailure.fromResponse(response));
+            }
+
+            final data = json.decode(response.body) as Map<String, dynamic>;
+            final jobObject = data['job'] as Map<String, dynamic>? ?? data;
+            return Right(JobModel.fromJsonDto(jobObject));
           },
         );
       })();

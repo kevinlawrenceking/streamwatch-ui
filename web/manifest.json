@@ -1,11 +1,11 @@
 {
-    "name": "streamwatch_frontend",
-    "short_name": "streamwatch_frontend",
+    "name": "StreamWatch",
+    "short_name": "StreamWatch",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Video transcription, speaker identification, and AI summarization.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

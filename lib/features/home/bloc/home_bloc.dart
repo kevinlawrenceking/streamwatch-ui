@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../data/models/job_model.dart';
+import '../../../data/sources/collection_data_source.dart';
 import '../../../data/sources/job_data_source.dart';
 import '../../../shared/errors/failures/failure.dart';
 import 'home_event.dart';
@@ -8,9 +9,13 @@ import 'home_state.dart';
 /// BLoC for the home screen with search and filter functionality.
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final IJobDataSource _jobDataSource;
+  final ICollectionDataSource? _collectionDataSource;
 
-  HomeBloc({required IJobDataSource jobDataSource})
-      : _jobDataSource = jobDataSource,
+  HomeBloc({
+    required IJobDataSource jobDataSource,
+    ICollectionDataSource? collectionDataSource,
+  })  : _jobDataSource = jobDataSource,
+        _collectionDataSource = collectionDataSource,
         super(const HomeInitial()) {
     on<LoadJobsEvent>(_onLoadJobs);
     on<RefreshJobsEvent>(_onRefreshJobs);
@@ -20,6 +25,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<ToggleFlagJobEvent>(_onToggleFlagJob);
     on<PauseJobEvent>(_onPauseJob);
     on<ResumeJobEvent>(_onResumeJob);
+    on<CancelJobEvent>(_onCancelJob);
+    on<LoadCollectionVideosEvent>(_onLoadCollectionVideos);
     on<ToggleViewModeEvent>(_onToggleViewMode);
   }
 
@@ -52,7 +59,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     Emitter<HomeState> emit,
   ) async {
     final currentState = state;
-    ViewMode viewMode = ViewMode.list;
+    ViewMode viewMode = ViewMode.grid;
 
     if (currentState is HomeLoaded) {
       viewMode = currentState.viewMode;
@@ -341,6 +348,75 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     );
   }
 
+  /// Cancel a processing or queued job.
+  Future<void> _onCancelJob(
+    CancelJobEvent event,
+    Emitter<HomeState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! HomeLoaded) return;
+
+    // Set in-flight state
+    final updatedInFlight = Map<String, JobActionType>.from(currentState.inFlightActions);
+    updatedInFlight[event.jobId] = JobActionType.cancel;
+    emit(currentState.copyWith(
+      inFlightActions: updatedInFlight,
+      clearActionError: true,
+      clearActionSuccess: true,
+    ));
+
+    final result = await _jobDataSource.cancelJob(event.jobId);
+
+    result.fold(
+      (failure) {
+        // Remove from in-flight and show error
+        final newInFlight = Map<String, JobActionType>.from(currentState.inFlightActions);
+        newInFlight.remove(event.jobId);
+        emit(currentState.copyWith(
+          inFlightActions: newInFlight,
+          actionError: _getErrorMessage(failure, 'cancel'),
+        ));
+      },
+      (updatedJob) {
+        // Update job in list
+        final newJobs = _updateJobInList(currentState.jobs, updatedJob);
+        final newFilteredJobs = _updateJobInList(currentState.filteredJobs, updatedJob);
+        final newInFlight = Map<String, JobActionType>.from(currentState.inFlightActions);
+        newInFlight.remove(event.jobId);
+
+        emit(currentState.copyWith(
+          jobs: newJobs,
+          filteredJobs: newFilteredJobs,
+          inFlightActions: newInFlight,
+          actionSuccess: 'Job cancelled',
+        ));
+      },
+    );
+  }
+
+  /// Load videos from a specific collection.
+  Future<void> _onLoadCollectionVideos(
+    LoadCollectionVideosEvent event,
+    Emitter<HomeState> emit,
+  ) async {
+    if (_collectionDataSource == null) return;
+
+    emit(const HomeLoading());
+
+    final result = await _collectionDataSource!
+        .getCollectionVideos(event.collectionId);
+
+    result.fold(
+      (failure) => emit(HomeError(failure)),
+      (jobs) {
+        emit(HomeLoaded(
+          jobs: jobs,
+          filteredJobs: jobs,
+        ));
+      },
+    );
+  }
+
   /// Toggle view mode between list and grid.
   void _onToggleViewMode(
     ToggleViewModeEvent event,
@@ -372,6 +448,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           return 'Cannot change state in the current job status';
         case 'flag':
           return 'Cannot flag this job right now';
+        case 'cancel':
+          return 'Cannot cancel a job in this status';
         default:
           return failure.message;
       }

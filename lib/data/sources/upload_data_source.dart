@@ -7,6 +7,7 @@ import '../models/job_model.dart';
 import '../../shared/errors/exception_handler.dart';
 import '../../shared/errors/failures/failure.dart';
 import '../../utils/config.dart';
+import 'auth_data_source.dart';
 
 /// Model for presigned upload response from API.
 class PresignedUploadResponse {
@@ -113,14 +114,28 @@ abstract class IUploadDataSource {
 class UploadDataSource implements IUploadDataSource {
   final String _baseUrl;
   final http.Client? _httpClient;
+  final IAuthDataSource _auth;
 
   UploadDataSource({
+    required IAuthDataSource auth,
     String? baseUrl,
     http.Client? httpClient,
-  })  : _baseUrl = baseUrl ?? Config.instance.apiBaseUrl,
+  })  : _auth = auth,
+        _baseUrl = baseUrl ?? Config.instance.apiBaseUrl,
         _httpClient = httpClient;
 
   http.Client get _client => _httpClient ?? http.Client();
+
+  Future<Map<String, String>> _authHeaders({bool isJson = true}) async {
+    final headers = <String, String>{
+      if (isJson) 'Content-Type': 'application/json',
+    };
+    final tokenResult = await _auth.getAuthToken();
+    tokenResult.fold((_) {}, (token) {
+      if (token.isNotEmpty) headers['Authorization'] = 'Bearer $token';
+    });
+    return headers;
+  }
 
   @override
   Future<Either<Failure, PresignedUploadResponse>> requestPresignedUrl({
@@ -151,7 +166,7 @@ class UploadDataSource implements IUploadDataSource {
 
         final response = await _client.post(
           Uri.parse('$_baseUrl/api/v1/uploads/presign'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authHeaders(),
           body: json.encode(body),
         );
 
@@ -239,7 +254,7 @@ class UploadDataSource implements IUploadDataSource {
 
         final response = await _client.post(
           Uri.parse('$_baseUrl/api/v1/uploads/complete'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authHeaders(),
           body: json.encode(body),
         );
 
@@ -258,7 +273,7 @@ class UploadDataSource implements IUploadDataSource {
         // Fetch the full job model
         final jobResponse = await _client.get(
           Uri.parse('$_baseUrl/api/v1/jobs/$jobId'),
-          headers: {'Content-Type': 'application/json'},
+          headers: await _authHeaders(),
         );
 
         if (jobResponse.statusCode != HttpStatus.ok) {

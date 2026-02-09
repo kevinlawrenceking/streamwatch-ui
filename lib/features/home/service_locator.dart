@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import '../../data/sources/collection_data_source.dart';
 import '../../data/sources/job_data_source.dart';
 import 'bloc/home_bloc.dart';
 
@@ -17,7 +18,10 @@ class ServiceLocator {
 
     // HomeBloc - factory (new instance each time)
     sl.registerFactory<HomeBloc>(
-      () => HomeBloc(jobDataSource: sl<IJobDataSource>()),
+      () => HomeBloc(
+        jobDataSource: sl<IJobDataSource>(),
+        collectionDataSource: sl<ICollectionDataSource>(),
+      ),
     );
 
     _initialized = true;

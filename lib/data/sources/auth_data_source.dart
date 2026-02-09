@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../shared/bloc/auth_session_bloc.dart';
 import '../../shared/errors/failures/failure.dart';
 import '../providers/rest_client.dart';
+import '../providers/token_store.dart';
 
 /// Interface for authentication operations.
 ///
@@ -69,12 +69,12 @@ class DevAuthDataSource implements IAuthDataSource {
 
 /// Production implementation that authenticates against the StreamWatch API.
 ///
-/// Uses FlutterSecureStorage for token persistence and JWT decoding for
+/// Uses browser localStorage for token persistence and JWT decoding for
 /// expiry checking. Login endpoint: POST /api/v1/auth with x-username
 /// and x-password headers.
 class ProdAuthDataSource implements IAuthDataSource {
   final IRestClient _client;
-  final FlutterSecureStorage _storage;
+  final TokenStore _storage;
   final AuthSessionBloc _authSessionBloc;
   String? _cachedToken;
 
@@ -83,10 +83,10 @@ class ProdAuthDataSource implements IAuthDataSource {
   ProdAuthDataSource({
     required IRestClient client,
     required AuthSessionBloc authSessionBloc,
-    FlutterSecureStorage? storage,
+    TokenStore? storage,
   })  : _client = client,
         _authSessionBloc = authSessionBloc,
-        _storage = storage ?? const FlutterSecureStorage();
+        _storage = storage ?? TokenStore();
 
   @override
   Future<Either<Failure, String>> authenticate({
@@ -153,6 +153,17 @@ class ProdAuthDataSource implements IAuthDataSource {
 
   @override
   Future<Either<Failure, void>> logout() async {
+    // Revoke server-side session (best effort)
+    if (_cachedToken != null) {
+      try {
+        await _client.post(
+          endPoint: '/api/v1/logout',
+          authToken: _cachedToken!,
+        );
+      } catch (_) {
+        // Best effort - still clear locally even if server call fails
+      }
+    }
     _cachedToken = null;
     await _storage.delete(key: _tokenKey);
     return const Right(null);

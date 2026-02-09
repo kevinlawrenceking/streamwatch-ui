@@ -1,7 +1,9 @@
 import 'package:get_it/get_it.dart';
 import '../data/providers/rest_client.dart';
 import '../data/sources/auth_data_source.dart';
+import '../data/sources/collection_data_source.dart';
 import '../data/sources/job_data_source.dart';
+import '../data/sources/user_data_source.dart';
 import '../shared/bloc/auth_session_bloc.dart';
 import 'config.dart';
 
@@ -11,6 +13,8 @@ import '../features/jobs_list/service_locator.dart' as jobs_list;
 import '../features/upload/service_locator.dart' as upload;
 import '../features/job_detail/service_locator.dart' as job_detail;
 import '../features/login/service_locator.dart' as login;
+import '../features/collections/service_locator.dart' as collections;
+import '../features/users/service_locator.dart' as users;
 
 /// Global service locator instance.
 final sl = GetIt.instance;
@@ -77,6 +81,26 @@ Future<void> initServiceLocator() async {
     ),
   );
 
+  // User Data Source - depends on auth and client
+  if (useAuth) {
+    sl.registerSingleton<IUserDataSource>(
+      ProdUserDataSource(
+        auth: sl<IAuthDataSource>(),
+        client: sl<IRestClient>(),
+      ),
+    );
+  } else {
+    sl.registerSingleton<IUserDataSource>(DevUserDataSource());
+  }
+
+  // Collection Data Source - depends on auth and client
+  sl.registerSingleton<ICollectionDataSource>(
+    CollectionDataSource(
+      auth: sl<IAuthDataSource>(),
+      client: sl<IRestClient>(),
+    ),
+  );
+
   // ============================================================================
   // Feature Service Locators
   // ============================================================================
@@ -86,6 +110,8 @@ Future<void> initServiceLocator() async {
   jobs_list.ServiceLocator.init();
   upload.ServiceLocator.init();
   job_detail.ServiceLocator.init();
+  users.ServiceLocator.init();
+  collections.ServiceLocator.init();
 }
 
 /// Resets the service locator (useful for testing).

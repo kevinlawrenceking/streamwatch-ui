@@ -3,7 +3,7 @@ import '../../../data/models/job_model.dart';
 import '../../../shared/errors/failures/failure.dart';
 
 /// Types of job actions that can be in-flight.
-enum JobActionType { delete, flag, pause, resume }
+enum JobActionType { delete, flag, pause, resume, cancel }
 
 /// View mode for the jobs list.
 enum ViewMode { list, grid }
@@ -54,7 +54,7 @@ class HomeLoaded extends HomeState {
     this.inFlightActions = const {},
     this.actionError,
     this.actionSuccess,
-    this.viewMode = ViewMode.list,
+    this.viewMode = ViewMode.grid,
   });
 
   @override
@@ -114,7 +114,7 @@ class HomeRefreshing extends HomeState {
     required this.filteredJobs,
     this.searchQuery = '',
     this.statusFilter,
-    this.viewMode = ViewMode.list,
+    this.viewMode = ViewMode.grid,
   });
 
   @override

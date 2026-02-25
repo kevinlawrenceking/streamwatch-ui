@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../data/models/collection_model.dart';
+import '../../../data/sources/collection_data_source.dart';
 import '../../../themes/app_theme.dart';
 import '../bloc/upload_bloc.dart';
 
@@ -85,6 +87,40 @@ class _UploadBodyState extends State<_UploadBody> {
   bool _isLive = false; // Live stream mode
   int _captureSeconds = 900; // Default: 15 minutes
 
+  // Collection picker state
+  List<CollectionModel> _collections = [];
+  String? _selectedCollectionId;
+  bool _collectionsLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCollections();
+  }
+
+  Future<void> _loadCollections() async {
+    try {
+      final ds = GetIt.instance<ICollectionDataSource>();
+      final result = await ds.getCollections();
+      if (!mounted) return;
+      result.fold(
+        (_) => setState(() => _collectionsLoading = false),
+        (collections) {
+          final active = collections.where((c) => c.isActive).toList();
+          final defaultCol = active.where((c) => c.isDefault).toList();
+          setState(() {
+            _collections = active;
+            _selectedCollectionId =
+                defaultCol.isNotEmpty ? defaultCol.first.id : null;
+            _collectionsLoading = false;
+          });
+        },
+      );
+    } catch (_) {
+      if (mounted) setState(() => _collectionsLoading = false);
+    }
+  }
+
   @override
   void dispose() {
     _urlController.dispose();
@@ -153,6 +189,7 @@ class _UploadBodyState extends State<_UploadBody> {
         segmentDuration: _segmentDuration,
         isLive: _isLive,
         captureSeconds: _isLive ? _captureSeconds : null,
+        collectionId: _selectedCollectionId,
       ));
     } else {
       if (_selectedFile == null) {
@@ -174,6 +211,7 @@ class _UploadBodyState extends State<_UploadBody> {
         celebrities: celebritiesValue,
         transcriptionEngine: _transcriptionEngine,
         segmentDuration: _segmentDuration,
+        collectionId: _selectedCollectionId,
       ));
     }
   }
@@ -529,6 +567,37 @@ class _UploadBodyState extends State<_UploadBody> {
 
                   // Celebrities (optional) - Chip input
                   _buildCelebrityChipsInput(),
+
+                  const SizedBox(height: 16),
+
+                  // Collection picker
+                  if (_collectionsLoading)
+                    const LinearProgressIndicator()
+                  else if (_collections.isNotEmpty)
+                    DropdownButtonFormField<String>(
+                      value: _selectedCollectionId,
+                      decoration: const InputDecoration(
+                        labelText: 'Collection',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.folder),
+                        helperText: 'Assign this video to a collection',
+                      ),
+                      items: _collections
+                          .map((c) => DropdownMenuItem(
+                                value: c.id,
+                                child: Text(
+                                  c.isDefault
+                                      ? '${c.name} (default)'
+                                      : c.name,
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCollectionId = value;
+                        });
+                      },
+                    ),
 
                   const SizedBox(height: 16),
 

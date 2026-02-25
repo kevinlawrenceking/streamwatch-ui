@@ -107,6 +107,7 @@ abstract class IUploadDataSource {
   Future<Either<Failure, JobModel>> completeUpload({
     required String uploadId,
     String? etag,
+    String? collectionId,
   });
 }
 
@@ -243,11 +244,13 @@ class UploadDataSource implements IUploadDataSource {
   Future<Either<Failure, JobModel>> completeUpload({
     required String uploadId,
     String? etag,
+    String? collectionId,
   }) =>
       ExceptionHandler<JobModel>(() async {
         final body = <String, dynamic>{
           'upload_id': uploadId,
           if (etag != null) 'etag': etag,
+          if (collectionId != null) 'collection_id': collectionId,
         };
 
         print('[UploadDataSource] Completing upload: $uploadId');

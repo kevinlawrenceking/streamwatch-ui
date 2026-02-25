@@ -24,6 +24,7 @@ abstract class IJobDataSource {
     int? segmentDuration, // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
     bool isLive = false, // Whether this is a live stream capture
     int? captureSeconds, // Duration to capture from live stream (60-3600)
+    String? collectionId, // Optional: assign to a collection
   });
 
   /// Creates a job from a file upload.
@@ -108,6 +109,7 @@ class JobDataSource implements IJobDataSource {
     int? segmentDuration,
     bool isLive = false,
     int? captureSeconds,
+    String? collectionId,
   }) =>
       ExceptionHandler<JobModel>(() async {
         final tokenResult = await _auth.getAuthToken();
@@ -132,6 +134,7 @@ class JobDataSource implements IJobDataSource {
                 'transcription_engine': transcriptionEngine,
               if (segmentDuration != null)
                 'segment_duration': segmentDuration,
+              if (collectionId != null) 'collection_id': collectionId,
             };
 
             // Add live stream capture fields

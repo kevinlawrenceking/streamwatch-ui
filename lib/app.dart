@@ -14,6 +14,9 @@ import 'features/job_detail/views/job_detail_view.dart';
 import 'features/scheduler/views/scheduler_view.dart';
 import 'features/users/views/users_view.dart';
 import 'features/video_player/views/video_player_view.dart';
+import 'features/collections/views/collections_manager_view.dart';
+import 'features/type_control/views/type_list_view.dart';
+import 'features/type_control/views/type_detail_view.dart';
 
 /// Root application widget.
 ///
@@ -155,6 +158,28 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
           theme: AppTheme.dark,
           initialRoute: _initialRoute,
           onGenerateRoute: _onGenerateRoute,
+          builder: Config.instance.devAssumeAdmin
+              ? (context, child) => Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        color: Colors.orange,
+                        child: const Text(
+                          'DEV ADMIN SESSION',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                      Expanded(child: child ?? const SizedBox.shrink()),
+                    ],
+                  )
+              : null,
         ),
       ),
     );
@@ -193,10 +218,26 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
         return MaterialPageRoute(
           builder: (context) => const UsersView(),
         );
+      case '/collections':
+        // Collections manager screen
+        return MaterialPageRoute(
+          builder: (context) => const CollectionsManagerView(),
+        );
       case '/scheduler':
         // Scheduler screen (coming soon placeholder)
         return MaterialPageRoute(
           builder: (context) => const SchedulerView(),
+        );
+      case '/type-control':
+        // TypeControl - video type list (admin-only)
+        return MaterialPageRoute(
+          builder: (context) => const TypeListView(),
+        );
+      case '/type-control/detail':
+        // TypeControl - type detail with versions/rules/prompt
+        final videoTypeId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (context) => TypeDetailView(videoTypeId: videoTypeId),
         );
       case '/video':
         // Video player screen

@@ -1,0 +1,33 @@
+{
+	"folders": [
+		{
+			"path": "../streamwatch-api"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"claudeCodeChat.permissions.yoloMode": true,
+		"workbench.colorCustomizations": {
+			"activityBar.activeBackground": "#519dff",
+			"activityBar.background": "#519dff",
+			"activityBar.foreground": "#15202b",
+			"activityBar.inactiveForeground": "#15202b99",
+			"activityBarBadge.background": "#ffdfed",
+			"activityBarBadge.foreground": "#15202b",
+			"commandCenter.border": "#e7e7e799",
+			"sash.hoverBorder": "#519dff",
+			"statusBar.background": "#1e80ff",
+			"statusBar.foreground": "#e7e7e7",
+			"statusBarItem.hoverBackground": "#519dff",
+			"statusBarItem.remoteBackground": "#1e80ff",
+			"statusBarItem.remoteForeground": "#e7e7e7",
+			"titleBar.activeBackground": "#1e80ff",
+			"titleBar.activeForeground": "#e7e7e7",
+			"titleBar.inactiveBackground": "#1e80ff99",
+			"titleBar.inactiveForeground": "#e7e7e799"
+		},
+		"peacock.color": "#1E80FF"
+	}
+}

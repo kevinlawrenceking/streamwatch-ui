@@ -18,6 +18,7 @@ class SubmitUrlJobEvent extends UploadEvent {
   final int? segmentDuration; // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
   final bool isLive; // Whether this is a live stream capture
   final int? captureSeconds; // Duration to capture from live stream (60-3600)
+  final String? collectionId; // Optional: assign to a collection
 
   const SubmitUrlJobEvent({
     required this.url,
@@ -28,10 +29,11 @@ class SubmitUrlJobEvent extends UploadEvent {
     this.segmentDuration,
     this.isLive = false,
     this.captureSeconds,
+    this.collectionId,
   });
 
   @override
-  List<Object?> get props => [url, title, description, celebrities, transcriptionEngine, segmentDuration, isLive, captureSeconds];
+  List<Object?> get props => [url, title, description, celebrities, transcriptionEngine, segmentDuration, isLive, captureSeconds, collectionId];
 }
 
 /// Event to submit a job from a file upload.
@@ -44,6 +46,7 @@ class SubmitFileJobEvent extends UploadEvent {
   final String? celebrities; // Comma/newline separated celebrity names
   final String? transcriptionEngine;
   final int? segmentDuration; // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
+  final String? collectionId; // Optional: assign to a collection
 
   const SubmitFileJobEvent({
     this.filePath,
@@ -54,6 +57,7 @@ class SubmitFileJobEvent extends UploadEvent {
     this.celebrities,
     this.transcriptionEngine,
     this.segmentDuration,
+    this.collectionId,
   });
 
   @override
@@ -66,6 +70,7 @@ class SubmitFileJobEvent extends UploadEvent {
         celebrities,
         transcriptionEngine,
         segmentDuration,
+        collectionId,
       ];
 }
 

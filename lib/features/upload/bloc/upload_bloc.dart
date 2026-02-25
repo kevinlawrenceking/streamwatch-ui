@@ -45,6 +45,7 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
       segmentDuration: event.segmentDuration,
       isLive: event.isLive,
       captureSeconds: event.captureSeconds,
+      collectionId: event.collectionId,
     );
 
     if (isClosed) return;
@@ -160,6 +161,7 @@ class UploadBloc extends Bloc<UploadEvent, UploadState> {
 
     final completeResult = await _uploadDataSource.completeUpload(
       uploadId: presignedUpload.uploadId,
+      collectionId: event.collectionId,
     );
 
     if (isClosed) return;

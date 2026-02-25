@@ -44,6 +44,10 @@ abstract class ICollectionDataSource {
   /// Removes a video from a collection.
   Future<Either<Failure, void>> removeVideoFromCollection(
       String collectionId, String videoId);
+
+  /// Lists collections that contain a specific video/job.
+  Future<Either<Failure, List<CollectionModel>>> getVideoCollections(
+      String videoId);
 }
 
 /// HTTP implementation of ICollectionDataSource.
@@ -263,6 +267,43 @@ class CollectionDataSource implements ICollectionDataSource {
             }
 
             return const Right(null);
+          },
+        );
+      }).call();
+
+  @override
+  Future<Either<Failure, List<CollectionModel>>> getVideoCollections(
+          String videoId) =>
+      ExceptionHandler<List<CollectionModel>>(() async {
+        final tokenResult = await _auth.getAuthToken();
+
+        return tokenResult.fold(
+          (failure) => Left(failure),
+          (authToken) async {
+            final response = await _client.get(
+              endPoint: '/api/v1/videos/$videoId/collections',
+              authToken: authToken,
+            );
+
+            if (response.statusCode != HttpStatus.ok) {
+              return Left(HttpFailure.fromResponse(response));
+            }
+
+            final body = response.body;
+            if (body.isEmpty || body == 'null') {
+              return const Right([]);
+            }
+
+            final decoded = json.decode(body);
+            if (decoded is! List) {
+              return const Right([]);
+            }
+
+            final collections = decoded
+                .map((e) =>
+                    CollectionModel.fromJson(e as Map<String, dynamic>))
+                .toList();
+            return Right(collections);
           },
         );
       }).call();

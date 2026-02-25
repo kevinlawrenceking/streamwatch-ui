@@ -1,9 +1,11 @@
 import 'package:get_it/get_it.dart';
+import '../data/models/user_profile_model.dart';
 import '../data/providers/rest_client.dart';
 import '../data/sources/auth_data_source.dart';
 import '../data/sources/collection_data_source.dart';
 import '../data/sources/job_data_source.dart';
 import '../data/sources/user_data_source.dart';
+import '../data/sources/video_type_data_source.dart';
 import '../shared/bloc/auth_session_bloc.dart';
 import 'config.dart';
 
@@ -14,6 +16,7 @@ import '../features/upload/service_locator.dart' as upload;
 import '../features/job_detail/service_locator.dart' as job_detail;
 import '../features/login/service_locator.dart' as login;
 import '../features/collections/service_locator.dart' as collections;
+import '../features/type_control/service_locator.dart' as type_control;
 import '../features/users/service_locator.dart' as users;
 
 /// Global service locator instance.
@@ -69,6 +72,21 @@ Future<void> initServiceLocator() async {
     sl.registerSingleton<IAuthDataSource>(DevAuthDataSource());
   }
 
+  // DEV ONLY: Seed an admin session so admin-gated UI is visible locally.
+  // Toggle off with: --dart-define=DEV_ASSUME_ADMIN=false
+  if (config.devAssumeAdmin) {
+    final devProfile = UserProfileModel(
+      id: '00000000-0000-0000-0000-000000000000',
+      username: 'dev-admin',
+      firstName: 'Dev',
+      lastName: 'Admin',
+      role: 'admin',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    sl<AuthSessionBloc>().add(UserProfileLoadedEvent(devProfile));
+  }
+
   // ============================================================================
   // Data Sources
   // ============================================================================
@@ -101,6 +119,14 @@ Future<void> initServiceLocator() async {
     ),
   );
 
+  // VideoType Data Source - depends on auth and client
+  sl.registerSingleton<IVideoTypeDataSource>(
+    VideoTypeDataSource(
+      auth: sl<IAuthDataSource>(),
+      client: sl<IRestClient>(),
+    ),
+  );
+
   // ============================================================================
   // Feature Service Locators
   // ============================================================================
@@ -112,6 +138,7 @@ Future<void> initServiceLocator() async {
   job_detail.ServiceLocator.init();
   users.ServiceLocator.init();
   collections.ServiceLocator.init();
+  type_control.ServiceLocator.init();
 }
 
 /// Resets the service locator (useful for testing).

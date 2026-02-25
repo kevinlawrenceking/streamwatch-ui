@@ -1,24 +1,23 @@
-import 'dart:html' as html;
+import 'token_store_stub.dart'
+    if (dart.library.js_interop) 'token_store_web.dart' as impl;
 
 /// Simple token storage for Flutter web using browser localStorage.
 ///
-/// On web, FlutterSecureStorage uses method channels that often fail with
-/// MissingPluginException. This class provides reliable localStorage-backed
-/// token persistence. Suitable for web deployments where "secure storage"
-/// is inherently limited to what the browser provides.
+/// Uses conditional imports so that unit tests can compile on VM (non-web)
+/// platforms. In production (web), delegates to localStorage.
 class TokenStore {
   /// Writes a value to localStorage.
   Future<void> write({required String key, required String value}) async {
-    html.window.localStorage[key] = value;
+    impl.write(key: key, value: value);
   }
 
   /// Reads a value from localStorage. Returns null if not found.
   Future<String?> read({required String key}) async {
-    return html.window.localStorage[key];
+    return impl.read(key: key);
   }
 
   /// Deletes a value from localStorage.
   Future<void> delete({required String key}) async {
-    html.window.localStorage.remove(key);
+    impl.delete(key: key);
   }
 }

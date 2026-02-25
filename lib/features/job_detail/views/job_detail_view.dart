@@ -10,7 +10,9 @@ import 'package:video_player/video_player.dart';
 import '../../../data/models/job_model.dart';
 import '../../../data/models/chunk_model.dart';
 import '../../../data/models/celebrity_model.dart';
+import '../../../data/models/collection_model.dart';
 import '../../../data/sources/auth_data_source.dart';
+import '../../../data/sources/collection_data_source.dart';
 import '../../../data/sources/job_data_source.dart';
 import '../../../models/cast.dart';
 import '../../../themes/app_theme.dart';
@@ -234,6 +236,8 @@ class _JobDetailBody extends StatelessWidget {
                     if (job.isFlagged)
                       _FlagBanner(flagNote: job.flagNote),
                     _JobInfoCard(job: job, celebrities: state.celebrities),
+                    const SizedBox(height: 16),
+                    _CollectionsSection(jobId: job.jobId),
                     const SizedBox(height: 16),
                     // Only show progress bar when NOT completed
                     if (!job.isCompleted) ...[
@@ -1511,6 +1515,280 @@ class _ErrorView extends StatelessWidget {
             onPressed: onRetry,
             child: const Text('Retry'),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Section showing which collections this job belongs to, with add/remove.
+class _CollectionsSection extends StatefulWidget {
+  final String jobId;
+
+  const _CollectionsSection({required this.jobId});
+
+  @override
+  State<_CollectionsSection> createState() => _CollectionsSectionState();
+}
+
+class _CollectionsSectionState extends State<_CollectionsSection> {
+  List<CollectionModel>? _memberships;
+  List<CollectionModel>? _allCollections;
+  bool _loading = true;
+  String? _error;
+  bool _expanded = true;
+  String? _selectedCollectionId;
+  bool _actionInFlight = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final ds = GetIt.instance<ICollectionDataSource>();
+      final results = await Future.wait([
+        ds.getVideoCollections(widget.jobId),
+        ds.getCollections(),
+      ]);
+
+      if (!mounted) return;
+
+      final membershipsResult = results[0] as dynamic;
+      final allResult = results[1] as dynamic;
+
+      List<CollectionModel> memberships = [];
+      List<CollectionModel> all = [];
+
+      membershipsResult.fold(
+        (f) => null,
+        (list) => memberships = list as List<CollectionModel>,
+      );
+      allResult.fold(
+        (f) => null,
+        (list) => all = list as List<CollectionModel>,
+      );
+
+      setState(() {
+        _memberships = memberships;
+        _allCollections = all;
+        _loading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  List<CollectionModel> get _availableToAdd {
+    if (_allCollections == null || _memberships == null) return [];
+    final memberIds = _memberships!.map((m) => m.id).toSet();
+    return _allCollections!
+        .where((c) => c.isActive && !memberIds.contains(c.id))
+        .toList();
+  }
+
+  Future<void> _addToCollection(String collectionId) async {
+    setState(() => _actionInFlight = true);
+    final ds = GetIt.instance<ICollectionDataSource>();
+    final result =
+        await ds.addVideosToCollection(collectionId, [widget.jobId]);
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(failure.message),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+        setState(() => _actionInFlight = false);
+      },
+      (_) {
+        setState(() {
+          _selectedCollectionId = null;
+          _actionInFlight = false;
+        });
+        _loadData();
+      },
+    );
+  }
+
+  Future<void> _removeFromCollection(CollectionModel collection) async {
+    setState(() => _actionInFlight = true);
+    final ds = GetIt.instance<ICollectionDataSource>();
+    final result =
+        await ds.removeVideoFromCollection(collection.id, widget.jobId);
+
+    if (!mounted) return;
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(failure.message),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+        setState(() => _actionInFlight = false);
+      },
+      (_) {
+        setState(() => _actionInFlight = false);
+        _loadData();
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const Icon(Icons.folder, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Collections',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const Spacer(),
+                  if (_loading)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else ...[
+                    Text(
+                      '${_memberships?.length ?? 0}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(_expanded ? Icons.expand_less : Icons.expand_more),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          if (_expanded) ...[
+            const Divider(height: 1),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_error != null)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              )
+            else
+              _buildContent(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Membership chips
+          if (_memberships != null && _memberships!.isNotEmpty)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _memberships!.map((c) => Chip(
+                label: Text(c.name),
+                avatar: Icon(
+                  c.isPublic ? Icons.public : Icons.lock,
+                  size: 16,
+                ),
+                deleteIcon: const Icon(Icons.close, size: 16),
+                onDeleted: _actionInFlight
+                    ? null
+                    : () => _removeFromCollection(c),
+              )).toList(),
+            )
+          else
+            Text(
+              'Not in any collections',
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+            ),
+          const SizedBox(height: 12),
+          // Add to collection row
+          if (_availableToAdd.isNotEmpty)
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCollectionId,
+                    decoration: const InputDecoration(
+                      labelText: 'Add to collection',
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    items: _availableToAdd
+                        .map((c) => DropdownMenuItem(
+                              value: c.id,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    c.isPublic ? Icons.public : Icons.lock,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(c.name),
+                                ],
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: _actionInFlight
+                        ? null
+                        : (value) => setState(
+                            () => _selectedCollectionId = value),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _selectedCollectionId != null && !_actionInFlight
+                      ? () => _addToCollection(_selectedCollectionId!)
+                      : null,
+                  child: _actionInFlight
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Add'),
+                ),
+              ],
+            ),
         ],
       ),
     );

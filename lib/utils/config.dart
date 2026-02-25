@@ -4,17 +4,20 @@
 /// ```bash
 /// flutter run --dart-define=API_BASE_URL=http://localhost:8081 --dart-define=ENV=development
 /// flutter build web --dart-define=AUTH_REQUIRED=false  # disable auth gate
+/// flutter build web --dart-define=DEV_ASSUME_ADMIN=false  # disable dev admin stub
 /// ```
 class Config {
   final String apiBaseUrl;
   final String environment;
   final bool authRequired;
+  final bool _devAssumeAdminFlag;
 
   const Config._({
     required this.apiBaseUrl,
     required this.environment,
     required this.authRequired,
-  });
+    required bool devAssumeAdmin,
+  }) : _devAssumeAdminFlag = devAssumeAdmin;
 
   static Config? _instance;
 
@@ -38,6 +41,10 @@ class Config {
         'AUTH_REQUIRED',
         defaultValue: true,
       ),
+      devAssumeAdmin: bool.fromEnvironment(
+        'DEV_ASSUME_ADMIN',
+        defaultValue: true,
+      ),
     );
   }
 
@@ -49,6 +56,11 @@ class Config {
 
   /// Whether running in staging mode.
   bool get isStaging => environment == 'staging';
+
+  /// DEV ONLY: When true and in development mode, stubs an admin session
+  /// so admin-gated UI (Users, Type Control) is visible without real auth.
+  /// Always false in production regardless of the flag value.
+  bool get devAssumeAdmin => isDevelopment && _devAssumeAdminFlag;
 
   /// WebSocket base URL derived from API URL.
   String get wsBaseUrl => apiBaseUrl.replaceFirst('http', 'ws');

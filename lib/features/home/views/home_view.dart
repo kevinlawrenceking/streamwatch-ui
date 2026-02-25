@@ -176,6 +176,8 @@ class _HomeBodyState extends State<_HomeBody> {
                       _handleLogout(context);
                     } else if (value == 'users') {
                       Navigator.pushNamed(context, '/users');
+                    } else if (value == 'type-control') {
+                      Navigator.pushNamed(context, '/type-control');
                     }
                   },
                   itemBuilder: (context) => [
@@ -186,7 +188,7 @@ class _HomeBodyState extends State<_HomeBody> {
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    if (isAdmin)
+                    if (isAdmin) ...[
                       const PopupMenuItem<String>(
                         value: 'users',
                         child: ListTile(
@@ -196,6 +198,16 @@ class _HomeBodyState extends State<_HomeBody> {
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
+                      const PopupMenuItem<String>(
+                        value: 'type-control',
+                        child: ListTile(
+                          dense: true,
+                          leading: Icon(Icons.category),
+                          title: Text('Type Control'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
                     const PopupMenuDivider(),
                     const PopupMenuItem<String>(
                       value: 'logout',
@@ -477,6 +489,19 @@ class _HomeBodyState extends State<_HomeBody> {
                             ),
                             const Spacer(),
                             IconButton(
+                              icon: const Icon(Icons.settings, size: 18),
+                              tooltip: 'Manage Collections',
+                              onPressed: () {
+                                Navigator.pop(context);
+                                Navigator.pushNamed(context, '/collections');
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 32,
+                              ),
+                            ),
+                            IconButton(
                               icon: const Icon(Icons.add, size: 20),
                               tooltip: 'New Collection',
                               onPressed: () => _showCreateCollectionDialog(context),
@@ -519,13 +544,26 @@ class _HomeBodyState extends State<_HomeBody> {
               final isAdmin = authState is AuthSessionAuthenticated &&
                   authState.userProfile?.isAdmin == true;
               if (!isAdmin) return const SizedBox.shrink();
-              return ListTile(
-                leading: const Icon(Icons.people),
-                title: const Text('Users'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, '/users');
-                },
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.people),
+                    title: const Text('Users'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/users');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.category),
+                    title: const Text('Type Control'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/type-control');
+                    },
+                  ),
+                ],
               );
             },
           ),

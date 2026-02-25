@@ -12,6 +12,7 @@ class CollectionsBloc extends Bloc<CollectionsEvent, CollectionsState> {
         super(const CollectionsInitial()) {
     on<LoadCollectionsEvent>(_onLoadCollections);
     on<CreateCollectionEvent>(_onCreateCollection);
+    on<UpdateCollectionEvent>(_onUpdateCollection);
     on<MakeDefaultEvent>(_onMakeDefault);
     on<SelectCollectionEvent>(_onSelectCollection);
   }
@@ -52,6 +53,37 @@ class CollectionsBloc extends Bloc<CollectionsEvent, CollectionsState> {
         emit(currentState.copyWith(
           collections: updated,
           actionSuccess: 'Collection "${collection.name}" created',
+        ));
+      },
+    );
+  }
+
+  Future<void> _onUpdateCollection(
+    UpdateCollectionEvent event,
+    Emitter<CollectionsState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! CollectionsLoaded) return;
+
+    final result = await _collectionDataSource.updateCollection(
+      event.collectionId,
+      name: event.name,
+      visibility: event.visibility,
+      status: event.status,
+    );
+
+    result.fold(
+      (failure) => emit(currentState.copyWith(
+        actionError: failure.message,
+      )),
+      (updated) {
+        final collections = currentState.collections.map((c) {
+          return c.id == updated.id ? updated : c;
+        }).toList();
+        final action = event.status == 'archived' ? 'archived' : 'updated';
+        emit(currentState.copyWith(
+          collections: collections,
+          actionSuccess: 'Collection "${updated.name}" $action',
         ));
       },
     );

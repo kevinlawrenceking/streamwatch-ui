@@ -39,6 +39,24 @@ class MakeDefaultEvent extends CollectionsEvent {
   List<Object?> get props => [collectionId];
 }
 
+/// Update a collection (rename, visibility, status/archive).
+class UpdateCollectionEvent extends CollectionsEvent {
+  final String collectionId;
+  final String? name;
+  final String? visibility;
+  final String? status;
+
+  const UpdateCollectionEvent({
+    required this.collectionId,
+    this.name,
+    this.visibility,
+    this.status,
+  });
+
+  @override
+  List<Object?> get props => [collectionId, name, visibility, status];
+}
+
 /// Select a collection to filter the home view.
 class SelectCollectionEvent extends CollectionsEvent {
   final String? collectionId;

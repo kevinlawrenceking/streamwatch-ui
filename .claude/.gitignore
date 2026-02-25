@@ -1,0 +1,7 @@
+# User-local credentials (never commit)
+config.json
+settings.local.json
+.credentials.json
+
+# Chat images are optional
+claude-code-chat-images/

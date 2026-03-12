@@ -18,19 +18,19 @@ class LoadExemplarsEvent extends ExemplarManagementEvent {
 
 class BulkCreateExemplarsEvent extends ExemplarManagementEvent {
   final String videoTypeId;
-  final List<String> clipIds;
+  final List<String> jobIds;
   final String? exemplarKind;
   final String? notes;
 
   const BulkCreateExemplarsEvent({
     required this.videoTypeId,
-    required this.clipIds,
+    required this.jobIds,
     this.exemplarKind,
     this.notes,
   });
 
   @override
-  List<Object?> get props => [videoTypeId, clipIds, exemplarKind, notes];
+  List<Object?> get props => [videoTypeId, jobIds, exemplarKind, notes];
 }
 
 class DeleteExemplarEvent extends ExemplarManagementEvent {

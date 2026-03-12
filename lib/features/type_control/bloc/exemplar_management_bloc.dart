@@ -37,7 +37,7 @@ class ExemplarManagementBloc
       emit(current.copyWith(isSubmitting: true));
     }
     final body = <String, dynamic>{
-      'clip_ids': event.clipIds,
+      'job_ids': event.jobIds,
       if (event.exemplarKind != null) 'exemplar_kind': event.exemplarKind,
       if (event.notes != null) 'notes': event.notes,
     };

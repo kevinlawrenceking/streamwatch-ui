@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../../data/models/job_model.dart';
 import '../../../data/models/video_type_model.dart';
+import '../../../data/sources/job_data_source.dart';
 import '../../../themes/app_theme.dart';
 import '../bloc/candidate_review_bloc.dart';
 import '../bloc/candidate_review_event.dart';
@@ -342,15 +346,8 @@ class _VersionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: TmzColors.gray70),
                 ),
-                child: Text(
-                  _formatJson(version.definitionJson!),
-                  style: TmzTextStyles.caption.copyWith(
-                    fontFamily: 'monospace',
-                    fontSize: 11,
-                  ),
-                  maxLines: 5,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: _DefinitionFields(
+                    definition: version.definitionJson!),
               ),
             ],
             const SizedBox(height: 8),
@@ -423,15 +420,193 @@ class _VersionCard extends StatelessWidget {
     );
   }
 
-  String _formatJson(Map<String, dynamic> json) {
-    try {
-      final entries = json.entries
-          .map((e) => '${e.key}: ${e.value}')
-          .join(', ');
-      return '{$entries}';
-    } catch (_) {
-      return json.toString();
+}
+
+/// Renders definition_json fields as labeled rows instead of raw JSON.
+class _DefinitionFields extends StatelessWidget {
+  final Map<String, dynamic> definition;
+
+  const _DefinitionFields({required this.definition});
+
+  @override
+  Widget build(BuildContext context) {
+    // Known definition fields in display order
+    const fieldOrder = [
+      'type_code',
+      'what_it_is',
+      'must_have',
+      'must_not_have',
+      'may_have',
+      'notes',
+      'signals',
+      'flags',
+      'format_guidance',
+    ];
+
+    final entries = <MapEntry<String, dynamic>>[];
+
+    // Add known fields in order
+    for (final key in fieldOrder) {
+      if (definition.containsKey(key) && definition[key] != null) {
+        entries.add(MapEntry(key, definition[key]));
+      }
     }
+
+    // Add any remaining fields not in the known list
+    for (final entry in definition.entries) {
+      if (!fieldOrder.contains(entry.key) && entry.value != null) {
+        entries.add(entry);
+      }
+    }
+
+    if (entries.isEmpty) {
+      return Text(
+        'No definition fields',
+        style: TmzTextStyles.caption
+            .copyWith(color: TmzColors.textSecondary),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < entries.length; i++) ...[
+          _buildField(entries[i].key, entries[i].value),
+          if (i < entries.length - 1)
+            Divider(color: TmzColors.gray70, height: 8, thickness: 0.5),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildField(String key, dynamic value) {
+    final label = _formatLabel(key);
+
+    // Arrays: bulleted list under a bold label
+    if (value is List) {
+      if (value.isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TmzTextStyles.caption.copyWith(
+                fontWeight: FontWeight.bold,
+                color: TmzColors.textSecondary,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 3),
+            ...value.map((item) => Padding(
+                  padding: const EdgeInsets.only(left: 12, bottom: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('•  ',
+                          style: TmzTextStyles.caption
+                              .copyWith(fontSize: 11)),
+                      Expanded(
+                        child: Text(
+                          '$item',
+                          style: TmzTextStyles.caption
+                              .copyWith(fontSize: 11),
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+          ],
+        ),
+      );
+    }
+
+    // Maps: each key-value on its own line, indented under the section label
+    if (value is Map) {
+      final mapEntries = (value as Map<String, dynamic>)
+          .entries
+          .where((e) => e.value != null)
+          .toList();
+      if (mapEntries.isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TmzTextStyles.caption.copyWith(
+                fontWeight: FontWeight.bold,
+                color: TmzColors.textSecondary,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 3),
+            ...mapEntries.map((e) {
+              final entryValue = e.value is List
+                  ? (e.value as List).join(', ')
+                  : '${e.value}';
+              return Padding(
+                padding: const EdgeInsets.only(left: 12, bottom: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_formatLabel(e.key)}:  ',
+                      style: TmzTextStyles.caption.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: TmzColors.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        entryValue,
+                        style: TmzTextStyles.caption.copyWith(fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      );
+    }
+
+    // Scalars: label and value side by side
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label:  ',
+            style: TmzTextStyles.caption.copyWith(
+              fontWeight: FontWeight.bold,
+              color: TmzColors.textSecondary,
+              fontSize: 11,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              '$value',
+              style: TmzTextStyles.caption.copyWith(fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatLabel(String key) {
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((w) =>
+            w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
   }
 }
 
@@ -1402,93 +1577,213 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
   }
 
   void _showBulkCreateDialog(BuildContext context) {
-    final clipIdsController = TextEditingController();
+    final searchController = TextEditingController();
     final notesController = TextEditingController();
     String selectedKind = 'canonical';
+    List<JobModel> searchResults = [];
+    Set<String> selectedJobIds = {};
+    bool isSearching = false;
+    Timer? debounce;
+
+    final jobDS = GetIt.instance<IJobDataSource>();
 
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: const Text('Add Exemplars'),
-          content: SizedBox(
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: clipIdsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Clip IDs (one per line) *',
-                    border: OutlineInputBorder(),
-                    hintText: 'CLIP001\nCLIP002\nCLIP003',
+        builder: (dialogContext, setDialogState) {
+          void doSearch(String query) {
+            debounce?.cancel();
+            if (query.trim().isEmpty) {
+              setDialogState(() {
+                searchResults = [];
+                isSearching = false;
+              });
+              return;
+            }
+            setDialogState(() => isSearching = true);
+            debounce = Timer(const Duration(milliseconds: 300), () async {
+              final result = await jobDS.getRecentJobs(
+                limit: 20,
+                status: 'completed',
+                searchQuery: query.trim(),
+              );
+              result.fold(
+                (_) => setDialogState(() => isSearching = false),
+                (jobs) => setDialogState(() {
+                  searchResults = jobs;
+                  isSearching = false;
+                }),
+              );
+            });
+          }
+
+          return AlertDialog(
+            title: const Text('Add Exemplar Jobs'),
+            content: SizedBox(
+              width: 500,
+              height: 480,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Search field
+                  TextField(
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      labelText: 'Search jobs by title or filename',
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: isSearching
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Padding(
+                                padding: EdgeInsets.all(12),
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
+                              ),
+                            )
+                          : null,
+                    ),
+                    onChanged: doSearch,
                   ),
-                  maxLines: 5,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedKind,
-                  decoration: const InputDecoration(
-                    labelText: 'Kind',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                        value: 'canonical', child: Text('Canonical')),
-                    DropdownMenuItem(
-                        value: 'counter_example',
-                        child: Text('Counter Example')),
-                    DropdownMenuItem(
-                        value: 'edge_case', child: Text('Edge Case')),
+                  // Selected count
+                  if (selectedJobIds.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '${selectedJobIds.length} job(s) selected',
+                      style: TmzTextStyles.caption.copyWith(
+                          color: TmzColors.tmzRed,
+                          fontWeight: FontWeight.bold),
+                    ),
                   ],
-                  onChanged: (val) {
-                    if (val != null) {
-                      setDialogState(() => selectedKind = val);
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes (optional)',
-                    border: OutlineInputBorder(),
+                  const SizedBox(height: 8),
+                  // Search results
+                  Expanded(
+                    child: searchResults.isEmpty &&
+                            searchController.text.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Type to search completed jobs',
+                              style: TmzTextStyles.body.copyWith(
+                                  color: TmzColors.textSecondary),
+                            ),
+                          )
+                        : searchResults.isEmpty
+                            ? Center(
+                                child: Text(
+                                  isSearching
+                                      ? 'Searching...'
+                                      : 'No jobs found',
+                                  style: TmzTextStyles.body.copyWith(
+                                      color: TmzColors.textSecondary),
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: searchResults.length,
+                                itemBuilder: (context, index) {
+                                  final job = searchResults[index];
+                                  final isSelected = selectedJobIds
+                                      .contains(job.jobId);
+                                  return CheckboxListTile(
+                                    value: isSelected,
+                                    dense: true,
+                                    title: Text(
+                                      job.title ??
+                                          job.filename ??
+                                          job.jobId,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TmzTextStyles.bodyBold
+                                          .copyWith(fontSize: 13),
+                                    ),
+                                    subtitle: Text(
+                                      '${job.source}  •  ${job.typeCode ?? 'untyped'}  •  ${_formatDate(job.createdAt)}',
+                                      style: TmzTextStyles.caption,
+                                    ),
+                                    onChanged: (checked) {
+                                      setDialogState(() {
+                                        if (checked == true) {
+                                          selectedJobIds.add(job.jobId);
+                                        } else {
+                                          selectedJobIds
+                                              .remove(job.jobId);
+                                        }
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
                   ),
-                  maxLines: 2,
-                ),
-              ],
+                  const Divider(),
+                  // Kind dropdown
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedKind,
+                    decoration: const InputDecoration(
+                      labelText: 'Kind',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'canonical',
+                          child: Text('Canonical')),
+                      DropdownMenuItem(
+                          value: 'counter_example',
+                          child: Text('Counter Example')),
+                      DropdownMenuItem(
+                          value: 'edge_case',
+                          child: Text('Edge Case')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setDialogState(() => selectedKind = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  // Notes
+                  TextField(
+                    controller: notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes (optional)',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                final lines = clipIdsController.text
-                    .split('\n')
-                    .map((l) => l.trim())
-                    .where((l) => l.isNotEmpty)
-                    .toList();
-                if (lines.isEmpty) return;
-                Navigator.of(dialogContext).pop();
-                context.read<ExemplarManagementBloc>().add(
-                      BulkCreateExemplarsEvent(
-                        videoTypeId: widget.videoTypeId,
-                        clipIds: lines,
-                        exemplarKind: selectedKind,
-                        notes: notesController.text.trim().isEmpty
-                            ? null
-                            : notesController.text.trim(),
-                      ),
-                    );
-              },
-              child: const Text('Create'),
-            ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: selectedJobIds.isEmpty
+                    ? null
+                    : () {
+                        Navigator.of(dialogContext).pop();
+                        context.read<ExemplarManagementBloc>().add(
+                              BulkCreateExemplarsEvent(
+                                videoTypeId: widget.videoTypeId,
+                                jobIds: selectedJobIds.toList(),
+                                exemplarKind: selectedKind,
+                                notes:
+                                    notesController.text.trim().isEmpty
+                                        ? null
+                                        : notesController.text.trim(),
+                              ),
+                            );
+                      },
+                child: Text(selectedJobIds.isEmpty
+                    ? 'Add'
+                    : 'Add ${selectedJobIds.length} Job(s)'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1530,30 +1825,71 @@ class _ExemplarCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Title line: job title or filename, fallback to job_id
                   Text(
-                    exemplar.clipId,
+                    exemplar.displayName,
                     style: TmzTextStyles.bodyBold,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
+                  // Metadata row
                   Row(
                     children: [
                       _StatusChip(
                         status: exemplar.exemplarKind
                             .replaceAll('_', ' '),
                       ),
-                      if (exemplar.notes != null) ...[
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            exemplar.notes!,
-                            style: TmzTextStyles.caption,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      if (exemplar.jobSource != null) ...[
+                        const SizedBox(width: 6),
+                        Icon(
+                          exemplar.jobSource == 'upload'
+                              ? Icons.upload_file
+                              : Icons.link,
+                          size: 14,
+                          color: TmzColors.textSecondary,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          exemplar.jobSource!,
+                          style: TmzTextStyles.caption
+                              .copyWith(fontSize: 10),
+                        ),
+                      ],
+                      if (exemplar.jobTypeCode != null) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          exemplar.jobTypeCode!,
+                          style: TmzTextStyles.caption.copyWith(
+                            fontSize: 10,
+                            color: TmzColors.tmzRed,
                           ),
                         ),
                       ],
+                      if (exemplar.jobStatus != null) ...[
+                        const SizedBox(width: 6),
+                        _StatusChip(status: exemplar.jobStatus!),
+                      ],
                     ],
                   ),
+                  // Job ID + notes line
+                  if (exemplar.notes != null ||
+                      exemplar.jobId != exemplar.displayName) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      [
+                        if (exemplar.jobId != exemplar.displayName)
+                          exemplar.jobId,
+                        if (exemplar.notes != null) exemplar.notes,
+                      ].join(' • '),
+                      style: TmzTextStyles.caption.copyWith(
+                        fontSize: 10,
+                        color: TmzColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -1574,7 +1910,7 @@ class _ExemplarCard extends StatelessWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Exemplar?'),
         content: Text(
-          'Remove clip "${exemplar.clipId}" from exemplars? '
+          'Remove "${exemplar.displayName}" from exemplars? '
           'This cannot be undone.',
         ),
         actions: [

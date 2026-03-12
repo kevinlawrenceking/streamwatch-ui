@@ -256,7 +256,7 @@ void main() {
     test('S3 URLs show "S3 Upload"', () {
       expect(
           extractDomain(
-              'https://tmzai-streamwatch-media.s3.amazonaws.com/video.mp4'),
+              'https://streamwatch-media-bucket.s3.amazonaws.com/video.mp4'),
           'S3 Upload');
     });
 

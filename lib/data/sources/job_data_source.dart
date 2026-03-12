@@ -50,8 +50,8 @@ abstract class IJobDataSource {
   /// Gets chunks for a job.
   Future<Either<Failure, List<ChunkModel>>> getJobChunks(String jobId);
 
-  /// Gets recent jobs with optional status filter.
-  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20, String? status});
+  /// Gets recent jobs with optional status and search query filters.
+  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20, String? status, String? searchQuery});
 
   /// Gets the worker log file for a job.
   Future<Either<Failure, String>> getJobLog(String jobId, {int? tailLines});
@@ -334,7 +334,7 @@ class JobDataSource implements IJobDataSource {
       })();
 
   @override
-  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20, String? status}) =>
+  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20, String? status, String? searchQuery}) =>
       ExceptionHandler<List<JobModel>>(() async {
         final tokenResult = await _auth.getAuthToken();
 
@@ -344,6 +344,9 @@ class JobDataSource implements IJobDataSource {
             final queryParams = <String, String>{'limit': limit.toString()};
             if (status != null && status.isNotEmpty) {
               queryParams['status'] = status;
+            }
+            if (searchQuery != null && searchQuery.isNotEmpty) {
+              queryParams['q'] = searchQuery;
             }
             final response = await _client.get(
               endPoint: '/api/v1/jobs',

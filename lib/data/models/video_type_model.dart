@@ -121,10 +121,11 @@ class VideoTypeRuleModel extends Equatable {
   factory VideoTypeRuleModel.fromJson(Map<String, dynamic> json) {
     return VideoTypeRuleModel(
       id: json['id'] as String,
-      versionId: json['version_id'] as String,
+      // API returns 'video_type_version_id'; accept both for safety
+      versionId: (json['video_type_version_id'] ?? json['version_id']) as String,
       ruleText: json['rule_text'] as String,
-      ruleOrder: json['rule_order'] as int,
-      status: json['status'] as String,
+      ruleOrder: json['rule_order'] as int? ?? 0,
+      status: json['status'] as String? ?? 'active',
       source: json['source'] as String?,
       evidence: json['evidence'] as Map<String, dynamic>?,
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -247,41 +248,72 @@ class VideoTypeRuleCandidateModel extends Equatable {
       ];
 }
 
-/// Immutable model representing an exemplar.
+/// Immutable model representing an exemplar (linked to an ingested job).
 @immutable
 class VideoTypeExemplarModel extends Equatable {
   final String id;
   final String videoTypeId;
-  final String clipId;
+  final String jobId;
   final String exemplarKind;
   final String? notes;
   final String? addedBy;
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Enriched job metadata (from LEFT JOIN — null if job was deleted)
+  final String? jobTitle;
+  final String? jobFilename;
+  final String? jobSource;
+  final String? jobStatus;
+  final String? jobThumbnailPath;
+  final String? jobTypeCode;
+  final int? jobDurationMs;
+  final DateTime? jobCreatedAt;
+
   const VideoTypeExemplarModel({
     required this.id,
     required this.videoTypeId,
-    required this.clipId,
+    required this.jobId,
     required this.exemplarKind,
     this.notes,
     this.addedBy,
     required this.createdAt,
     required this.updatedAt,
+    this.jobTitle,
+    this.jobFilename,
+    this.jobSource,
+    this.jobStatus,
+    this.jobThumbnailPath,
+    this.jobTypeCode,
+    this.jobDurationMs,
+    this.jobCreatedAt,
   });
 
   factory VideoTypeExemplarModel.fromJson(Map<String, dynamic> json) {
     return VideoTypeExemplarModel(
       id: json['id'] as String,
       videoTypeId: json['video_type_id'] as String,
-      clipId: json['clip_id'] as String,
+      jobId: json['job_id'] as String,
       exemplarKind: json['exemplar_kind'] as String? ?? 'canonical',
       notes: json['notes'] as String?,
       addedBy: json['added_by'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      jobTitle: json['job_title'] as String?,
+      jobFilename: json['job_filename'] as String?,
+      jobSource: json['job_source'] as String?,
+      jobStatus: json['job_status'] as String?,
+      jobThumbnailPath: json['job_thumbnail_path'] as String?,
+      jobTypeCode: json['job_type_code'] as String?,
+      jobDurationMs: json['job_duration_ms'] as int?,
+      jobCreatedAt: json['job_created_at'] != null
+          ? DateTime.parse(json['job_created_at'] as String)
+          : null,
     );
   }
+
+  /// Display name: prefer title, fallback to filename, then job_id.
+  String get displayName => jobTitle ?? jobFilename ?? jobId;
 
   bool get isCanonical => exemplarKind == 'canonical';
   bool get isCounterExample => exemplarKind == 'counter_example';
@@ -291,11 +323,19 @@ class VideoTypeExemplarModel extends Equatable {
   List<Object?> get props => [
         id,
         videoTypeId,
-        clipId,
+        jobId,
         exemplarKind,
         notes,
         addedBy,
         createdAt,
         updatedAt,
+        jobTitle,
+        jobFilename,
+        jobSource,
+        jobStatus,
+        jobThumbnailPath,
+        jobTypeCode,
+        jobDurationMs,
+        jobCreatedAt,
       ];
 }

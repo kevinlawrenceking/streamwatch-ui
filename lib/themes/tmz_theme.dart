@@ -1,6 +1,6 @@
-/// TMZ Watch Global Theme
+/// TMZ Filtered Global Theme
 ///
-/// This file defines the unified look and feel for ALL TMZ Watch applications.
+/// This file defines the unified look and feel for ALL TMZ Filtered applications.
 /// Based on TMZ brand guidelines - bold, condensed, high-impact design.
 ///
 /// Usage:
@@ -23,7 +23,7 @@ class TmzColors {
   // ============================================
 
   /// TMZ Red - Primary brand color
-  /// ALWAYS use #cf0000 for primary red across all TMZ Watch apps
+  /// ALWAYS use #cf0000 for primary red across all TMZ Filtered apps
   static const Color tmzRed = Color(0xFFCF0000);
   static const Color tmzRedLight = Color(0xFFE53935);
   static const Color tmzRedDark = Color(0xFF8E0000);
@@ -126,9 +126,9 @@ class WatchAppIdentity {
     required this.accentColor,
   });
 
-  /// TMZ Watch Portal (magnifying glass for investigation/search)
+  /// TMZ Filtered Portal (magnifying glass for investigation/search)
   static const tmzWatch = WatchAppIdentity(
-    name: 'TMZ Watch',
+    name: 'TMZ Filtered',
     shortName: 'TMZ',
     icon: Icons.search,
     accentColor: TmzColors.tmzRed,
@@ -331,7 +331,7 @@ class TmzTextStyles {
 // THEME DATA
 // ============================================================================
 
-/// Main theme class for TMZ Watch applications.
+/// Main theme class for TMZ Filtered applications.
 class TmzTheme {
   /// Standard dark theme with TMZ Red as primary.
   static ThemeData get dark => _buildTheme(TmzColors.tmzRed);
@@ -698,7 +698,7 @@ class TmzAppBar extends StatelessWidget implements PreferredSizeWidget {
     // For now, show a snackbar
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('TMZ Watch Portal - Coming Soon'),
+        content: Text('TMZ Filtered Portal - Coming Soon'),
         duration: Duration(seconds: 1),
       ),
     );

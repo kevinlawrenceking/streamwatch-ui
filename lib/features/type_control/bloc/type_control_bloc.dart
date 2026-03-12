@@ -57,12 +57,37 @@ class TypeDetailBloc extends Bloc<TypeControlEvent, TypeDetailState> {
         final versionsResult =
             await _dataSource.getVersions(event.videoTypeId);
 
-        versionsResult.fold(
-          (failure) => emit(TypeDetailError(failure)),
-          (versions) => emit(TypeDetailLoaded(
-            type: type,
-            versions: versions,
-          )),
+        await versionsResult.fold(
+          (failure) async => emit(TypeDetailError(failure)),
+          (versions) async {
+            final loaded = TypeDetailLoaded(
+              type: type,
+              versions: versions,
+            );
+            emit(loaded);
+
+            // Auto-load rules for the active version
+            final activeVersion = loaded.activeVersion;
+            if (activeVersion != null) {
+              emit(loaded.copyWith(
+                isRulesLoading: true,
+                selectedVersionId: activeVersion.id,
+              ));
+              final rulesResult =
+                  await _dataSource.getRules(activeVersion.id);
+              if (state is! TypeDetailLoaded) return;
+              final latestState = state as TypeDetailLoaded;
+              rulesResult.fold(
+                (failure) => emit(latestState.copyWith(
+                  isRulesLoading: false,
+                )),
+                (rules) => emit(latestState.copyWith(
+                  rules: rules,
+                  isRulesLoading: false,
+                )),
+              );
+            }
+          },
         );
       },
     );

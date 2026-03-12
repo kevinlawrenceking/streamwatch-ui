@@ -5,7 +5,7 @@ This skill defines the required folder and file organization for the StreamWatch
 The goal is:
 - Predictable layout
 - Clear separation of concerns (BLoC pattern)
-- Consistent structure across TMZ Watch UIs
+- Consistent structure across TMZ Filtered UIs
 - Easy navigation for Kevin and Claude
 - Zero ambiguity about where new code should live
 

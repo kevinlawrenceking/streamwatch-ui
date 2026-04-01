@@ -18,8 +18,20 @@ void main() {
   final tExemplar = VideoTypeExemplarModel(
     id: 'ex-1',
     videoTypeId: 'type-1',
-    clipId: 'CLIP001',
+    jobId: 'JOB001',
     exemplarKind: 'canonical',
+    weight: 2.5,
+    notes: 'Test exemplar',
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+  );
+
+  final tUpdatedExemplar = VideoTypeExemplarModel(
+    id: 'ex-1',
+    videoTypeId: 'type-1',
+    jobId: 'JOB001',
+    exemplarKind: 'canonical',
+    weight: 5.0,
     notes: 'Test exemplar',
     createdAt: DateTime(2026, 1, 1),
     updatedAt: DateTime(2026, 1, 1),
@@ -79,7 +91,7 @@ void main() {
       seed: () => ExemplarManagementLoaded(exemplars: [tExemplar]),
       act: (bloc) => bloc.add(const BulkCreateExemplarsEvent(
         videoTypeId: 'type-1',
-        clipIds: ['CLIP001', 'CLIP002'],
+        jobIds: ['JOB001', 'JOB002'],
         exemplarKind: 'canonical',
       )),
       expect: () => [
@@ -99,7 +111,7 @@ void main() {
       seed: () => ExemplarManagementLoaded(exemplars: [tExemplar]),
       act: (bloc) => bloc.add(const BulkCreateExemplarsEvent(
         videoTypeId: 'type-1',
-        clipIds: ['CLIP001'],
+        jobIds: ['JOB001'],
       )),
       expect: () => [
         ExemplarManagementLoaded(exemplars: [tExemplar], isSubmitting: true),
@@ -144,6 +156,128 @@ void main() {
         ExemplarManagementLoaded(exemplars: [tExemplar], isSubmitting: true),
         const ExemplarManagementError(Failure('fail')),
       ],
+    );
+
+    // --- UpdateExemplarEvent tests ---
+
+    blocTest<ExemplarManagementBloc, ExemplarManagementState>(
+      'UpdateExemplarEvent with valid weight emits updating then re-fetches',
+      build: () {
+        when(() => mockDataSource.updateExemplar(
+              any(),
+              weight: any(named: 'weight'),
+              notes: any(named: 'notes'),
+              exemplarKind: any(named: 'exemplarKind'),
+            )).thenAnswer((_) async => const Right(null));
+        when(() => mockDataSource.getExemplars(any()))
+            .thenAnswer((_) async => Right([tUpdatedExemplar]));
+        return bloc;
+      },
+      seed: () {
+        // Trigger a load first to set _currentTypeId
+        return ExemplarManagementLoaded(exemplars: [tExemplar]);
+      },
+      act: (bloc) {
+        // Manually set _currentTypeId by dispatching load first
+        bloc.add(const LoadExemplarsEvent('type-1'));
+      },
+      wait: const Duration(milliseconds: 100),
+      verify: (_) {
+        verify(() => mockDataSource.getExemplars('type-1')).called(1);
+      },
+    );
+
+    blocTest<ExemplarManagementBloc, ExemplarManagementState>(
+      'UpdateExemplarEvent marks card as updating then emits loaded on success',
+      build: () {
+        when(() => mockDataSource.getExemplars(any()))
+            .thenAnswer((_) async => Right([tExemplar]));
+        when(() => mockDataSource.updateExemplar(
+              any(),
+              weight: any(named: 'weight'),
+              notes: any(named: 'notes'),
+              exemplarKind: any(named: 'exemplarKind'),
+            )).thenAnswer((_) async => const Right(null));
+        return bloc;
+      },
+      act: (bloc) async {
+        bloc.add(const LoadExemplarsEvent('type-1'));
+        await Future.delayed(const Duration(milliseconds: 50));
+        bloc.add(const UpdateExemplarEvent(
+          exemplarId: 'ex-1',
+          weight: 5.0,
+        ));
+      },
+      wait: const Duration(milliseconds: 200),
+      expect: () => [
+        const ExemplarManagementLoading(),
+        ExemplarManagementLoaded(exemplars: [tExemplar]),
+        ExemplarManagementLoaded(
+          exemplars: [tExemplar],
+          updatingExemplarIds: const {'ex-1'},
+        ),
+        ExemplarManagementLoaded(
+          exemplars: [tExemplar],
+          updatingExemplarIds: const {},
+        ),
+      ],
+    );
+
+    blocTest<ExemplarManagementBloc, ExemplarManagementState>(
+      'UpdateExemplarEvent with datasource failure emits error',
+      build: () {
+        when(() => mockDataSource.getExemplars(any()))
+            .thenAnswer((_) async => Right([tExemplar]));
+        when(() => mockDataSource.updateExemplar(
+              any(),
+              weight: any(named: 'weight'),
+              notes: any(named: 'notes'),
+              exemplarKind: any(named: 'exemplarKind'),
+            )).thenAnswer((_) async => const Left(Failure('update failed')));
+        return bloc;
+      },
+      act: (bloc) async {
+        bloc.add(const LoadExemplarsEvent('type-1'));
+        await Future.delayed(const Duration(milliseconds: 50));
+        bloc.add(const UpdateExemplarEvent(
+          exemplarId: 'ex-1',
+          weight: 5.0,
+        ));
+      },
+      wait: const Duration(milliseconds: 200),
+      expect: () => [
+        const ExemplarManagementLoading(),
+        ExemplarManagementLoaded(exemplars: [tExemplar]),
+        ExemplarManagementLoaded(
+          exemplars: [tExemplar],
+          updatingExemplarIds: const {'ex-1'},
+        ),
+        ExemplarManagementLoaded(
+          exemplars: [tExemplar],
+          updatingExemplarIds: const {},
+        ),
+        const ExemplarManagementError(Failure('update failed')),
+      ],
+    );
+
+    blocTest<ExemplarManagementBloc, ExemplarManagementState>(
+      'UpdateExemplarEvent with all-null fields emits error without calling datasource',
+      build: () => bloc,
+      seed: () => ExemplarManagementLoaded(exemplars: [tExemplar]),
+      act: (bloc) => bloc.add(const UpdateExemplarEvent(
+        exemplarId: 'ex-1',
+      )),
+      expect: () => [
+        const ExemplarManagementError(Failure('No fields to update')),
+      ],
+      verify: (_) {
+        verifyNever(() => mockDataSource.updateExemplar(
+              any(),
+              weight: any(named: 'weight'),
+              notes: any(named: 'notes'),
+              exemplarKind: any(named: 'exemplarKind'),
+            ));
+      },
     );
   });
 }

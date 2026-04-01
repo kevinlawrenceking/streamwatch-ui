@@ -45,3 +45,20 @@ class DeleteExemplarEvent extends ExemplarManagementEvent {
   @override
   List<Object?> get props => [exemplarId, videoTypeId];
 }
+
+class UpdateExemplarEvent extends ExemplarManagementEvent {
+  final String exemplarId;
+  final double? weight;
+  final String? notes;
+  final String? exemplarKind;
+
+  const UpdateExemplarEvent({
+    required this.exemplarId,
+    this.weight,
+    this.notes,
+    this.exemplarKind,
+  });
+
+  @override
+  List<Object?> get props => [exemplarId, weight, notes, exemplarKind];
+}

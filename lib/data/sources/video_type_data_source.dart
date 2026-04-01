@@ -76,6 +76,15 @@ abstract class IVideoTypeDataSource {
       String videoTypeId, Map<String, dynamic> body);
 
   Future<Either<Failure, void>> deleteExemplar(String exemplarId);
+
+  /// Updates an exemplar via PATCH /exemplars/{exemplar_id}.
+  /// Only non-null fields are included in the request body.
+  Future<Either<Failure, void>> updateExemplar(
+    String exemplarId, {
+    double? weight,
+    String? notes,
+    String? exemplarKind,
+  });
 }
 
 /// HTTP implementation of IVideoTypeDataSource.
@@ -591,6 +600,36 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             );
             if (response.statusCode != HttpStatus.ok &&
                 response.statusCode != HttpStatus.noContent) {
+              return Left(HttpFailure.fromResponse(response));
+            }
+            return const Right(null);
+          },
+        );
+      }).call();
+
+  @override
+  Future<Either<Failure, void>> updateExemplar(
+    String exemplarId, {
+    double? weight,
+    String? notes,
+    String? exemplarKind,
+  }) =>
+      ExceptionHandler<void>(() async {
+        final tokenResult = await _auth.getAuthToken();
+        return tokenResult.fold(
+          (failure) => Left(failure),
+          (authToken) async {
+            final body = <String, dynamic>{};
+            if (weight != null) body['weight'] = weight;
+            if (notes != null) body['notes'] = notes;
+            if (exemplarKind != null) body['exemplar_kind'] = exemplarKind;
+
+            final response = await _client.patch(
+              endPoint: '/api/v1/typecontrol/exemplars/$exemplarId',
+              authToken: authToken,
+              body: body,
+            );
+            if (response.statusCode != HttpStatus.ok) {
               return Left(HttpFailure.fromResponse(response));
             }
             return const Right(null);

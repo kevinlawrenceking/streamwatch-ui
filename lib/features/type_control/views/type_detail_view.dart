@@ -15,6 +15,7 @@ import '../bloc/candidate_review_state.dart';
 import '../bloc/exemplar_management_bloc.dart';
 import '../bloc/exemplar_management_event.dart';
 import '../bloc/exemplar_management_state.dart';
+import '../widgets/exemplar_card.dart';
 import '../bloc/rule_management_bloc.dart';
 import '../bloc/rule_management_event.dart';
 import '../bloc/rule_management_state.dart';
@@ -1536,9 +1537,12 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                             padding: const EdgeInsets.all(16),
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
-                              return _ExemplarCard(
-                                exemplar: filtered[index],
+                              final exemplar = filtered[index];
+                              return ExemplarCard(
+                                exemplar: exemplar,
                                 videoTypeId: widget.videoTypeId,
+                                isUpdating: state.updatingExemplarIds
+                                    .contains(exemplar.id),
                               );
                             },
                           ),
@@ -1784,154 +1788,6 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _ExemplarCard extends StatelessWidget {
-  final VideoTypeExemplarModel exemplar;
-  final String videoTypeId;
-
-  const _ExemplarCard({
-    required this.exemplar,
-    required this.videoTypeId,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // Kind icon
-            Icon(
-              exemplar.isCanonical
-                  ? Icons.star
-                  : exemplar.isCounterExample
-                      ? Icons.cancel_outlined
-                      : Icons.warning_amber,
-              color: exemplar.isCanonical
-                  ? Colors.amber
-                  : exemplar.isCounterExample
-                      ? TmzColors.error
-                      : Colors.orange,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title line: job title or filename, fallback to job_id
-                  Text(
-                    exemplar.displayName,
-                    style: TmzTextStyles.bodyBold,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  // Metadata row
-                  Row(
-                    children: [
-                      _StatusChip(
-                        status: exemplar.exemplarKind
-                            .replaceAll('_', ' '),
-                      ),
-                      if (exemplar.jobSource != null) ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          exemplar.jobSource == 'upload'
-                              ? Icons.upload_file
-                              : Icons.link,
-                          size: 14,
-                          color: TmzColors.textSecondary,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          exemplar.jobSource!,
-                          style: TmzTextStyles.caption
-                              .copyWith(fontSize: 10),
-                        ),
-                      ],
-                      if (exemplar.jobTypeCode != null) ...[
-                        const SizedBox(width: 6),
-                        Text(
-                          exemplar.jobTypeCode!,
-                          style: TmzTextStyles.caption.copyWith(
-                            fontSize: 10,
-                            color: TmzColors.tmzRed,
-                          ),
-                        ),
-                      ],
-                      if (exemplar.jobStatus != null) ...[
-                        const SizedBox(width: 6),
-                        _StatusChip(status: exemplar.jobStatus!),
-                      ],
-                    ],
-                  ),
-                  // Job ID + notes line
-                  if (exemplar.notes != null ||
-                      exemplar.jobId != exemplar.displayName) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      [
-                        if (exemplar.jobId != exemplar.displayName)
-                          exemplar.jobId,
-                        if (exemplar.notes != null) exemplar.notes,
-                      ].join(' • '),
-                      style: TmzTextStyles.caption.copyWith(
-                        fontSize: 10,
-                        color: TmzColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, size: 18),
-              tooltip: 'Delete exemplar',
-              onPressed: () => _showDeleteDialog(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Exemplar?'),
-        content: Text(
-          'Remove "${exemplar.displayName}" from exemplars? '
-          'This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: TmzColors.error),
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              context.read<ExemplarManagementBloc>().add(
-                    DeleteExemplarEvent(
-                      exemplarId: exemplar.id,
-                      videoTypeId: videoTypeId,
-                    ),
-                  );
-            },
-            child: const Text('Delete'),
-          ),
-        ],
       ),
     );
   }

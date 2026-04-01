@@ -255,8 +255,11 @@ class VideoTypeExemplarModel extends Equatable {
   final String videoTypeId;
   final String jobId;
   final String exemplarKind;
+  final double weight;
   final String? notes;
   final String? addedBy;
+  final String? imageS3Key;
+  final String? imageUrl;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -275,8 +278,11 @@ class VideoTypeExemplarModel extends Equatable {
     required this.videoTypeId,
     required this.jobId,
     required this.exemplarKind,
+    this.weight = 1.0,
     this.notes,
     this.addedBy,
+    this.imageS3Key,
+    this.imageUrl,
     required this.createdAt,
     required this.updatedAt,
     this.jobTitle,
@@ -295,8 +301,11 @@ class VideoTypeExemplarModel extends Equatable {
       videoTypeId: json['video_type_id'] as String,
       jobId: json['job_id'] as String,
       exemplarKind: json['exemplar_kind'] as String? ?? 'canonical',
+      weight: (json['weight'] as num?)?.toDouble() ?? 1.0,
       notes: json['notes'] as String?,
       addedBy: json['added_by'] as String?,
+      imageS3Key: json['image_s3_key'] as String?,
+      imageUrl: json['image_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       jobTitle: json['job_title'] as String?,
@@ -325,8 +334,11 @@ class VideoTypeExemplarModel extends Equatable {
         videoTypeId,
         jobId,
         exemplarKind,
+        weight,
         notes,
         addedBy,
+        imageS3Key,
+        imageUrl,
         createdAt,
         updatedAt,
         jobTitle,

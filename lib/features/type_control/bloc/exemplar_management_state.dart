@@ -20,22 +20,26 @@ class ExemplarManagementLoading extends ExemplarManagementState {
 class ExemplarManagementLoaded extends ExemplarManagementState {
   final List<VideoTypeExemplarModel> exemplars;
   final bool isSubmitting;
+  final Set<String> updatingExemplarIds;
 
   const ExemplarManagementLoaded({
     required this.exemplars,
     this.isSubmitting = false,
+    this.updatingExemplarIds = const {},
   });
 
   @override
-  List<Object?> get props => [exemplars, isSubmitting];
+  List<Object?> get props => [exemplars, isSubmitting, updatingExemplarIds];
 
   ExemplarManagementLoaded copyWith({
     List<VideoTypeExemplarModel>? exemplars,
     bool? isSubmitting,
+    Set<String>? updatingExemplarIds,
   }) {
     return ExemplarManagementLoaded(
       exemplars: exemplars ?? this.exemplars,
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      updatingExemplarIds: updatingExemplarIds ?? this.updatingExemplarIds,
     );
   }
 }

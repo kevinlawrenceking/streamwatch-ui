@@ -43,9 +43,8 @@ class SchedulerView extends StatelessWidget {
                 '• Schedule recurring transcription jobs\n'
                 '• Set up RSS feed monitoring',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  color: AppColors.textGhost,
                   height: 1.6,
                 ),
               ),
@@ -59,7 +58,7 @@ class SchedulerView extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.videocam, color: Colors.red),
+                          const Icon(Icons.videocam, color: AppColors.tmzRed),
                           const SizedBox(width: 8),
                           const Text(
                             'Example: YouTube Channel Monitor',
@@ -69,12 +68,12 @@ class SchedulerView extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.grey.withValues(alpha: 0.2),
+                              color: AppColors.textGhost.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
+                            child: Text(
                               'COMING SOON',
-                              style: TextStyle(fontSize: 10, color: Colors.grey),
+                              style: Theme.of(context).textTheme.labelSmall!.copyWith(color: AppColors.textGhost),
                             ),
                           ),
                         ],
@@ -82,16 +81,16 @@ class SchedulerView extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         'Automatically transcribe new uploads from @TMZ',
-                        style: TextStyle(color: Colors.grey[600]),
+                        style: TextStyle(color: AppColors.textGhost),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.repeat, size: 16, color: Colors.grey[500]),
+                          Icon(Icons.repeat, size: 16, color: AppColors.textGhost),
                           const SizedBox(width: 4),
                           Text(
                             'Every 30 minutes',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                            style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
                           ),
                         ],
                       ),

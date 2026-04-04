@@ -113,7 +113,7 @@ class _HomeBodyState extends State<_HomeBody> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.actionSuccess!),
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.success,
                 behavior: SnackBarBehavior.floating,
                 duration: const Duration(seconds: 2),
               ),
@@ -228,7 +228,7 @@ class _HomeBodyState extends State<_HomeBody> {
                         const SizedBox(width: 4),
                         Text(
                           displayName,
-                          style: const TextStyle(fontSize: 13),
+                          style: Theme.of(context).textTheme.bodySmall!,
                         ),
                         const Icon(Icons.arrow_drop_down, size: 18),
                       ],
@@ -407,19 +407,18 @@ class _HomeBodyState extends State<_HomeBody> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const Icon(Icons.videocam, size: 48, color: Colors.white),
+                const Icon(Icons.videocam, size: 48, color: AppColors.textMax),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'StreamWatch',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
+                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                    color: AppColors.textMax,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   'Video Transcription',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+                  style: TextStyle(color: AppColors.textMax.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -835,7 +834,7 @@ class _JobCard extends StatelessWidget {
                           const Icon(
                             Icons.flag,
                             size: 16,
-                            color: Colors.orange,
+                            color: AppColors.warning,
                           ),
                           const SizedBox(width: 4),
                         ],
@@ -996,13 +995,13 @@ class _JobGridCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.7),
+                          color: AppColors.bg.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.zero,
                         ),
                         child: const Icon(
                           Icons.flag,
                           size: 14,
-                          color: Colors.orange,
+                          color: AppColors.warning,
                         ),
                       ),
                     ),
@@ -1017,7 +1016,7 @@ class _JobGridCard extends StatelessWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            color: Colors.black.withValues(alpha: 0.7),
+                            color: AppColors.bg.withValues(alpha: 0.7),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -1026,15 +1025,14 @@ class _JobGridCard extends StatelessWidget {
                                   height: 10,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 1.5,
-                                    color: Colors.white,
+                                    color: AppColors.textMax,
                                   ),
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   '${job.progressPct}%',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
+                                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                                    color: AppColors.textMax,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -1044,7 +1042,7 @@ class _JobGridCard extends StatelessWidget {
                           LinearProgressIndicator(
                             value: job.progressPct / 100,
                             minHeight: 2,
-                            backgroundColor: Colors.black38,
+                            backgroundColor: AppColors.bg.withValues(alpha: 0.38),
                             valueColor: const AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
                           ),
                         ],
@@ -1176,7 +1174,7 @@ class _CompactStatusBadge extends StatelessWidget {
       ),
       child: Text(
         status.toUpperCase(),
-        style: const TextStyle(
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontSize: 9,
           fontWeight: FontWeight.w700,
           color: AppColors.textMax,
@@ -1205,7 +1203,7 @@ class _CompactTypeBadge extends StatelessWidget {
       ),
       child: Text(
         typeCode.toUpperCase(),
-        style: TextStyle(
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontSize: 9,
           fontWeight: FontWeight.w600,
           color: color,
@@ -1214,25 +1212,8 @@ class _CompactTypeBadge extends StatelessWidget {
     );
   }
 
-  Color _getTypeColor(String code) {
-    switch (code.toLowerCase()) {
-      case 'tv_clip':
-        return Colors.blue;
-      case 'interview':
-        return Colors.cyan;
-      case 'news':
-        return Colors.orange;
-      case 'podcast':
-        return Colors.green;
-      case 'press':
-        return Colors.teal;
-      case 'documentary':
-        return Colors.purple;
-      case 'commercial':
-        return Colors.amber;
-      default:
-        return AppColors.textGhost;
-    }
+  Color _getTypeColor(String type) {
+    return ContentTypeColors.fromType(type);
   }
 }
 
@@ -1454,7 +1435,7 @@ class _JobActionButtons extends StatelessWidget {
         _ActionButton(
           icon: job.isFlagged ? Icons.flag : Icons.flag_outlined,
           tooltip: job.isFlagged ? 'Unflag' : 'Flag',
-          iconColor: job.isFlagged ? Colors.orange : null,
+          iconColor: job.isFlagged ? AppColors.warning : null,
           isLoading: isActionInFlight && inFlightAction == JobActionType.flag,
           isDisabled: isActionInFlight,
           onPressed: () => _showFlagDialog(context),

@@ -105,7 +105,7 @@ class _UploadPageState extends State<UploadPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.error,
       ),
     );
   }
@@ -132,11 +132,10 @@ class _UploadPageState extends State<UploadPage> {
                   color: AppColors.tmzRed,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Upload Video for Processing',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
+                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -192,7 +191,7 @@ class _UploadPageState extends State<UploadPage> {
                     const SizedBox(height: 8),
                     Text(
                       'Selected: $_selectedFileName',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: AppColors.textGhost),
                     ),
                   ],
                 ],
@@ -267,12 +266,12 @@ class _UploadPageState extends State<UploadPage> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: AppColors.textMax,
                           ),
                         )
-                      : const Text(
+                      : Text(
                           'Start Processing',
-                          style: TextStyle(fontSize: 16),
+                          style: Theme.of(context).textTheme.titleMedium!,
                         ),
                 ),
 

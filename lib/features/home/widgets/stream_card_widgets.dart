@@ -32,7 +32,7 @@ class StreamStatusBadge extends StatelessWidget {
       ),
       child: Text(
         status.toUpperCase(),
-        style: TextStyle(
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontSize: isCompact ? 9 : 10,
           fontWeight: FontWeight.w700,
           color: AppColors.textMax,
@@ -61,7 +61,7 @@ class StreamTypeBadge extends StatelessWidget {
       ),
       child: Text(
         typeCode.toUpperCase(),
-        style: TextStyle(
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontSize: 9,
           fontWeight: FontWeight.w600,
           color: color,
@@ -71,29 +71,8 @@ class StreamTypeBadge extends StatelessWidget {
     );
   }
 
-  Color _getTypeColor(String code) {
-    switch (code.toLowerCase()) {
-      case 'tv_clip':
-        return Colors.blue;
-      case 'interview':
-        return Colors.cyan;
-      case 'news':
-        return Colors.orange;
-      case 'documentary':
-        return Colors.purple;
-      case 'podcast':
-        return Colors.green;
-      case 'press':
-        return Colors.teal;
-      case 'sports':
-        return Colors.red;
-      case 'entertainment':
-        return Colors.pink;
-      case 'commercial':
-        return Colors.amber;
-      default:
-        return AppColors.textGhost;
-    }
+  Color _getTypeColor(String type) {
+    return ContentTypeColors.fromType(type);
   }
 }
 
@@ -152,8 +131,7 @@ class _CelebChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 11,
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontWeight: isOverflow ? FontWeight.w400 : FontWeight.w600,
           color: AppColors.textMax,
           height: 1.2,
@@ -210,8 +188,7 @@ class _StreamPeopleListState extends State<StreamPeopleList> {
                 Expanded(
                   child: Text(
                     name,
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
                       fontWeight: FontWeight.w500,
                       color: AppColors.textMax,
                       height: 1.3,
@@ -240,8 +217,7 @@ class _StreamPeopleListState extends State<StreamPeopleList> {
                   const SizedBox(width: 4),
                   Text(
                     _expanded ? 'Show less' : '+$overflow more',
-                    style: const TextStyle(
-                      fontSize: 12,
+                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
                       fontWeight: FontWeight.w500,
                       color: AppColors.tmzRed,
                       height: 1.3,
@@ -467,7 +443,7 @@ class StreamProgressOverlay extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            color: Colors.black.withValues(alpha:0.7),
+            color: AppColors.bg.withValues(alpha:0.7),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -476,15 +452,14 @@ class StreamProgressOverlay extends StatelessWidget {
                   height: 12,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: AppColors.textMax,
                   ),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   '$progressPct%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
+                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                    color: AppColors.textMax,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -494,7 +469,7 @@ class StreamProgressOverlay extends StatelessWidget {
           LinearProgressIndicator(
             value: progressPct / 100,
             minHeight: 3,
-            backgroundColor: Colors.black38,
+            backgroundColor: AppColors.bg.withValues(alpha: 0.38),
             valueColor: const AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
           ),
         ],
@@ -574,13 +549,13 @@ class StreamFlagIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha:0.6),
+        color: AppColors.bg.withValues(alpha:0.6),
         borderRadius: BorderRadius.zero,
       ),
       child: const Icon(
         Icons.flag,
         size: 14,
-        color: Colors.orange,
+        color: AppColors.warning,
       ),
     );
   }

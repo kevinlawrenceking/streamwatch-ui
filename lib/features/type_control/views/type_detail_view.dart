@@ -88,7 +88,7 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppColors.success,
                   behavior: SnackBarBehavior.floating,
                   duration: const Duration(seconds: 2),
                 ),
@@ -155,7 +155,7 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.actionSuccess!),
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppColors.success,
                   behavior: SnackBarBehavior.floating,
                   duration: const Duration(seconds: 2),
                 ),
@@ -377,7 +377,7 @@ class _VersionCard extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                textStyle: const TextStyle(fontSize: 12),
+                textStyle: Theme.of(context).textTheme.bodySmall!,
               ),
             ),
           ],
@@ -822,8 +822,7 @@ class _RuleCard extends StatelessWidget {
               ),
               child: Text(
                 '${rule.ruleOrder}',
-                style: TextStyle(
-                  fontSize: 12,
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: rule.isActive ? AppColors.success : AppColors.textGhost,
                 ),
@@ -954,7 +953,7 @@ class _RuleCard extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context
@@ -1215,7 +1214,7 @@ class _CandidateCard extends StatelessWidget {
                     icon: const Icon(Icons.merge_type, size: 16),
                     label: const Text('Merge'),
                     style:
-                        TextButton.styleFrom(foregroundColor: Colors.orange),
+                        TextButton.styleFrom(foregroundColor: AppColors.warning),
                     onPressed: () =>
                         _showMergeDialog(context, candidate, videoTypeId),
                   ),
@@ -1377,7 +1376,7 @@ class _CandidateCard extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
             onPressed: () {
               if (targetRuleIdController.text.trim().isEmpty) return;
               Navigator.of(dialogContext).pop();
@@ -1879,8 +1878,8 @@ class _PromptTab extends StatelessWidget {
                   onPressed: () =>
                       _showRollbackDialog(context, state.type.id),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.orange,
-                    side: const BorderSide(color: Colors.orange),
+                    foregroundColor: AppColors.warning,
+                    side: const BorderSide(color: AppColors.warning),
                   ),
                 ),
               ],
@@ -1940,9 +1939,7 @@ class _PromptTab extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Hash: ${state.renderedPrompt!.hash.substring(0, 16)}...',
-                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      fontFamily: 'monospace',
-                    ),
+                    style: TmzTextStyles.mono,
                   ),
                 ),
               ],
@@ -1960,8 +1957,7 @@ class _PromptTab extends StatelessWidget {
             ),
             child: SelectableText(
               state.renderedPrompt!.prompt,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                fontFamily: 'monospace',
+              style: TmzTextStyles.mono.copyWith(
                 fontSize: 13,
                 height: 1.6,
               ),
@@ -1988,7 +1984,7 @@ class _PromptTab extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context
@@ -2024,8 +2020,7 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         status.toUpperCase(),
-        style: TextStyle(
-          fontSize: 10,
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontWeight: FontWeight.w600,
           color: color,
         ),
@@ -2040,19 +2035,19 @@ class _StatusChip extends StatelessWidget {
         return AppColors.success;
       case 'draft':
       case 'pending':
-        return Colors.orange;
+        return AppColors.warning;
       case 'archived':
       case 'deprecated':
       case 'rejected':
         return AppColors.textGhost;
       case 'merged':
-        return Colors.blue;
+        return AppColors.info;
       case 'canonical':
-        return Colors.amber;
+        return AppColors.warning;
       case 'counter example':
         return AppColors.error;
       case 'edge case':
-        return Colors.orange;
+        return AppColors.warning;
       default:
         return AppColors.textGhost;
     }
@@ -2089,8 +2084,7 @@ class _FilterChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
+          style: Theme.of(context).textTheme.bodySmall!.copyWith(
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
             color: selected ? AppColors.success : AppColors.textDim,
           ),
@@ -2109,7 +2103,7 @@ Color _getVersionStatusColor(String status) {
     case 'active':
       return AppColors.success;
     case 'draft':
-      return Colors.orange;
+      return AppColors.warning;
     case 'archived':
       return AppColors.textGhost;
     default:

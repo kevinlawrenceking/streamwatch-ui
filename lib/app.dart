@@ -164,13 +164,12 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 2),
-                        color: Colors.orange,
-                        child: const Text(
+                        color: AppColors.warning,
+                        child: Text(
                           'DEV ADMIN SESSION',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 11,
+                          style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                            color: AppColors.bg,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.0,
                           ),

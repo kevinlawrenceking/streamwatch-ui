@@ -7,6 +7,7 @@ import 'package:streamwatch_frontend/data/models/collection_model.dart';
 import 'package:streamwatch_frontend/features/collections/bloc/collections_bloc.dart';
 import 'package:streamwatch_frontend/features/collections/bloc/collections_event.dart';
 import 'package:streamwatch_frontend/features/collections/bloc/collections_state.dart';
+import 'package:shared_ui/tokens/tokens.dart';
 import 'package:streamwatch_frontend/shared/errors/failures/failure.dart';
 
 class MockCollectionsBloc extends MockBloc<CollectionsEvent, CollectionsState>
@@ -324,7 +325,7 @@ class _ManagerBodyForTestState extends State<_ManagerBodyForTest> {
                               DataCell(
                                 c.isDefault
                                     ? const Icon(Icons.check_circle,
-                                        size: 18, color: Colors.green)
+                                        size: 18, color: AppColors.success)
                                     : const SizedBox.shrink(),
                               ),
                               DataCell(

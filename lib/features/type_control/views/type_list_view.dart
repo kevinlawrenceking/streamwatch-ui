@@ -183,8 +183,7 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         status.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontWeight: FontWeight.w600,
           color: color,
         ),
@@ -197,7 +196,7 @@ class _StatusChip extends StatelessWidget {
       case 'active':
         return AppColors.success;
       case 'draft':
-        return Colors.orange;
+        return AppColors.warning;
       case 'archived':
         return AppColors.textGhost;
       default:

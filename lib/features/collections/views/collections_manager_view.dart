@@ -53,7 +53,7 @@ class _ManagerBodyState extends State<_ManagerBody> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.actionSuccess!),
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.success,
                 behavior: SnackBarBehavior.floating,
                 duration: const Duration(seconds: 2),
               ),
@@ -449,7 +449,7 @@ class _CollectionsTable extends StatelessWidget {
                   DataCell(
                     c.isDefault
                         ? const Icon(Icons.check_circle,
-                            size: 18, color: Colors.green)
+                            size: 18, color: AppColors.success)
                         : const SizedBox.shrink(),
                   ),
                   // Actions
@@ -522,7 +522,7 @@ class _VisibilityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPublic = visibility == 'public';
-    final color = isPublic ? Colors.blue : AppColors.textGhost;
+    final color = isPublic ? AppColors.info : AppColors.textGhost;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -533,8 +533,7 @@ class _VisibilityBadge extends StatelessWidget {
       ),
       child: Text(
         visibility.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontWeight: FontWeight.w600,
           color: color,
         ),

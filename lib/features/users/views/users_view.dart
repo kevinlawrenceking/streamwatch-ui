@@ -72,7 +72,7 @@ class _UsersBodyState extends State<_UsersBody> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 2),
             ),
@@ -298,8 +298,7 @@ class _RoleBadge extends StatelessWidget {
       ),
       child: Text(
         role.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
           fontWeight: FontWeight.w600,
           color: color,
         ),

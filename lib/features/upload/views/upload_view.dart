@@ -220,10 +220,10 @@ class _UploadBodyState extends State<_UploadBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.error,
         action: SnackBarAction(
           label: 'Dismiss',
-          textColor: Colors.white,
+          textColor: AppColors.textMax,
           onPressed: () {},
         ),
       ),
@@ -285,8 +285,7 @@ class _UploadBodyState extends State<_UploadBody> {
         // Label
         Text(
           'Celebrities (optional)',
-          style: TextStyle(
-            fontSize: 12,
+          style: Theme.of(context).textTheme.bodySmall!.copyWith(
             color: Theme.of(context).hintColor,
           ),
         ),
@@ -295,7 +294,7 @@ class _UploadBodyState extends State<_UploadBody> {
         // Chips + input field in a container
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade400),
+            border: Border.all(color: AppColors.textGhost),
             borderRadius: BorderRadius.circular(4),
           ),
           padding: const EdgeInsets.all(8),
@@ -346,8 +345,7 @@ class _UploadBodyState extends State<_UploadBody> {
           padding: const EdgeInsets.only(top: 8, left: 12),
           child: Text(
             'Type names and press Enter, or separate with commas. If provided, AI celebrity detection is skipped.',
-            style: TextStyle(
-              fontSize: 12,
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
               color: Theme.of(context).hintColor,
             ),
           ),
@@ -359,9 +357,8 @@ class _UploadBodyState extends State<_UploadBody> {
             padding: const EdgeInsets.only(top: 4, left: 12),
             child: Text(
               _celebrityFeedback!,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.orange,
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                color: AppColors.warning,
               ),
             ),
           ),
@@ -401,11 +398,10 @@ class _UploadBodyState extends State<_UploadBody> {
                     color: AppColors.tmzRed,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Ingest Video for Processing',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
+                    style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -711,15 +707,15 @@ class _UploadBodyState extends State<_UploadBody> {
                               label: const Text('Try Again'),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.all(16),
-                                backgroundColor: Colors.orange,
-                                foregroundColor: Colors.white,
+                                backgroundColor: AppColors.warning,
+                                foregroundColor: AppColors.textMax,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Error: ${state.failure.message}',
-                              style: const TextStyle(
-                                  color: Colors.red, fontSize: 12),
+                              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                                  color: AppColors.error),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -742,21 +738,21 @@ class _UploadBodyState extends State<_UploadBody> {
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: AppColors.textMax,
                                     ),
                                   ),
                                   if (uploadProgress != null) ...[
                                     const SizedBox(width: 12),
                                     Text(
                                       uploadProgress.statusMessage,
-                                      style: const TextStyle(fontSize: 14),
+                                      style: Theme.of(context).textTheme.labelLarge!,
                                     ),
                                   ],
                                 ],
                               )
-                            : const Text(
+                            : Text(
                                 'Start Processing',
-                                style: TextStyle(fontSize: 16),
+                                style: Theme.of(context).textTheme.titleMedium!,
                               ),
                       );
                     },
@@ -783,7 +779,7 @@ class _UploadBodyState extends State<_UploadBody> {
       children: [
         Text(
           'Selected: $_selectedFileName',
-          style: TextStyle(color: Colors.grey[600]),
+          style: TextStyle(color: AppColors.textGhost),
         ),
         const SizedBox(height: 4),
         Row(
@@ -791,14 +787,13 @@ class _UploadBodyState extends State<_UploadBody> {
             Icon(
               isLarge ? Icons.cloud_upload : Icons.upload_file,
               size: 16,
-              color: isLarge ? Colors.blue : Colors.grey[600],
+              color: isLarge ? AppColors.info : AppColors.textGhost,
             ),
             const SizedBox(width: 4),
             Text(
               '$sizeInMB MB${isLarge ? ' (direct S3 upload)' : ''}',
-              style: TextStyle(
-                color: isLarge ? Colors.blue : Colors.grey[600],
-                fontSize: 12,
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                color: isLarge ? AppColors.info : AppColors.textGhost,
               ),
             ),
           ],
@@ -830,18 +825,16 @@ class _UploadBodyState extends State<_UploadBody> {
                   children: [
                     Text(
                       state.statusMessage,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
                         fontWeight: FontWeight.w500,
-                        fontSize: 14,
                       ),
                     ),
                     if (state.uploadId != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         'Upload ID: ${state.uploadId}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 11,
+                        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                          color: AppColors.textGhost,
                         ),
                       ),
                     ],
@@ -858,7 +851,7 @@ class _UploadBodyState extends State<_UploadBody> {
               value: state.bytesUploaded != null
                   ? state.bytesUploaded! / state.totalBytes!
                   : null,
-              backgroundColor: Colors.grey[300],
+              backgroundColor: AppColors.textGhost,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
             ),
           ],
@@ -876,15 +869,15 @@ class _UploadBodyState extends State<_UploadBody> {
     switch (phase) {
       case UploadPhase.requestingPresign:
         icon = Icons.security;
-        color = Colors.orange;
+        color = AppColors.warning;
         break;
       case UploadPhase.uploadingToS3:
         icon = Icons.cloud_upload;
-        color = Colors.blue;
+        color = AppColors.info;
         break;
       case UploadPhase.finalizing:
         icon = Icons.check_circle;
-        color = Colors.green;
+        color = AppColors.success;
         break;
     }
 
@@ -930,21 +923,20 @@ class _UploadBodyState extends State<_UploadBody> {
           height: 24,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: completed ? AppColors.tmzRed : Colors.grey[300],
+            color: completed ? AppColors.tmzRed : AppColors.textGhost,
             border: active
                 ? Border.all(color: AppColors.tmzRed, width: 2)
                 : null,
           ),
           child: completed
-              ? const Icon(Icons.check, size: 14, color: Colors.white)
+              ? const Icon(Icons.check, size: 14, color: AppColors.textMax)
               : null,
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 10,
-            color: completed ? AppColors.tmzRed : Colors.grey[600],
+          style: Theme.of(context).textTheme.labelSmall!.copyWith(
+            color: completed ? AppColors.tmzRed : AppColors.textGhost,
             fontWeight: active ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -955,7 +947,7 @@ class _UploadBodyState extends State<_UploadBody> {
   Widget _buildStepLine(bool completed) {
     return Container(
       height: 2,
-      color: completed ? AppColors.tmzRed : Colors.grey[300],
+      color: completed ? AppColors.tmzRed : AppColors.textGhost,
     );
   }
 }

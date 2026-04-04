@@ -56,11 +56,11 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
         materialProgressColors: ChewieProgressColors(
           playedColor: AppColors.tmzRed,
           handleColor: AppColors.tmzRed,
-          backgroundColor: Colors.grey[800]!,
-          bufferedColor: Colors.grey[600]!,
+          backgroundColor: AppColors.surfaceOverlay,
+          bufferedColor: AppColors.textGhost,
         ),
         placeholder: Container(
-          color: Colors.black,
+          color: AppColors.bg,
           child: const Center(
             child: CircularProgressIndicator(color: AppColors.tmzRed),
           ),
@@ -70,16 +70,16 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error, color: Colors.red, size: 48),
+                const Icon(Icons.error, color: AppColors.error, size: 48),
                 const SizedBox(height: 16),
                 Text(
                   'Playback error',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 16),
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(color: AppColors.textGhost),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   errorMessage,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -111,7 +111,7 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
       appBar: AppBar(
         title: Text(
           widget.title,
-          style: const TextStyle(fontSize: 16),
+          style: Theme.of(context).textTheme.titleMedium!,
           overflow: TextOverflow.ellipsis,
         ),
         backgroundColor: AppColors.tmzRed,
@@ -120,7 +120,7 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bg,
       body: _buildBody(),
     );
   }
@@ -133,16 +133,16 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: Colors.red, size: 64),
+              const Icon(Icons.error_outline, color: AppColors.error, size: 64),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Failed to load video',
-                style: TextStyle(color: Colors.white, fontSize: 18),
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(color: AppColors.textMax),
               ),
               const SizedBox(height: 8),
               Text(
                 _error!,
-                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -175,7 +175,7 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
             SizedBox(height: 16),
             Text(
               'Loading video...',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: AppColors.textGhost),
             ),
           ],
         ),

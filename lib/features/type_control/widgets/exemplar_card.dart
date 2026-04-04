@@ -156,10 +156,10 @@ class _ExemplarCardState extends State<ExemplarCard> {
                   ? Icons.cancel_outlined
                   : Icons.warning_amber,
           color: widget.exemplar.isCanonical
-              ? Colors.amber
+              ? AppColors.warning
               : widget.exemplar.isCounterExample
                   ? AppColors.error
-                  : Colors.orange,
+                  : AppColors.warning,
           size: 24,
         ),
         const SizedBox(width: 12),
@@ -271,8 +271,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
           children: [
             Text(
               widget.exemplar.exemplarKind.replaceAll('_', ' ').toUpperCase(),
-              style: TextStyle(
-                fontSize: 10,
+              style: Theme.of(context).textTheme.labelSmall!.copyWith(
                 fontWeight: FontWeight.w600,
                 color: _getKindColor(widget.exemplar.exemplarKind),
               ),
@@ -315,7 +314,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                   errorText: _weightError,
-                  errorStyle: const TextStyle(fontSize: 10),
+                  errorStyle: Theme.of(context).textTheme.labelSmall!,
                 ),
                 onFieldSubmitted: (_) => _submitWeight(context),
               ),
@@ -499,11 +498,11 @@ class _ExemplarCardState extends State<ExemplarCard> {
   Color _getKindColor(String kind) {
     switch (kind) {
       case 'canonical':
-        return Colors.amber;
+        return AppColors.warning;
       case 'counter_example':
         return AppColors.error;
       case 'edge_case':
-        return Colors.orange;
+        return AppColors.warning;
       default:
         return AppColors.textGhost;
     }

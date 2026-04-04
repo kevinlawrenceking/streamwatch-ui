@@ -110,18 +110,18 @@ class _JobCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: Colors.grey[300],
+                      color: AppColors.textGhost,
                       child: Icon(
                         Icons.videocam,
                         size: 40,
-                        color: Colors.grey[500],
+                        color: AppColors.textGhost,
                       ),
                     );
                   },
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return Container(
-                      color: Colors.grey[200],
+                      color: AppColors.surfaceOverlay,
                       child: const Center(
                         child: SizedBox(
                           width: 20,
@@ -147,8 +147,7 @@ class _JobCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             job.title ?? 'Job ${job.jobId.substring(0, 8)}',
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 1,
@@ -165,7 +164,7 @@ class _JobCard extends StatelessWidget {
                         Icon(
                           job.source == 'url' ? Icons.link : Icons.upload_file,
                           size: 14,
-                          color: Colors.grey[600],
+                          color: AppColors.textGhost,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -174,7 +173,7 @@ class _JobCard extends StatelessWidget {
                                 ? job.sourceUrl ?? 'URL'
                                 : job.filePath ?? 'Uploaded file',
                             style:
-                                TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                Theme.of(context).textTheme.labelSmall!.copyWith(color: AppColors.textGhost),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -187,13 +186,12 @@ class _JobCard extends StatelessWidget {
                       children: [
                         Text(
                           _formatDateTime(job.createdAt),
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                          style: Theme.of(context).textTheme.labelSmall!.copyWith(color: AppColors.textGhost),
                         ),
                         if (job.isProcessing)
                           Text(
                             '${job.progressPct}%',
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: Theme.of(context).textTheme.bodySmall!.copyWith(
                               color: AppColors.tmzRed,
                               fontWeight: FontWeight.bold,
                             ),
@@ -205,7 +203,7 @@ class _JobCard extends StatelessWidget {
                       LinearProgressIndicator(
                         value: job.progressPct / 100,
                         minHeight: 3,
-                        backgroundColor: Colors.grey[300],
+                        backgroundColor: AppColors.textGhost,
                       ),
                     ],
                   ],
@@ -236,7 +234,7 @@ class _StatusChip extends StatelessWidget {
     return Chip(
       label: Text(
         status.toUpperCase(),
-        style: const TextStyle(fontSize: 11),
+        style: Theme.of(context).textTheme.labelSmall!,
       ),
       backgroundColor: color.withValues(alpha: 0.2),
       labelStyle: TextStyle(color: color, fontWeight: FontWeight.bold),
@@ -258,7 +256,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error, size: 64, color: Colors.red),
+          const Icon(Icons.error, size: 64, color: AppColors.error),
           const SizedBox(height: 16),
           Text('Error: $message'),
           const SizedBox(height: 16),
@@ -281,7 +279,7 @@ class _EmptyView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inbox, size: 64, color: Colors.grey),
+          Icon(Icons.inbox, size: 64, color: AppColors.textGhost),
           SizedBox(height: 16),
           Text('No jobs found'),
         ],

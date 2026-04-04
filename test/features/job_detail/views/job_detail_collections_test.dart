@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:streamwatch_frontend/data/models/collection_model.dart';
 import 'package:streamwatch_frontend/data/sources/collection_data_source.dart';
+import 'package:shared_ui/tokens/tokens.dart';
 import 'package:streamwatch_frontend/shared/errors/failures/failure.dart';
 
 class MockCollectionDataSource extends Mock implements ICollectionDataSource {}
@@ -97,7 +98,7 @@ class _TestCollectionsSectionState extends State<TestCollectionsSection> {
       (failure) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(failure.message),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ));
         setState(() => _actionInFlight = false);
@@ -124,7 +125,7 @@ class _TestCollectionsSectionState extends State<TestCollectionsSection> {
       (failure) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(failure.message),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ));
         setState(() => _actionInFlight = false);
@@ -151,7 +152,7 @@ class _TestCollectionsSectionState extends State<TestCollectionsSection> {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Text(_error!, style: const TextStyle(color: Colors.red)),
+          child: Text(_error!, style: const TextStyle(color: AppColors.error)),
         ),
       );
     }

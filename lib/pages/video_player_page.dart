@@ -93,7 +93,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
         title: Text(
           widget.title,
@@ -120,20 +120,20 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       children: [
         const Icon(
           Icons.error_outline,
-          color: Colors.red,
+          color: AppColors.error,
           size: 64,
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           'Error loading video',
-          style: TextStyle(color: Colors.white, fontSize: 18),
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(color: AppColors.textMax),
         ),
         const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Text(
             _error!,
-            style: TextStyle(color: Colors.grey[400], fontSize: 14),
+            style: Theme.of(context).textTheme.labelLarge!.copyWith(color: AppColors.textGhost),
             textAlign: TextAlign.center,
           ),
         ),
@@ -165,12 +165,12 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               if (!_isPlaying)
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: AppColors.bg.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
                     iconSize: 64,
-                    color: Colors.white,
+                    color: AppColors.textMax,
                     icon: const Icon(Icons.play_arrow),
                     onPressed: _togglePlayPause,
                   ),
@@ -189,8 +189,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             allowScrubbing: true,
             colors: VideoProgressColors(
               playedColor: AppColors.tmzRed,
-              bufferedColor: Colors.grey,
-              backgroundColor: Colors.black26,
+              bufferedColor: AppColors.textGhost,
+              backgroundColor: AppColors.bg.withValues(alpha: 0.26),
             ),
           ),
         ),
@@ -205,11 +205,11 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             children: [
               Text(
                 _formatDuration(_controller.value.position),
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textMax),
               ),
               Text(
                 _formatDuration(_controller.value.duration),
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textMax),
               ),
             ],
           ),
@@ -224,7 +224,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             // Rewind 10s
             IconButton(
               icon: const Icon(Icons.replay_10),
-              color: Colors.white,
+              color: AppColors.textMax,
               iconSize: 32,
               onPressed: () {
                 final newPosition = _controller.value.position - const Duration(seconds: 10);
@@ -247,7 +247,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             // Forward 10s
             IconButton(
               icon: const Icon(Icons.forward_10),
-              color: Colors.white,
+              color: AppColors.textMax,
               iconSize: 32,
               onPressed: () {
                 final newPosition = _controller.value.position + const Duration(seconds: 10);

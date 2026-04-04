@@ -95,19 +95,18 @@ class _LoginBodyState extends State<_LoginBody> {
                       const SizedBox(height: 16),
 
                       // Title
-                      const Text(
+                      Text(
                         'StreamWatch',
-                        style: TextStyle(
+                        style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textMax,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Video Intelligence Newsroom',
-                        style: TextStyle(
-                          fontSize: 14,
+                        style: Theme.of(context).textTheme.labelLarge!.copyWith(
                           color: AppColors.textDim,
                         ),
                       ),
@@ -185,10 +184,9 @@ class _LoginBodyState extends State<_LoginBody> {
                                     color: AppColors.textMax,
                                   ),
                                 )
-                              : const Text(
+                              : Text(
                                   'SIGN IN',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1,
                                   ),

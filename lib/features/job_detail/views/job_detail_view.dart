@@ -62,7 +62,7 @@ class _JobDetailBody extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.tmzRed),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context.read<JobDetailBloc>().add(const DeleteJobDetailEvent());
@@ -118,7 +118,7 @@ class _JobDetailBody extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.actionError!),
-                backgroundColor: Colors.red,
+                backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -128,7 +128,7 @@ class _JobDetailBody extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.actionSuccess!),
-                backgroundColor: Colors.green,
+                backgroundColor: AppColors.success,
                 behavior: SnackBarBehavior.floating,
                 duration: const Duration(seconds: 2),
               ),
@@ -201,7 +201,7 @@ class _JobDetailBody extends StatelessWidget {
                     context: context,
                     icon: job.isFlagged ? Icons.flag : Icons.flag_outlined,
                     tooltip: job.isFlagged ? 'Unflag' : 'Flag',
-                    iconColor: job.isFlagged ? Colors.orange : null,
+                    iconColor: job.isFlagged ? AppColors.warning : null,
                     isLoading: isActionInFlight && state.inFlightAction == JobDetailActionType.flag,
                     isDisabled: isActionInFlight,
                     onPressed: () => _showFlagDialog(context, job.isFlagged),
@@ -211,7 +211,7 @@ class _JobDetailBody extends StatelessWidget {
                     context: context,
                     icon: Icons.delete_outline,
                     tooltip: job.canDelete ? 'Delete' : 'Cannot delete (processing or flagged)',
-                    iconColor: job.canDelete ? Colors.red : Colors.grey,
+                    iconColor: job.canDelete ? AppColors.tmzRed : AppColors.textGhost,
                     isLoading: isActionInFlight && state.inFlightAction == JobDetailActionType.delete,
                     isDisabled: isActionInFlight || !job.canDelete,
                     onPressed: job.canDelete ? () => _showDeleteDialog(context) : null,
@@ -280,7 +280,7 @@ class _JobDetailBody extends StatelessWidget {
         child: SizedBox(
           width: 20,
           height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textMax),
         ),
       );
     }
@@ -306,18 +306,18 @@ class _FlagBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.zero,
-        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.flag, color: Colors.orange, size: 20),
+          const Icon(Icons.flag, color: AppColors.warning, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               flagNote ?? 'This job has been flagged for review',
-              style: const TextStyle(color: Colors.orange, fontSize: 13),
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.warning),
             ),
           ),
         ],
@@ -485,7 +485,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Could not load video. Try again later.'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -547,7 +547,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Could not open download'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -704,18 +704,18 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.grey[800],
+                    color: AppColors.surfaceOverlay,
                     child: const Icon(
                       Icons.videocam,
                       size: 64,
-                      color: Colors.grey,
+                      color: AppColors.textGhost,
                     ),
                   );
                 },
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
-                    color: Colors.grey[900],
+                    color: AppColors.surfaceElevated,
                     child: const Center(
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
@@ -727,7 +727,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.zero,
-                color: Colors.black.withValues(alpha: 0.3),
+                color: AppColors.bg.withValues(alpha: 0.3),
               ),
               child: Center(
                 child: Column(
@@ -736,18 +736,18 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                     Icon(
                       hasUrl ? Icons.open_in_new : Icons.download,
                       size: 72,
-                      color: Colors.white,
+                      color: AppColors.textMax,
                     ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
+                        color: AppColors.bg.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         hasUrl ? 'Watch Original' : 'Download Video',
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textMax),
                       ),
                     ),
                   ],
@@ -766,17 +766,17 @@ class _JobInfoCardState extends State<_JobInfoCard> {
         aspectRatio: 16 / 9,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey[900],
+            color: AppColors.surfaceElevated,
             borderRadius: BorderRadius.zero,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error, color: Colors.red, size: 40),
+              const Icon(Icons.error, color: AppColors.error, size: 40),
               const SizedBox(height: 8),
               Text(
                 'Video unavailable',
-                style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                style: Theme.of(context).textTheme.labelLarge!.copyWith(color: AppColors.textGhost),
               ),
               const SizedBox(height: 8),
               TextButton(
@@ -794,7 +794,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
         aspectRatio: 16 / 9,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey[900],
+            color: AppColors.surfaceElevated,
             borderRadius: BorderRadius.zero,
           ),
           child: const Center(
@@ -901,7 +901,7 @@ class _InlineVideoControlsState extends State<_InlineVideoControls> {
         const SizedBox(width: 4),
         Text(
           _formatDuration(position),
-          style: const TextStyle(fontSize: 10),
+          style: Theme.of(context).textTheme.labelSmall!,
         ),
         const SizedBox(width: 4),
         IconButton(
@@ -1114,18 +1114,18 @@ class _PollErrorBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.orange.withValues(alpha: 0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.zero,
-        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.wifi_off, color: Colors.orange, size: 20),
+          const Icon(Icons.wifi_off, color: AppColors.warning, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: Colors.orange, fontSize: 13),
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.warning),
             ),
           ),
         ],
@@ -1178,19 +1178,19 @@ class _ProgressCard extends StatelessWidget {
             LinearProgressIndicator(
               value: job.progressPct / 100,
               minHeight: 8,
-              backgroundColor: Colors.grey[300],
+              backgroundColor: Theme.of(context).colorScheme.outline,
               valueColor: AlwaysStoppedAnimation<Color>(
-                job.isFailed ? Colors.red : AppColors.tmzRed,
+                job.isFailed ? AppColors.error : AppColors.tmzRed,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               '${job.progressPct}%',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               '${job.completedChunks} segments processed',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textGhost),
             ),
           ],
         ),
@@ -1235,7 +1235,7 @@ class _FinalSummarySection extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.summarize, color: Colors.green),
+                const Icon(Icons.summarize, color: AppColors.success),
                 const SizedBox(width: 8),
                 Text(
                   'Final Summary',
@@ -1246,7 +1246,7 @@ class _FinalSummarySection extends StatelessWidget {
             const Divider(),
             Text(
               job.summaryText!,
-              style: const TextStyle(fontSize: 16, height: 1.5),
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(height: 1.5),
             ),
           ],
         ),
@@ -1327,7 +1327,7 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
   Widget _buildFullView(String transcript) {
     return SelectableText(
       transcript,
-      style: const TextStyle(fontSize: 14, height: 1.6),
+      style: Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.6),
     );
   }
 
@@ -1345,9 +1345,8 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
               ),
               child: Text(
                 'Segment ${i + 1} (${widget.chunks[i].formattedTimeRange})',
-                style: const TextStyle(
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontSize: 13,
                   color: AppColors.tmzRed,
                 ),
               ),
@@ -1355,7 +1354,7 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
             const SizedBox(height: 8),
             SelectableText(
               widget.chunks[i].transcript!,
-              style: const TextStyle(fontSize: 14, height: 1.5),
+              style: Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.5),
             ),
             const SizedBox(height: 20),
           ],
@@ -1380,7 +1379,7 @@ class _ChunksSection extends StatelessWidget {
           child: Center(
             child: Text(
               'No segments available yet',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textGhost),
             ),
           ),
         ),
@@ -1436,18 +1435,18 @@ class _ChunkTile extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.grey[800],
+                    color: AppColors.surfaceOverlay,
                     child: Icon(
                       Icons.videocam,
                       size: 36,
-                      color: Colors.grey[500],
+                      color: AppColors.textGhost,
                     ),
                   );
                 },
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return Container(
-                    color: Colors.grey[900],
+                    color: AppColors.surfaceElevated,
                     child: const Center(
                       child: SizedBox(
                         width: 20,
@@ -1470,12 +1469,12 @@ class _ChunkTile extends StatelessWidget {
                   children: [
                     Text(
                       'Segment $displaySegmentNum',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       chunk.formattedTimeRange,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
                     ),
                   ],
                 ),
@@ -1483,7 +1482,7 @@ class _ChunkTile extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     chunk.summary!,
-                    style: const TextStyle(fontSize: 14, height: 1.4),
+                    style: Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.4),
                   ),
                 ],
               ],
@@ -1507,7 +1506,7 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error, size: 64, color: Colors.red),
+          const Icon(Icons.error, size: 64, color: AppColors.error),
           const SizedBox(height: 16),
           Text('Error: $message'),
           const SizedBox(height: 16),
@@ -1611,7 +1610,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
       (failure) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(failure.message),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ));
         setState(() => _actionInFlight = false);
@@ -1638,7 +1637,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
       (failure) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(failure.message),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ));
         setState(() => _actionInFlight = false);
@@ -1678,7 +1677,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
                   else ...[
                     Text(
                       '${_memberships?.length ?? 0}',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
                     ),
                     const SizedBox(width: 8),
                     Icon(_expanded ? Icons.expand_less : Icons.expand_more),
@@ -1697,7 +1696,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                child: Text(_error!, style: const TextStyle(color: AppColors.error)),
               )
             else
               _buildContent(),
@@ -1733,7 +1732,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
           else
             Text(
               'Not in any collections',
-              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
             ),
           const SizedBox(height: 12),
           // Add to collection row
@@ -1759,7 +1758,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
                                   Icon(
                                     c.isPublic ? Icons.public : Icons.lock,
                                     size: 14,
-                                    color: Colors.grey,
+                                    color: AppColors.textGhost,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(c.name),
@@ -1783,7 +1782,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2, color: AppColors.textMax),
                         )
                       : const Text('Add'),
                 ),
@@ -1912,7 +1911,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
                   else ...[
                     Text(
                       '${_speakers?.length ?? 0} speakers',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
                     ),
                     const SizedBox(width: 8),
                     Icon(_expanded ? Icons.expand_less : Icons.expand_more),
@@ -1932,7 +1931,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                child: Text(_error!, style: const TextStyle(color: AppColors.error)),
               )
             else
               _buildContent(),
@@ -1996,7 +1995,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
                     padding: const EdgeInsets.all(8),
                     child: Text(
                       speaker.speakerLabel,
-                      style: const TextStyle(fontFamily: 'monospace'),
+                      style: TmzTextStyles.mono,
                     ),
                   ),
                   Padding(
@@ -2005,7 +2004,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
                       speaker.resolvedName ?? 'Unknown',
                       style: TextStyle(
                         fontWeight: speaker.resolvedName != null ? FontWeight.w500 : FontWeight.normal,
-                        color: speaker.resolvedName != null ? null : Colors.grey,
+                        color: speaker.resolvedName != null ? null : AppColors.textGhost,
                       ),
                     ),
                   ),
@@ -2025,7 +2024,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
           if (_speakers!.any((s) => s.aiReasoning != null && s.aiReasoning!.isNotEmpty)) ...[
             const SizedBox(height: 16),
             ExpansionTile(
-              title: const Text('AI Reasoning', style: TextStyle(fontSize: 14)),
+              title: Text('AI Reasoning', style: Theme.of(context).textTheme.labelLarge!),
               tilePadding: EdgeInsets.zero,
               children: [
                 ..._speakers!
@@ -2037,12 +2036,12 @@ class _PeopleSectionState extends State<_PeopleSection> {
                             children: [
                               Text(
                                 '${s.speakerLabel}: ',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                style: Theme.of(context).textTheme.bodySmall!.copyWith(fontWeight: FontWeight.bold),
                               ),
                               Expanded(
                                 child: Text(
                                   s.aiReasoning!,
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
                                 ),
                               ),
                             ],
@@ -2062,11 +2061,11 @@ class _PeopleSectionState extends State<_PeopleSection> {
     final percent = (confidence * 100).toInt();
     Color color;
     if (percent >= 80) {
-      color = Colors.green;
+      color = AppColors.success;
     } else if (percent >= 50) {
-      color = Colors.orange;
+      color = AppColors.warning;
     } else {
-      color = Colors.red;
+      color = AppColors.error;
     }
 
     return Container(
@@ -2077,7 +2076,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
       ),
       child: Text(
         '$percent%',
-        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: color, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -2090,27 +2089,27 @@ class _PeopleSectionState extends State<_PeopleSection> {
     switch (source) {
       case 'ai_guess':
         icon = Icons.auto_awesome;
-        color = Colors.purple;
+        color = ContentTypeColors.documentary;
         label = 'AI';
         break;
       case 'manual':
         icon = Icons.person;
-        color = Colors.blue;
+        color = AppColors.info;
         label = 'Manual';
         break;
       case 'facewatch':
         icon = Icons.face;
-        color = Colors.teal;
+        color = ContentTypeColors.press;
         label = 'Face';
         break;
       case 'voiceprint':
         icon = Icons.mic;
-        color = Colors.indigo;
+        color = AppColors.info;
         label = 'Voice';
         break;
       default:
         icon = Icons.help_outline;
-        color = Colors.grey;
+        color = AppColors.textGhost;
         label = source;
     }
 
@@ -2119,7 +2118,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 11, color: color)),
+        Text(label, style: Theme.of(context).textTheme.labelSmall!.copyWith(color: color)),
       ],
     );
   }
@@ -2225,9 +2224,9 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error, color: Colors.red, size: 48),
+                              const Icon(Icons.error, color: AppColors.error, size: 48),
                               const SizedBox(height: 16),
-                              Text(_error!, style: const TextStyle(color: Colors.red)),
+                              Text(_error!, style: const TextStyle(color: AppColors.error)),
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: _loadLog,
@@ -2238,7 +2237,7 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
                         )
                       : Container(
                           decoration: BoxDecoration(
-                            color: Colors.black87,
+                            color: AppColors.bg.withValues(alpha: 0.87),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: SingleChildScrollView(
@@ -2246,10 +2245,9 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
                             padding: const EdgeInsets.all(12),
                             child: SelectableText(
                               _logContent ?? 'No log content',
-                              style: const TextStyle(
-                                fontFamily: 'monospace',
+                              style: TmzTextStyles.mono.copyWith(
                                 fontSize: 12,
-                                color: Colors.greenAccent,
+                                color: AppColors.success,
                                 height: 1.4,
                               ),
                             ),
@@ -2260,10 +2258,9 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
             const SizedBox(height: 8),
             Text(
               'Look for "GEMINI SPEAKER RESOLUTION" section to verify speaker attribution',
-              style: TextStyle(
-                fontSize: 12,
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
                 fontStyle: FontStyle.italic,
-                color: Colors.grey[600],
+                color: AppColors.textGhost,
               ),
             ),
           ],

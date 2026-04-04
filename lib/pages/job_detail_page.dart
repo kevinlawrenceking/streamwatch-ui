@@ -260,7 +260,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.error,
       ),
     );
   }
@@ -282,7 +282,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error, size: 64, color: Colors.red),
+                      const Icon(Icons.error, size: 64, color: AppColors.error),
                       const SizedBox(height: 16),
                       Text('Error: $_error'),
                       const SizedBox(height: 16),
@@ -382,19 +382,19 @@ class _JobDetailPageState extends State<JobDetailPage> {
             LinearProgressIndicator(
               value: _job!.progressPct / 100,
               minHeight: 8,
-              backgroundColor: Colors.grey[300],
+              backgroundColor: Theme.of(context).colorScheme.outline,
               valueColor: AlwaysStoppedAnimation<Color>(
-                _job!.isFailed ? Colors.red : AppColors.tmzRed,
+                _job!.isFailed ? AppColors.error : AppColors.tmzRed,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               '${_job!.progressPct}%',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               '${_job!.completedChunks} segments processed',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textGhost),
             ),
           ],
         ),
@@ -410,7 +410,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
           child: Center(
             child: Text(
               'No segments available yet',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textGhost),
             ),
           ),
         ),
@@ -454,18 +454,18 @@ class _JobDetailPageState extends State<JobDetailPage> {
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               return Container(
-                color: Colors.grey[300],
+                color: AppColors.textGhost,
                 child: Icon(
                   Icons.videocam,
                   size: 40,
-                  color: Colors.grey[500],
+                  color: AppColors.textGhost,
                 ),
               );
             },
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return Container(
-                color: Colors.grey[200],
+                color: AppColors.surfaceOverlay,
                 child: const Center(
                   child: SizedBox(
                     width: 24,
@@ -482,12 +482,12 @@ class _JobDetailPageState extends State<JobDetailPage> {
         children: [
           Text(
             'Segment ${chunk.orderNo}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(width: 12),
           Text(
             chunk.formattedTimeRange,
-            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
           ),
         ],
       ),
@@ -496,7 +496,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 chunk.summary!,
-                style: const TextStyle(fontSize: 14, height: 1.4),
+                style: Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.4),
                 maxLines: 5,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -652,9 +652,8 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 Chip(
                   label: Text('$_segmentsCompleted/$_segmentsTotal segments'),
                   backgroundColor: AppColors.tmzRed.withValues(alpha: 0.1),
-                  labelStyle: TextStyle(
+                  labelStyle: Theme.of(context).textTheme.labelSmall!.copyWith(
                     color: AppColors.tmzRed,
-                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
                   padding: EdgeInsets.zero,
@@ -668,16 +667,15 @@ class _JobDetailPageState extends State<JobDetailPage> {
               child: Text(
                 _streamingSummary ?? 'Generating summary...',
                 key: ValueKey(_streamingSummary),
-                style: const TextStyle(fontSize: 15, height: 1.5),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(height: 1.5),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Summary updates as more content is processed...',
-              style: TextStyle(
-                fontSize: 12,
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
                 fontStyle: FontStyle.italic,
-                color: Colors.grey[600],
+                color: AppColors.textGhost,
               ),
             ),
           ],
@@ -699,7 +697,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.summarize, color: Colors.green),
+                const Icon(Icons.summarize, color: AppColors.success),
                 const SizedBox(width: 8),
                 Text(
                   'Final Summary',
@@ -710,7 +708,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
             const Divider(),
             Text(
               _job!.summaryText!,
-              style: const TextStyle(fontSize: 16, height: 1.5),
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(height: 1.5),
             ),
           ],
         ),
@@ -730,7 +728,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
     final transcriptToShow = hasCleanedTranscript ? _job!.transcriptFinal! : _job!.fullTranscript!;
     final transcriptLabel = hasCleanedTranscript ? 'Cleaned Transcript' : 'Full Transcript (Raw)';
     final transcriptIcon = hasCleanedTranscript ? Icons.auto_fix_high : Icons.description;
-    final transcriptColor = hasCleanedTranscript ? Colors.green : AppColors.tmzRed;
+    final transcriptColor = hasCleanedTranscript ? AppColors.success : AppColors.tmzRed;
 
     return Card(
       child: Padding(
@@ -750,8 +748,8 @@ class _JobDetailPageState extends State<JobDetailPage> {
                   const SizedBox(width: 8),
                   Chip(
                     label: const Text('AI Cleaned'),
-                    backgroundColor: Colors.green.withValues(alpha: 0.2),
-                    labelStyle: const TextStyle(color: Colors.green, fontSize: 11),
+                    backgroundColor: AppColors.success.withValues(alpha: 0.2),
+                    labelStyle: Theme.of(context).textTheme.labelSmall!.copyWith(color: AppColors.success),
                   ),
                 ],
               ],
@@ -762,7 +760,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
               child: SingleChildScrollView(
                 child: Text(
                   transcriptToShow,
-                  style: const TextStyle(fontSize: 14, height: 1.5),
+                  style: Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.5),
                 ),
               ),
             ),
@@ -776,19 +774,19 @@ class _JobDetailPageState extends State<JobDetailPage> {
     Color color;
     switch (status) {
       case 'completed':
-        color = Colors.green;
+        color = AppColors.success;
         break;
       case 'processing':
         color = AppColors.tmzRed;
         break;
       case 'failed':
-        color = Colors.red;
+        color = AppColors.error;
         break;
       case 'queued':
-        color = Colors.orange;
+        color = AppColors.warning;
         break;
       default:
-        color = Colors.grey;
+        color = AppColors.textGhost;
     }
 
     return Chip(
@@ -896,7 +894,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Could not open download'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }

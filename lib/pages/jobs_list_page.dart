@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/job.dart';
+import '../themes/app_theme.dart';
 
 class JobsListPage extends StatefulWidget {
   const JobsListPage({super.key});
@@ -43,7 +44,7 @@ class _JobsListPageState extends State<JobsListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recent Jobs'),
-        backgroundColor: const Color(0xFFCE0000),  // TMZ Red
+        backgroundColor: AppColors.tmzRed,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -107,10 +108,7 @@ class _JobsListPageState extends State<JobsListPage> {
           children: [
             // Thumbnail on the left
             ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                bottomLeft: Radius.circular(4),
-              ),
+              borderRadius: BorderRadius.zero,
               child: SizedBox(
                 width: 120,
                 height: 90,
@@ -202,7 +200,7 @@ class _JobsListPageState extends State<JobsListPage> {
                             '${job.progressPct}%',
                             style: const TextStyle(
                               fontSize: 12,
-                              color: Color(0xFFCE0000),  // TMZ Red
+                              color: AppColors.tmzRed,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -233,7 +231,7 @@ class _JobsListPageState extends State<JobsListPage> {
         color = Colors.green;
         break;
       case 'processing':
-        color = const Color(0xFFCE0000);  // TMZ Red
+        color = AppColors.tmzRed;
         break;
       case 'failed':
         color = Colors.red;
@@ -250,7 +248,7 @@ class _JobsListPageState extends State<JobsListPage> {
         status.toUpperCase(),
         style: const TextStyle(fontSize: 11),
       ),
-      backgroundColor: color.withOpacity(0.2),
+      backgroundColor: color.withValues(alpha: 0.2),
       labelStyle: TextStyle(color: color, fontWeight: FontWeight.bold),
       padding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,

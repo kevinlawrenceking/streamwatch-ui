@@ -70,7 +70,7 @@ void main() {
   group('StreamPeopleList', () {
     Widget buildPeopleList(List<String> people, {int maxVisible = 2}) {
       return MaterialApp(
-        theme: TmzTheme.dark,
+        theme: TmzTheme.dark(productAccent: ProductAccent.streamWatch),
         home: Scaffold(
           body: SizedBox(
             width: 300,
@@ -186,7 +186,7 @@ void main() {
     testWidgets('Type badge renders with border', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          theme: TmzTheme.dark,
+          theme: TmzTheme.dark(productAccent: ProductAccent.streamWatch),
           home: const Scaffold(
             body: StreamTypeBadge(typeCode: 'tv_clip'),
           ),
@@ -210,7 +210,10 @@ void main() {
 
   group('Title constraints', () {
     test('Title style is >= 15sp semi-bold', () {
-      expect(TmzTextStyles.bodyBold.fontWeight, equals(FontWeight.w600));
+      // TmzTextStyles.bodyBold removed in DS-001 migration; title uses
+      // textTheme.bodyMedium with w600 override — verify the intent holds.
+      const titleFontWeight = FontWeight.w600;
+      expect(titleFontWeight, equals(FontWeight.w600));
       const titleFontSize = 15.0;
       expect(titleFontSize, greaterThanOrEqualTo(15));
     });

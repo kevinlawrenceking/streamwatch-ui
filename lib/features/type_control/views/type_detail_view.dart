@@ -105,7 +105,7 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.failure.message),
-                  backgroundColor: TmzColors.error,
+                  backgroundColor: AppColors.error,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -118,7 +118,7 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.failure.message),
-                  backgroundColor: TmzColors.error,
+                  backgroundColor: AppColors.error,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -131,7 +131,7 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.failure.message),
-                  backgroundColor: TmzColors.error,
+                  backgroundColor: AppColors.error,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -146,7 +146,7 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.actionError!),
-                  backgroundColor: TmzColors.error,
+                  backgroundColor: AppColors.error,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -168,7 +168,7 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
             return Scaffold(
               appBar: AppBar(
                 title: const Text('Type Detail'),
-                backgroundColor: TmzColors.gray90,
+                backgroundColor: AppColors.surfaceElevated,
               ),
               body: const Center(child: CircularProgressIndicator()),
             );
@@ -178,19 +178,19 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
             return Scaffold(
               appBar: AppBar(
                 title: const Text('Type Detail'),
-                backgroundColor: TmzColors.gray90,
+                backgroundColor: AppColors.surfaceElevated,
               ),
               body: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.error_outline,
-                        size: 64, color: TmzColors.error),
+                        size: 64, color: AppColors.error),
                     const SizedBox(height: 16),
                     Text(
                       'Error: ${state.failure.message}',
-                      style: TmzTextStyles.body
-                          .copyWith(color: TmzColors.textSecondary),
+                      style: Theme.of(context).textTheme.bodyMedium!
+                          .copyWith(color: AppColors.textDim),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
@@ -207,7 +207,7 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
             return Scaffold(
               appBar: AppBar(
                 title: Text(state.type.name),
-                backgroundColor: TmzColors.gray90,
+                backgroundColor: AppColors.surfaceElevated,
                 bottom: TabBar(
                   controller: _tabController,
                   tabs: const [
@@ -258,12 +258,12 @@ class _VersionsTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, size: 64, color: TmzColors.gray50),
+            Icon(Icons.history, size: 64, color: AppColors.textGhost),
             const SizedBox(height: 16),
             Text(
               'No versions yet',
               style:
-                  TmzTextStyles.body.copyWith(color: TmzColors.textSecondary),
+                  Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
             ),
           ],
         ),
@@ -316,7 +316,7 @@ class _VersionCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'Version ${version.versionNumber}',
-                  style: TmzTextStyles.bodyBold,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 8),
                 _StatusChip(status: version.status),
@@ -335,7 +335,7 @@ class _VersionCard extends StatelessWidget {
                 version.definitionJson!.isNotEmpty) ...[
               Text(
                 'Definition',
-                style: TmzTextStyles.caption
+                style: Theme.of(context).textTheme.bodySmall!
                     .copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
@@ -343,9 +343,9 @@ class _VersionCard extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: TmzColors.gray90,
+                  color: AppColors.surfaceElevated,
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: TmzColors.gray70),
+                  border: Border.all(color: AppColors.textGhost),
                 ),
                 child: _DefinitionFields(
                     definition: version.definitionJson!),
@@ -356,12 +356,12 @@ class _VersionCard extends StatelessWidget {
               children: [
                 Text(
                   'Created: ${_formatDate(version.createdAt)}',
-                  style: TmzTextStyles.caption,
+                  style: Theme.of(context).textTheme.bodySmall!,
                 ),
                 const SizedBox(width: 16),
                 Text(
                   'Updated: ${_formatDate(version.updatedAt)}',
-                  style: TmzTextStyles.caption,
+                  style: Theme.of(context).textTheme.bodySmall!,
                 ),
               ],
             ),
@@ -463,8 +463,8 @@ class _DefinitionFields extends StatelessWidget {
     if (entries.isEmpty) {
       return Text(
         'No definition fields',
-        style: TmzTextStyles.caption
-            .copyWith(color: TmzColors.textSecondary),
+        style: Theme.of(context).textTheme.bodySmall!
+            .copyWith(color: AppColors.textDim),
       );
     }
 
@@ -472,15 +472,15 @@ class _DefinitionFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int i = 0; i < entries.length; i++) ...[
-          _buildField(entries[i].key, entries[i].value),
+          _buildField(context, entries[i].key, entries[i].value),
           if (i < entries.length - 1)
-            Divider(color: TmzColors.gray70, height: 8, thickness: 0.5),
+            Divider(color: AppColors.textGhost, height: 8, thickness: 0.5),
         ],
       ],
     );
   }
 
-  Widget _buildField(String key, dynamic value) {
+  Widget _buildField(BuildContext context, String key, dynamic value) {
     final label = _formatLabel(key);
 
     // Arrays: bulleted list under a bold label
@@ -493,9 +493,9 @@ class _DefinitionFields extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TmzTextStyles.caption.copyWith(
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
                 fontWeight: FontWeight.bold,
-                color: TmzColors.textSecondary,
+                color: AppColors.textDim,
                 fontSize: 11,
               ),
             ),
@@ -506,12 +506,12 @@ class _DefinitionFields extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('•  ',
-                          style: TmzTextStyles.caption
+                          style: Theme.of(context).textTheme.bodySmall!
                               .copyWith(fontSize: 11)),
                       Expanded(
                         child: Text(
                           '$item',
-                          style: TmzTextStyles.caption
+                          style: Theme.of(context).textTheme.bodySmall!
                               .copyWith(fontSize: 11),
                         ),
                       ),
@@ -537,9 +537,9 @@ class _DefinitionFields extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TmzTextStyles.caption.copyWith(
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
                 fontWeight: FontWeight.bold,
-                color: TmzColors.textSecondary,
+                color: AppColors.textDim,
                 fontSize: 11,
               ),
             ),
@@ -555,16 +555,16 @@ class _DefinitionFields extends StatelessWidget {
                   children: [
                     Text(
                       '${_formatLabel(e.key)}:  ',
-                      style: TmzTextStyles.caption.copyWith(
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: TmzColors.textSecondary,
+                        color: AppColors.textDim,
                         fontSize: 11,
                       ),
                     ),
                     Expanded(
                       child: Text(
                         entryValue,
-                        style: TmzTextStyles.caption.copyWith(fontSize: 11),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 11),
                       ),
                     ),
                   ],
@@ -584,16 +584,16 @@ class _DefinitionFields extends StatelessWidget {
         children: [
           Text(
             '$label:  ',
-            style: TmzTextStyles.caption.copyWith(
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
               fontWeight: FontWeight.bold,
-              color: TmzColors.textSecondary,
+              color: AppColors.textDim,
               fontSize: 11,
             ),
           ),
           Expanded(
             child: Text(
               '$value',
-              style: TmzTextStyles.caption.copyWith(fontSize: 11),
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 11),
             ),
           ),
         ],
@@ -632,13 +632,13 @@ class _RulesTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.rule, size: 64, color: TmzColors.gray50),
+            Icon(Icons.rule, size: 64, color: AppColors.textGhost),
             const SizedBox(height: 16),
             Text(
               'Select a version from the Versions tab\nto view its rules',
               textAlign: TextAlign.center,
               style:
-                  TmzTextStyles.body.copyWith(color: TmzColors.textSecondary),
+                  Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
             ),
           ],
         ),
@@ -660,12 +660,12 @@ class _RulesTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.rule, size: 64, color: TmzColors.gray50),
+                Icon(Icons.rule, size: 64, color: AppColors.textGhost),
                 const SizedBox(height: 16),
                 Text(
                   'No rules defined for this version',
-                  style: TmzTextStyles.body
-                      .copyWith(color: TmzColors.textSecondary),
+                  style: Theme.of(context).textTheme.bodyMedium!
+                      .copyWith(color: AppColors.textDim),
                 ),
               ],
             ),
@@ -816,16 +816,16 @@ class _RuleCard extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: rule.isActive
-                    ? TmzColors.success.withValues(alpha: 0.15)
-                    : TmzColors.gray70,
-                borderRadius: BorderRadius.circular(14),
+                    ? AppColors.success.withValues(alpha: 0.15)
+                    : AppColors.textGhost,
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 '${rule.ruleOrder}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: rule.isActive ? TmzColors.success : TmzColors.gray50,
+                  color: rule.isActive ? AppColors.success : AppColors.textGhost,
                 ),
               ),
             ),
@@ -836,12 +836,12 @@ class _RuleCard extends StatelessWidget {
                 children: [
                   Text(
                     rule.ruleText,
-                    style: TmzTextStyles.body.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       decoration: rule.isDeprecated
                           ? TextDecoration.lineThrough
                           : null,
                       color: rule.isDeprecated
-                          ? TmzColors.textSecondary
+                          ? AppColors.textDim
                           : null,
                     ),
                   ),
@@ -853,7 +853,7 @@ class _RuleCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Source: ${rule.source}',
-                          style: TmzTextStyles.caption,
+                          style: Theme.of(context).textTheme.bodySmall!,
                         ),
                       ],
                     ],
@@ -1011,12 +1011,12 @@ class _CandidatesTabState extends State<_CandidatesTab> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.error_outline,
-                    size: 64, color: TmzColors.error),
+                    size: 64, color: AppColors.error),
                 const SizedBox(height: 16),
                 Text(
                   'Error: ${state.failure.message}',
-                  style: TmzTextStyles.body
-                      .copyWith(color: TmzColors.textSecondary),
+                  style: Theme.of(context).textTheme.bodyMedium!
+                      .copyWith(color: AppColors.textDim),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
@@ -1043,9 +1043,9 @@ class _CandidatesTabState extends State<_CandidatesTab> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: TmzColors.gray90,
+                  color: AppColors.surfaceElevated,
                   border: Border(
-                    bottom: BorderSide(color: TmzColors.gray70),
+                    bottom: BorderSide(color: AppColors.textGhost),
                   ),
                 ),
                 child: Row(
@@ -1101,8 +1101,8 @@ class _CandidatesTabState extends State<_CandidatesTab> {
                           _statusFilter == 'all'
                               ? 'No candidates yet'
                               : 'No $_statusFilter candidates',
-                          style: TmzTextStyles.body
-                              .copyWith(color: TmzColors.textSecondary),
+                          style: Theme.of(context).textTheme.bodyMedium!
+                              .copyWith(color: AppColors.textDim),
                         ),
                       )
                     : ListView.builder(
@@ -1125,12 +1125,12 @@ class _CandidatesTabState extends State<_CandidatesTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.how_to_vote, size: 64, color: TmzColors.gray50),
+              Icon(Icons.how_to_vote, size: 64, color: AppColors.textGhost),
               const SizedBox(height: 16),
               Text(
                 'Loading candidates...',
-                style: TmzTextStyles.body
-                    .copyWith(color: TmzColors.textSecondary),
+                style: Theme.of(context).textTheme.bodyMedium!
+                    .copyWith(color: AppColors.textDim),
               ),
             ],
           ),
@@ -1163,7 +1163,7 @@ class _CandidateCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     candidate.candidateText,
-                    style: TmzTextStyles.body,
+                    style: Theme.of(context).textTheme.bodyMedium!,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1176,12 +1176,12 @@ class _CandidateCard extends StatelessWidget {
                 if (candidate.source != null)
                   Text(
                     'Source: ${candidate.source}',
-                    style: TmzTextStyles.caption,
+                    style: Theme.of(context).textTheme.bodySmall!,
                   ),
                 const Spacer(),
                 Text(
                   _formatDate(candidate.createdAt),
-                  style: TmzTextStyles.caption,
+                  style: Theme.of(context).textTheme.bodySmall!,
                 ),
               ],
             ),
@@ -1197,7 +1197,7 @@ class _CandidateCard extends StatelessWidget {
                     icon: const Icon(Icons.check, size: 16),
                     label: const Text('Approve'),
                     style:
-                        TextButton.styleFrom(foregroundColor: TmzColors.success),
+                        TextButton.styleFrom(foregroundColor: AppColors.success),
                     onPressed: () =>
                         _showApproveDialog(context, candidate, videoTypeId),
                   ),
@@ -1206,7 +1206,7 @@ class _CandidateCard extends StatelessWidget {
                     icon: const Icon(Icons.close, size: 16),
                     label: const Text('Reject'),
                     style:
-                        TextButton.styleFrom(foregroundColor: TmzColors.error),
+                        TextButton.styleFrom(foregroundColor: AppColors.error),
                     onPressed: () =>
                         _showRejectDialog(context, candidate, videoTypeId),
                   ),
@@ -1264,7 +1264,7 @@ class _CandidateCard extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: TmzColors.success),
+            style: TextButton.styleFrom(foregroundColor: AppColors.success),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context.read<CandidateReviewBloc>().add(
@@ -1312,7 +1312,7 @@ class _CandidateCard extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: TmzColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               if (reasonController.text.trim().isEmpty) return;
               Navigator.of(dialogContext).pop();
@@ -1442,12 +1442,12 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.error_outline,
-                    size: 64, color: TmzColors.error),
+                    size: 64, color: AppColors.error),
                 const SizedBox(height: 16),
                 Text(
                   'Error: ${state.failure.message}',
-                  style: TmzTextStyles.body
-                      .copyWith(color: TmzColors.textSecondary),
+                  style: Theme.of(context).textTheme.bodyMedium!
+                      .copyWith(color: AppColors.textDim),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
@@ -1476,9 +1476,9 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: TmzColors.gray90,
+                      color: AppColors.surfaceElevated,
                       border: Border(
-                        bottom: BorderSide(color: TmzColors.gray70),
+                        bottom: BorderSide(color: AppColors.textGhost),
                       ),
                     ),
                     child: Row(
@@ -1529,8 +1529,8 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                               _kindFilter == 'all'
                                   ? 'No exemplars yet'
                                   : 'No $_kindFilter exemplars',
-                              style: TmzTextStyles.body.copyWith(
-                                  color: TmzColors.textSecondary),
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                  color: AppColors.textDim),
                             ),
                           )
                         : ListView.builder(
@@ -1566,12 +1566,12 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.video_library, size: 64, color: TmzColors.gray50),
+              Icon(Icons.video_library, size: 64, color: AppColors.textGhost),
               const SizedBox(height: 16),
               Text(
                 'Loading exemplars...',
-                style: TmzTextStyles.body
-                    .copyWith(color: TmzColors.textSecondary),
+                style: Theme.of(context).textTheme.bodyMedium!
+                    .copyWith(color: AppColors.textDim),
               ),
             ],
           ),
@@ -1656,8 +1656,8 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                     const SizedBox(height: 8),
                     Text(
                       '${selectedJobIds.length} job(s) selected',
-                      style: TmzTextStyles.caption.copyWith(
-                          color: TmzColors.tmzRed,
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: AppColors.tmzRed,
                           fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -1669,8 +1669,8 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                         ? Center(
                             child: Text(
                               'Type to search completed jobs',
-                              style: TmzTextStyles.body.copyWith(
-                                  color: TmzColors.textSecondary),
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                  color: AppColors.textDim),
                             ),
                           )
                         : searchResults.isEmpty
@@ -1679,8 +1679,8 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                                   isSearching
                                       ? 'Searching...'
                                       : 'No jobs found',
-                                  style: TmzTextStyles.body.copyWith(
-                                      color: TmzColors.textSecondary),
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                      color: AppColors.textDim),
                                 ),
                               )
                             : ListView.builder(
@@ -1698,12 +1698,12 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                                           job.jobId,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TmzTextStyles.bodyBold
-                                          .copyWith(fontSize: 13),
+                                      style: Theme.of(context).textTheme.bodyMedium!
+                                          .copyWith(fontWeight: FontWeight.w600, fontSize: 13),
                                     ),
                                     subtitle: Text(
                                       '${job.source}  •  ${job.typeCode ?? 'untyped'}  •  ${_formatDate(job.createdAt)}',
-                                      style: TmzTextStyles.caption,
+                                      style: Theme.of(context).textTheme.bodySmall!,
                                     ),
                                     onChanged: (checked) {
                                       setDialogState(() {
@@ -1810,9 +1810,9 @@ class _PromptTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: TmzColors.gray90,
+            color: AppColors.surfaceElevated,
             border: Border(
-              bottom: BorderSide(color: TmzColors.gray70),
+              bottom: BorderSide(color: AppColors.textGhost),
             ),
           ),
           child: Row(
@@ -1832,7 +1832,7 @@ class _PromptTab extends StatelessWidget {
               if (state.activeVersion != null)
                 Text(
                   'Active: v${state.activeVersion!.versionNumber}',
-                  style: TmzTextStyles.caption,
+                  style: Theme.of(context).textTheme.bodySmall!,
                 ),
               const Spacer(),
               if (state.renderedPrompt != null) ...[
@@ -1841,14 +1841,14 @@ class _PromptTab extends StatelessWidget {
                       ? Icons.cached
                       : Icons.refresh,
                   size: 14,
-                  color: TmzColors.textSecondary,
+                  color: AppColors.textDim,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   state.renderedPrompt!.fromCache
                       ? 'From cache'
                       : 'Freshly rendered',
-                  style: TmzTextStyles.caption,
+                  style: Theme.of(context).textTheme.bodySmall!,
                 ),
                 const SizedBox(width: 12),
                 IconButton(
@@ -1906,13 +1906,13 @@ class _PromptTab extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.description_outlined,
-                size: 64, color: TmzColors.gray50),
+                size: 64, color: AppColors.textGhost),
             const SizedBox(height: 16),
             Text(
               'Click "Render Prompt" to generate\nthe classification prompt',
               textAlign: TextAlign.center,
               style:
-                  TmzTextStyles.body.copyWith(color: TmzColors.textSecondary),
+                  Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
             ),
           ],
         ),
@@ -1928,19 +1928,19 @@ class _PromptTab extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: TmzColors.gray90,
+              color: AppColors.surfaceElevated,
               borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: TmzColors.gray70),
+              border: Border.all(color: AppColors.textGhost),
             ),
             child: Row(
               children: [
                 const Icon(Icons.fingerprint,
-                    size: 14, color: TmzColors.textSecondary),
+                    size: 14, color: AppColors.textDim),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     'Hash: ${state.renderedPrompt!.hash.substring(0, 16)}...',
-                    style: TmzTextStyles.caption.copyWith(
+                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
                       fontFamily: 'monospace',
                     ),
                   ),
@@ -1954,13 +1954,13 @@ class _PromptTab extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: TmzColors.gray90,
+              color: AppColors.surfaceElevated,
               borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: TmzColors.gray70),
+              border: Border.all(color: AppColors.textGhost),
             ),
             child: SelectableText(
               state.renderedPrompt!.prompt,
-              style: TmzTextStyles.body.copyWith(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontFamily: 'monospace',
                 fontSize: 13,
                 height: 1.6,
@@ -2037,24 +2037,24 @@ class _StatusChip extends StatelessWidget {
     switch (status) {
       case 'active':
       case 'approved':
-        return TmzColors.success;
+        return AppColors.success;
       case 'draft':
       case 'pending':
         return Colors.orange;
       case 'archived':
       case 'deprecated':
       case 'rejected':
-        return TmzColors.gray50;
+        return AppColors.textGhost;
       case 'merged':
         return Colors.blue;
       case 'canonical':
         return Colors.amber;
       case 'counter example':
-        return TmzColors.error;
+        return AppColors.error;
       case 'edge case':
         return Colors.orange;
       default:
-        return TmzColors.gray50;
+        return AppColors.textGhost;
     }
   }
 }
@@ -2078,13 +2078,13 @@ class _FilterChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: selected
-              ? TmzColors.success.withValues(alpha: 0.15)
+              ? AppColors.success.withValues(alpha: 0.15)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(
             color: selected
-                ? TmzColors.success
-                : TmzColors.gray50,
+                ? AppColors.success
+                : AppColors.textGhost,
           ),
         ),
         child: Text(
@@ -2092,7 +2092,7 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            color: selected ? TmzColors.success : TmzColors.textSecondary,
+            color: selected ? AppColors.success : AppColors.textDim,
           ),
         ),
       ),
@@ -2107,13 +2107,13 @@ class _FilterChip extends StatelessWidget {
 Color _getVersionStatusColor(String status) {
   switch (status) {
     case 'active':
-      return TmzColors.success;
+      return AppColors.success;
     case 'draft':
       return Colors.orange;
     case 'archived':
-      return TmzColors.gray50;
+      return AppColors.textGhost;
     default:
-      return TmzColors.gray50;
+      return AppColors.textGhost;
   }
 }
 

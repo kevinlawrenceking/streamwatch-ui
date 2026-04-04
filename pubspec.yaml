@@ -13,6 +13,10 @@ dependencies:
   tmz_ui:
     path: ../../../global/flutter/tmz_ui
 
+  # DS-001 design tokens
+  shared_ui:
+    path: ../../shared-ui/flutter
+
   # HTTP client for API requests
   http: ^1.1.0
 

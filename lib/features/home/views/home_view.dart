@@ -103,7 +103,7 @@ class _HomeBodyState extends State<_HomeBody> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.actionError!),
-                backgroundColor: TmzColors.error,
+                backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -328,8 +328,8 @@ class _HomeBodyState extends State<_HomeBody> {
           onPressed: _navigateToIngest,
           icon: const Icon(Icons.add),
           label: const Text('INGEST'),
-          backgroundColor: TmzColors.tmzRed,
-          foregroundColor: TmzColors.white,
+          backgroundColor: AppColors.tmzRed,
+          foregroundColor: AppColors.textMax,
         ),
       ),
     );
@@ -402,7 +402,7 @@ class _HomeBodyState extends State<_HomeBody> {
       child: Column(
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: TmzColors.tmzRed),
+            decoration: BoxDecoration(color: AppColors.tmzRed),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
@@ -454,7 +454,7 @@ class _HomeBodyState extends State<_HomeBody> {
                   return Center(
                     child: Text(
                       'Error loading collections',
-                      style: TmzTextStyles.caption,
+                      style: Theme.of(context).textTheme.bodySmall!,
                     ),
                   );
                 }
@@ -468,7 +468,7 @@ class _HomeBodyState extends State<_HomeBody> {
                       padding: const EdgeInsets.all(16),
                       child: Text(
                         'No collections yet',
-                        style: TmzTextStyles.caption,
+                        style: Theme.of(context).textTheme.bodySmall!,
                       ),
                     );
                   }
@@ -482,7 +482,7 @@ class _HomeBodyState extends State<_HomeBody> {
                           children: [
                             Text(
                               'COLLECTIONS',
-                              style: TmzTextStyles.caption.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall!.copyWith(
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.0,
                               ),
@@ -640,18 +640,18 @@ class _CollectionTile extends StatelessWidget {
     return ListTile(
       leading: Icon(
         collection.isDefault ? Icons.folder_special : Icons.folder,
-        color: isSelected ? TmzColors.tmzRed : null,
+        color: isSelected ? AppColors.tmzRed : null,
       ),
       title: Text(
         collection.name,
         style: TextStyle(
           fontWeight: collection.isDefault ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? TmzColors.tmzRed : null,
+          color: isSelected ? AppColors.tmzRed : null,
         ),
       ),
       trailing: Text(
         '${collection.videoCount}',
-        style: TmzTextStyles.caption,
+        style: Theme.of(context).textTheme.bodySmall!,
       ),
       selected: isSelected,
       dense: true,
@@ -681,9 +681,9 @@ class _SearchFilterBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: TmzColors.gray90,
+        color: AppColors.surfaceElevated,
         border: Border(
-          bottom: BorderSide(color: TmzColors.gray70, width: 1),
+          bottom: BorderSide(color: AppColors.textGhost, width: 1), // DS-001: was gray70 border
         ),
       ),
       child: Row(
@@ -795,18 +795,18 @@ class _JobCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: TmzColors.gray80,
+                      color: AppColors.surfaceOverlay,
                       child: Icon(
                         Icons.videocam,
                         size: 40,
-                        color: TmzColors.gray50,
+                        color: AppColors.textGhost,
                       ),
                     );
                   },
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return Container(
-                      color: TmzColors.gray80,
+                      color: AppColors.surfaceOverlay,
                       child: const Center(
                         child: SizedBox(
                           width: 20,
@@ -842,7 +842,7 @@ class _JobCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             job.title ?? 'Job ${job.jobId.substring(0, 8)}...',
-                            style: TmzTextStyles.bodyBold,
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -858,7 +858,7 @@ class _JobCard extends StatelessWidget {
                         Icon(
                           job.source == 'url' ? Icons.link : Icons.upload_file,
                           size: 14,
-                          color: TmzColors.textSecondary,
+                          color: AppColors.textDim,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -866,7 +866,7 @@ class _JobCard extends StatelessWidget {
                             job.source == 'url'
                                 ? job.sourceUrl ?? 'URL'
                                 : job.filename ?? 'Uploaded file',
-                            style: TmzTextStyles.caption,
+                            style: Theme.of(context).textTheme.bodySmall!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -879,14 +879,14 @@ class _JobCard extends StatelessWidget {
                       children: [
                         Text(
                           _formatDateTime(job.createdAt),
-                          style: TmzTextStyles.caption,
+                          style: Theme.of(context).textTheme.bodySmall!,
                         ),
                         if (job.isProcessing) ...[
                           const SizedBox(width: 8),
                           Text(
                             '${job.progressPct}%',
-                            style: TmzTextStyles.caption.copyWith(
-                              color: TmzColors.tmzRed,
+                            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                              color: AppColors.tmzRed,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -906,7 +906,7 @@ class _JobCard extends StatelessWidget {
                       LinearProgressIndicator(
                         value: job.progressPct / 100,
                         minHeight: 3,
-                        backgroundColor: TmzColors.gray70,
+                        backgroundColor: AppColors.textGhost,
                       ),
                     ],
                   ],
@@ -947,13 +947,13 @@ class _JobGridCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       elevation: 2,
-      color: TmzColors.gray90,
+      color: AppColors.surfaceElevated,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       child: InkWell(
         onTap: () {
           Navigator.pushNamed(context, '/job', arguments: job.jobId);
         },
-        hoverColor: TmzColors.gray80.withValues(alpha: 0.5),
+        hoverColor: AppColors.surfaceOverlay.withValues(alpha: 0.5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -969,11 +969,11 @@ class _JobGridCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: TmzColors.gray80,
+                        color: AppColors.surfaceOverlay,
                         child: Icon(
                           Icons.videocam,
                           size: 40,
-                          color: TmzColors.gray50,
+                          color: AppColors.textGhost,
                         ),
                       );
                     },
@@ -997,7 +997,7 @@ class _JobGridCard extends StatelessWidget {
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.zero,
                         ),
                         child: const Icon(
                           Icons.flag,
@@ -1045,7 +1045,7 @@ class _JobGridCard extends StatelessWidget {
                             value: job.progressPct / 100,
                             minHeight: 2,
                             backgroundColor: Colors.black38,
-                            valueColor: const AlwaysStoppedAnimation<Color>(TmzColors.tmzRed),
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
                           ),
                         ],
                       ),
@@ -1054,7 +1054,7 @@ class _JobGridCard extends StatelessWidget {
               ),
             ),
             // TMZ red accent line under thumbnail
-            Container(height: 2, color: TmzColors.tmzRed),
+            Container(height: 2, color: AppColors.tmzRed),
             // Content area - fixed height with consistent spacing
             Expanded(
               child: Padding(
@@ -1065,7 +1065,8 @@ class _JobGridCard extends StatelessWidget {
                     // Title - 2 lines max
                     Text(
                       job.title ?? 'Video ${job.jobId.substring(0, 8)}',
-                      style: TmzTextStyles.bodyBold.copyWith(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontWeight: FontWeight.w600,
                         fontSize: 15,
                         height: 1.2,
                       ),
@@ -1076,7 +1077,7 @@ class _JobGridCard extends StatelessWidget {
                     Divider(
                       height: 1,
                       thickness: 1,
-                      color: TmzColors.gray70.withValues(alpha: 0.3),
+                      color: AppColors.textGhost.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 6),
                     // Metadata row 1: Date + Type
@@ -1085,12 +1086,12 @@ class _JobGridCard extends StatelessWidget {
                         Icon(
                           Icons.calendar_today,
                           size: 13,
-                          color: TmzColors.textSecondary,
+                          color: AppColors.textDim,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _formatDate(job.createdAt),
-                          style: TmzTextStyles.caption.copyWith(fontSize: 12),
+                          style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 12),
                         ),
                         if (job.typeCode != null) ...[
                           const SizedBox(width: 8),
@@ -1105,7 +1106,7 @@ class _JobGridCard extends StatelessWidget {
                         Icon(
                           job.source == 'url' ? Icons.link : Icons.upload_file,
                           size: 13,
-                          color: TmzColors.textSecondary,
+                          color: AppColors.textDim,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -1113,7 +1114,7 @@ class _JobGridCard extends StatelessWidget {
                             job.source == 'url'
                                 ? _extractDomain(job.sourceUrl)
                                 : (job.filename ?? 'File'),
-                            style: TmzTextStyles.caption.copyWith(fontSize: 12),
+                            style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1127,7 +1128,7 @@ class _JobGridCard extends StatelessWidget {
                     ],
                     const Spacer(),
                     // Action row - bottom aligned
-                    const Divider(height: 12, thickness: 1, color: TmzColors.gray70),
+                    const Divider(height: 12, thickness: 1, color: AppColors.textGhost),
                     _GridCardActionRow(job: job),
                   ],
                 ),
@@ -1171,14 +1172,14 @@ class _CompactStatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.zero,
       ),
       child: Text(
         status.toUpperCase(),
         style: const TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.w700,
-          color: TmzColors.white,
+          color: AppColors.textMax,
           letterSpacing: 0.3,
         ),
       ),
@@ -1199,7 +1200,7 @@ class _CompactTypeBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Text(
@@ -1230,7 +1231,7 @@ class _CompactTypeBadge extends StatelessWidget {
       case 'commercial':
         return Colors.amber;
       default:
-        return TmzColors.gray50;
+        return AppColors.textGhost;
     }
   }
 }
@@ -1249,7 +1250,7 @@ class _GridCardActionRow extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Could not download $type'),
-              backgroundColor: TmzColors.error,
+              backgroundColor: AppColors.error,
             ),
           );
         }
@@ -1265,7 +1266,7 @@ class _GridCardActionRow extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Could not open link'),
-              backgroundColor: TmzColors.error,
+              backgroundColor: AppColors.error,
             ),
           );
         }
@@ -1285,7 +1286,7 @@ class _GridCardActionRow extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: TmzColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context.read<HomeBloc>().add(DeleteJobEvent(job.jobId));
@@ -1341,7 +1342,7 @@ class _GridCardActionRow extends StatelessWidget {
           tooltip: job.canDelete ? 'Delete' : 'Cannot delete (processing or flagged)',
           enabled: job.canDelete,
           onTap: () => _showDeleteDialog(context),
-          iconColor: job.canDelete ? TmzColors.error : null,
+          iconColor: job.canDelete ? AppColors.error : null,
         ),
       ],
     );
@@ -1367,8 +1368,8 @@ class _GridActionIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = enabled
-        ? (iconColor ?? TmzColors.textSecondary)
-        : TmzColors.gray70;
+        ? (iconColor ?? AppColors.textDim)
+        : AppColors.textGhost;
 
     return Tooltip(
       message: tooltip,
@@ -1393,7 +1394,7 @@ class _ThumbnailSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: TmzColors.gray80,
+      color: AppColors.surfaceOverlay,
       child: const Center(
         child: SizedBox(
           width: 20,
@@ -1427,7 +1428,7 @@ class _JobActionButtons extends StatelessWidget {
           _ActionButton(
             icon: Icons.cancel_outlined,
             tooltip: 'Cancel',
-            iconColor: TmzColors.error,
+            iconColor: AppColors.error,
             isLoading: isActionInFlight && inFlightAction == JobActionType.cancel,
             isDisabled: isActionInFlight,
             onPressed: () => _showCancelDialog(context),
@@ -1462,7 +1463,7 @@ class _JobActionButtons extends StatelessWidget {
         _ActionButton(
           icon: Icons.delete_outline,
           tooltip: job.canDelete ? 'Delete' : 'Cannot delete (processing or flagged)',
-          iconColor: job.canDelete ? TmzColors.error : TmzColors.gray50,
+          iconColor: job.canDelete ? AppColors.error : AppColors.textGhost,
           isLoading: isActionInFlight && inFlightAction == JobActionType.delete,
           isDisabled: isActionInFlight || !job.canDelete,
           onPressed: job.canDelete ? () => _showDeleteDialog(context) : null,
@@ -1513,7 +1514,7 @@ class _JobActionButtons extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: TmzColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context.read<HomeBloc>().add(DeleteJobEvent(job.jobId));
@@ -1539,7 +1540,7 @@ class _JobActionButtons extends StatelessWidget {
             child: const Text('Keep Processing'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: TmzColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context.read<HomeBloc>().add(CancelJobEvent(job.jobId));
@@ -1613,12 +1614,12 @@ class _EmptyView extends StatelessWidget {
           Icon(
             hasFilters ? Icons.search_off : Icons.videocam_off,
             size: 64,
-            color: TmzColors.gray50,
+            color: AppColors.textGhost,
           ),
           const SizedBox(height: 16),
           Text(
             hasFilters ? 'No jobs match your search' : 'No jobs yet',
-            style: TmzTextStyles.body.copyWith(color: TmzColors.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
           ),
           const SizedBox(height: 24),
           if (!hasFilters)
@@ -1646,11 +1647,11 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: TmzColors.error),
+          const Icon(Icons.error_outline, size: 64, color: AppColors.error),
           const SizedBox(height: 16),
           Text(
             'Error: $message',
-            style: TmzTextStyles.body.copyWith(color: TmzColors.textSecondary),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),

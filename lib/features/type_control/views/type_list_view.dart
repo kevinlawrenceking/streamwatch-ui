@@ -54,12 +54,12 @@ class _TypeListBody extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.error_outline,
-                      size: 64, color: TmzColors.error),
+                      size: 64, color: AppColors.error),
                   const SizedBox(height: 16),
                   Text(
                     'Error: ${state.failure.message}',
-                    style: TmzTextStyles.body
-                        .copyWith(color: TmzColors.textSecondary),
+                    style: Theme.of(context).textTheme.bodyMedium!
+                        .copyWith(color: AppColors.textDim),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
@@ -83,12 +83,12 @@ class _TypeListBody extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.category_outlined,
-                        size: 64, color: TmzColors.gray50),
+                        size: 64, color: AppColors.textGhost),
                     const SizedBox(height: 16),
                     Text(
                       'No video types defined yet',
-                      style: TmzTextStyles.body
-                          .copyWith(color: TmzColors.textSecondary),
+                      style: Theme.of(context).textTheme.bodyMedium!
+                          .copyWith(color: AppColors.textDim),
                     ),
                   ],
                 ),
@@ -131,7 +131,7 @@ class _TypeCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.category,
-                color: type.isActive ? TmzColors.success : TmzColors.gray50,
+                color: type.isActive ? AppColors.success : AppColors.textGhost,
                 size: 28,
               ),
               const SizedBox(width: 16),
@@ -141,19 +141,19 @@ class _TypeCard extends StatelessWidget {
                   children: [
                     Text(
                       type.name,
-                      style: TmzTextStyles.bodyBold,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Updated ${_formatDate(type.updatedAt)}',
-                      style: TmzTextStyles.caption,
+                      style: Theme.of(context).textTheme.bodySmall!,
                     ),
                   ],
                 ),
               ),
               _StatusChip(status: type.status),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, color: TmzColors.gray50),
+              const Icon(Icons.chevron_right, color: AppColors.textGhost),
             ],
           ),
         ),
@@ -195,13 +195,13 @@ class _StatusChip extends StatelessWidget {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'active':
-        return TmzColors.success;
+        return AppColors.success;
       case 'draft':
         return Colors.orange;
       case 'archived':
-        return TmzColors.gray50;
+        return AppColors.textGhost;
       default:
-        return TmzColors.gray50;
+        return AppColors.textGhost;
     }
   }
 }

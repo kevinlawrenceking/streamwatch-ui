@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import '../themes/app_theme.dart';
 
 class VideoPlayerPage extends StatefulWidget {
   final String videoUrl;
@@ -96,17 +97,17 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       appBar: AppBar(
         title: Text(
           widget.title,
-          style: const TextStyle(color: Color(0xFFE0E0E0)),
+          style: const TextStyle(color: AppColors.textPrimary),
         ),
-        backgroundColor: const Color(0xFFCE0000),  // TMZ Red
-        iconTheme: const IconThemeData(color: Color(0xFFE0E0E0)),
+        backgroundColor: AppColors.tmzRed,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       body: Center(
         child: _error != null
             ? _buildErrorWidget()
             : !_isInitialized
                 ? const CircularProgressIndicator(
-                    color: Color(0xFFCE0000),
+                    color: AppColors.tmzRed,
                   )
                 : _buildVideoPlayer(),
       ),
@@ -140,8 +141,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         ElevatedButton(
           onPressed: () => Navigator.pop(context),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFCE0000),
-            foregroundColor: const Color(0xFFE0E0E0),
+            backgroundColor: AppColors.tmzRed,
+            foregroundColor: AppColors.textPrimary,
           ),
           child: const Text('Go Back'),
         ),
@@ -164,7 +165,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               if (!_isPlaying)
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -186,8 +187,8 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
           child: VideoProgressIndicator(
             _controller,
             allowScrubbing: true,
-            colors: const VideoProgressColors(
-              playedColor: Color(0xFFCE0000),  // TMZ Red
+            colors: VideoProgressColors(
+              playedColor: AppColors.tmzRed,
               bufferedColor: Colors.grey,
               backgroundColor: Colors.black26,
             ),
@@ -236,7 +237,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
             // Play/Pause
             IconButton(
               icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-              color: const Color(0xFFCE0000),  // TMZ Red
+              color: AppColors.tmzRed,
               iconSize: 48,
               onPressed: _togglePlayPause,
             ),

@@ -54,15 +54,15 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
         allowPlaybackSpeedChanging: true,
         playbackSpeeds: const [0.5, 0.75, 1.0, 1.25, 1.5, 2.0],
         materialProgressColors: ChewieProgressColors(
-          playedColor: AppColors.primary,
-          handleColor: AppColors.primary,
+          playedColor: AppColors.tmzRed,
+          handleColor: AppColors.tmzRed,
           backgroundColor: Colors.grey[800]!,
           bufferedColor: Colors.grey[600]!,
         ),
         placeholder: Container(
           color: Colors.black,
           child: const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+            child: CircularProgressIndicator(color: AppColors.tmzRed),
           ),
         ),
         errorBuilder: (context, errorMessage) {
@@ -114,7 +114,7 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
           style: const TextStyle(fontSize: 16),
           overflow: TextOverflow.ellipsis,
         ),
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.tmzRed,
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
@@ -157,7 +157,7 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.tmzRed,
                 ),
               ),
             ],
@@ -171,7 +171,7 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: AppColors.primary),
+            CircularProgressIndicator(color: AppColors.tmzRed),
             SizedBox(height: 16),
             Text(
               'Loading video...',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:file_picker/file_picker.dart';
 import '../services/api_service.dart';
+import '../themes/app_theme.dart';
 
 class UploadPage extends StatefulWidget {
   const UploadPage({super.key});
@@ -114,7 +115,7 @@ class _UploadPageState extends State<UploadPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('StreamWatch - Upload Video'),
-        backgroundColor: const Color(0xFFCE0000),  // TMZ Red
+        backgroundColor: AppColors.tmzRed,
       ),
       body: Center(
         child: Container(
@@ -128,7 +129,7 @@ class _UploadPageState extends State<UploadPage> {
                 const Icon(
                   Icons.video_library,
                   size: 80,
-                  color: Color(0xFFCE0000),  // TMZ Red
+                  color: AppColors.tmzRed,
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -257,8 +258,8 @@ class _UploadPageState extends State<UploadPage> {
                   onPressed: _isLoading ? null : _submitJob,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.all(16),
-                    backgroundColor: const Color(0xFFCE0000),  // TMZ Red
-                    foregroundColor: const Color(0xFFE0E0E0),  // Off-white text
+                    backgroundColor: AppColors.tmzRed,
+                    foregroundColor: AppColors.textPrimary,
                   ),
                   child: _isLoading
                       ? const SizedBox(

@@ -28,14 +28,14 @@ class StreamStatusBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha:0.9),
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.zero,
       ),
       child: Text(
         status.toUpperCase(),
         style: TextStyle(
           fontSize: isCompact ? 9 : 10,
           fontWeight: FontWeight.w700,
-          color: TmzColors.white,
+          color: AppColors.textMax,
           letterSpacing: 0.5,
         ),
       ),
@@ -56,7 +56,7 @@ class StreamTypeBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha:0.15),
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: color.withValues(alpha:0.5), width: 1),
       ),
       child: Text(
@@ -92,7 +92,7 @@ class StreamTypeBadge extends StatelessWidget {
       case 'commercial':
         return Colors.amber;
       default:
-        return TmzColors.gray50;
+        return AppColors.textGhost;
     }
   }
 }
@@ -146,16 +146,16 @@ class _CelebChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: isOverflow
-            ? TmzColors.gray70.withValues(alpha: 0.6)
-            : TmzColors.gray70,
-        borderRadius: BorderRadius.circular(12),
+            ? AppColors.textGhost.withValues(alpha: 0.6)
+            : AppColors.textGhost,
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
         style: TextStyle(
           fontSize: 11,
           fontWeight: isOverflow ? FontWeight.w400 : FontWeight.w600,
-          color: TmzColors.white,
+          color: AppColors.textMax,
           height: 1.2,
         ),
         maxLines: 1,
@@ -204,7 +204,7 @@ class _StreamPeopleListState extends State<StreamPeopleList> {
                 const Icon(
                   Icons.person,
                   size: 12,
-                  color: TmzColors.textSecondary,
+                  color: AppColors.textDim,
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -213,7 +213,7 @@ class _StreamPeopleListState extends State<StreamPeopleList> {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: TmzColors.white,
+                      color: AppColors.textMax,
                       height: 1.3,
                     ),
                     maxLines: 1,
@@ -235,7 +235,7 @@ class _StreamPeopleListState extends State<StreamPeopleList> {
                   Icon(
                     _expanded ? Icons.expand_less : Icons.expand_more,
                     size: 12,
-                    color: TmzColors.tmzRed,
+                    color: AppColors.tmzRed,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -243,7 +243,7 @@ class _StreamPeopleListState extends State<StreamPeopleList> {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: TmzColors.tmzRed,
+                      color: AppColors.tmzRed,
                       height: 1.3,
                     ),
                   ),
@@ -276,7 +276,7 @@ class StreamMetaRow extends StatelessWidget {
         // Date
         Text(
           _formatDate(date),
-          style: TmzTextStyles.caption.copyWith(fontSize: 10),
+          style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 10),
         ),
         if (typeCode != null) ...[
           const SizedBox(width: 8),
@@ -310,14 +310,14 @@ class _SourceLabel extends StatelessWidget {
         Icon(
           isUrl ? Icons.link : Icons.upload_file,
           size: 10,
-          color: TmzColors.textSecondary,
+          color: AppColors.textDim,
         ),
         const SizedBox(width: 2),
         Text(
           isUrl ? 'URL' : 'File',
-          style: TmzTextStyles.caption.copyWith(
+          style: Theme.of(context).textTheme.bodySmall!.copyWith(
             fontSize: 9,
-            color: TmzColors.textSecondary,
+            color: AppColors.textDim,
           ),
         ),
       ],
@@ -357,7 +357,7 @@ class StreamActionRow extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Could not open link'),
-                backgroundColor: TmzColors.error,
+                backgroundColor: AppColors.error,
               ),
             );
           }
@@ -374,7 +374,7 @@ class StreamActionRow extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Could not download $type'),
-              backgroundColor: TmzColors.error,
+              backgroundColor: AppColors.error,
             ),
           );
         }
@@ -442,7 +442,7 @@ class _ActionIconButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 18,
-            color: enabled ? TmzColors.textSecondary : TmzColors.gray70,
+            color: enabled ? AppColors.textDim : AppColors.textGhost,
           ),
         ),
       ),
@@ -495,7 +495,7 @@ class StreamProgressOverlay extends StatelessWidget {
             value: progressPct / 100,
             minHeight: 3,
             backgroundColor: Colors.black38,
-            valueColor: const AlwaysStoppedAnimation<Color>(TmzColors.tmzRed),
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
           ),
         ],
       ),
@@ -511,14 +511,14 @@ class StreamCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      color: TmzColors.gray90,
+      color: AppColors.surfaceElevated,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Thumbnail skeleton
           AspectRatio(
             aspectRatio: 16 / 9,
-            child: Container(color: TmzColors.gray80),
+            child: Container(color: AppColors.surfaceOverlay),
           ),
           // Content skeleton
           Expanded(
@@ -532,8 +532,8 @@ class StreamCardSkeleton extends StatelessWidget {
                     height: 14,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: TmzColors.gray80,
-                      borderRadius: BorderRadius.circular(2),
+                      color: AppColors.surfaceOverlay,
+                      borderRadius: BorderRadius.zero,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -541,8 +541,8 @@ class StreamCardSkeleton extends StatelessWidget {
                     height: 14,
                     width: 120,
                     decoration: BoxDecoration(
-                      color: TmzColors.gray80,
-                      borderRadius: BorderRadius.circular(2),
+                      color: AppColors.surfaceOverlay,
+                      borderRadius: BorderRadius.zero,
                     ),
                   ),
                   const Spacer(),
@@ -551,8 +551,8 @@ class StreamCardSkeleton extends StatelessWidget {
                     height: 10,
                     width: 80,
                     decoration: BoxDecoration(
-                      color: TmzColors.gray80,
-                      borderRadius: BorderRadius.circular(2),
+                      color: AppColors.surfaceOverlay,
+                      borderRadius: BorderRadius.zero,
                     ),
                   ),
                 ],
@@ -575,7 +575,7 @@ class StreamFlagIndicator extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha:0.6),
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.zero,
       ),
       child: const Icon(
         Icons.flag,

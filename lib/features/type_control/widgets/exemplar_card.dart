@@ -96,7 +96,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
                 height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: TmzColors.tmzRed,
+                  color: AppColors.tmzRed,
                 ),
               ),
             ),
@@ -130,14 +130,14 @@ class _ExemplarCardState extends State<ExemplarCard> {
       aspectRatio: 16 / 9,
       child: Container(
         decoration: BoxDecoration(
-          color: TmzColors.gray90,
+          color: AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(4),
         ),
         child: const Center(
           child: Icon(
             Icons.videocam_outlined,
             size: 32,
-            color: TmzColors.gray50,
+            color: AppColors.textGhost,
           ),
         ),
       ),
@@ -158,7 +158,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
           color: widget.exemplar.isCanonical
               ? Colors.amber
               : widget.exemplar.isCounterExample
-                  ? TmzColors.error
+                  ? AppColors.error
                   : Colors.orange,
           size: 24,
         ),
@@ -170,7 +170,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
               // Title
               Text(
                 widget.exemplar.displayName,
-                style: TmzTextStyles.bodyBold,
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -186,21 +186,21 @@ class _ExemplarCardState extends State<ExemplarCard> {
                           ? Icons.upload_file
                           : Icons.link,
                       size: 14,
-                      color: TmzColors.textSecondary,
+                      color: AppColors.textDim,
                     ),
                     const SizedBox(width: 2),
                     Text(
                       widget.exemplar.jobSource!,
-                      style: TmzTextStyles.caption.copyWith(fontSize: 10),
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 10),
                     ),
                   ],
                   if (widget.exemplar.jobTypeCode != null) ...[
                     const SizedBox(width: 6),
                     Text(
                       widget.exemplar.jobTypeCode!,
-                      style: TmzTextStyles.caption.copyWith(
+                      style: Theme.of(context).textTheme.bodySmall!.copyWith(
                         fontSize: 10,
-                        color: TmzColors.tmzRed,
+                        color: AppColors.tmzRed,
                       ),
                     ),
                   ],
@@ -216,9 +216,9 @@ class _ExemplarCardState extends State<ExemplarCard> {
                 const SizedBox(height: 2),
                 Text(
                   widget.exemplar.jobId,
-                  style: TmzTextStyles.caption.copyWith(
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
                     fontSize: 10,
-                    color: TmzColors.textSecondary,
+                    color: AppColors.textDim,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -323,7 +323,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
             const SizedBox(width: 4),
             InkWell(
               onTap: () => _submitWeight(context),
-              child: const Icon(Icons.check, size: 16, color: TmzColors.success),
+              child: const Icon(Icons.check, size: 16, color: AppColors.success),
             ),
             const SizedBox(width: 4),
             InkWell(
@@ -333,7 +333,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
                 _weightController.text =
                     widget.exemplar.weight.toStringAsFixed(1);
               }),
-              child: const Icon(Icons.close, size: 16, color: TmzColors.error),
+              child: const Icon(Icons.close, size: 16, color: AppColors.error),
             ),
           ],
         ),
@@ -351,7 +351,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.edit, size: 12, color: TmzColors.textSecondary),
+            const Icon(Icons.edit, size: 12, color: AppColors.textDim),
           ],
         ),
       ),
@@ -394,7 +394,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
               child: TextFormField(
                 controller: _notesController,
                 autofocus: true,
-                style: TmzTextStyles.caption.copyWith(fontSize: 12),
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 12),
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding:
@@ -407,7 +407,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
             const SizedBox(width: 4),
             InkWell(
               onTap: () => _submitNotes(context),
-              child: const Icon(Icons.check, size: 16, color: TmzColors.success),
+              child: const Icon(Icons.check, size: 16, color: AppColors.success),
             ),
             const SizedBox(width: 4),
             InkWell(
@@ -415,7 +415,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
                 _isEditingNotes = false;
                 _notesController.text = widget.exemplar.notes ?? '';
               }),
-              child: const Icon(Icons.close, size: 16, color: TmzColors.error),
+              child: const Icon(Icons.close, size: 16, color: AppColors.error),
             ),
           ],
         ),
@@ -432,16 +432,16 @@ class _ExemplarCardState extends State<ExemplarCard> {
             Expanded(
               child: Text(
                 notes != null && notes.isNotEmpty ? notes : 'No notes',
-                style: TmzTextStyles.caption.copyWith(
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
                   fontSize: 10,
-                  color: TmzColors.textSecondary,
+                  color: AppColors.textDim,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.edit, size: 12, color: TmzColors.textSecondary),
+            const Icon(Icons.edit, size: 12, color: AppColors.textDim),
           ],
         ),
       ),
@@ -479,7 +479,7 @@ class _ExemplarCardState extends State<ExemplarCard> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: TmzColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context.read<ExemplarManagementBloc>().add(
@@ -501,11 +501,11 @@ class _ExemplarCardState extends State<ExemplarCard> {
       case 'canonical':
         return Colors.amber;
       case 'counter_example':
-        return TmzColors.error;
+        return AppColors.error;
       case 'edge_case':
         return Colors.orange;
       default:
-        return TmzColors.gray50;
+        return AppColors.textGhost;
     }
   }
 }

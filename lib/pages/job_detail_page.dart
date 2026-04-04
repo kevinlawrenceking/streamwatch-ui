@@ -3,6 +3,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../models/job.dart';
+import '../themes/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'video_player_page.dart';
 
@@ -270,9 +271,9 @@ class _JobDetailPageState extends State<JobDetailPage> {
       appBar: AppBar(
         title: Text(
           _job?.title ?? 'Job ${widget.jobId}',
-          style: const TextStyle(color: Color(0xFFE0E0E0)),
+          style: const TextStyle(color: AppColors.textPrimary),
         ),
-        backgroundColor: const Color(0xFFCE0000),  // TMZ Red
+        backgroundColor: AppColors.tmzRed,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -383,7 +384,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
               minHeight: 8,
               backgroundColor: Colors.grey[300],
               valueColor: AlwaysStoppedAnimation<Color>(
-                _job!.isFailed ? Colors.red : const Color(0xFFCE0000),  // TMZ Red
+                _job!.isFailed ? Colors.red : AppColors.tmzRed,
               ),
             ),
             const SizedBox(height: 8),
@@ -444,7 +445,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
     return ExpansionTile(
       tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.zero,
         child: SizedBox(
           width: thumbnailWidth,
           height: thumbnailHeight,
@@ -577,7 +578,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
             child: Text(
               value,
               style: TextStyle(
-                color: isUrl ? const Color(0xFFCE0000) : null,  // TMZ Red
+                color: isUrl ? AppColors.tmzRed : null,
                 decoration: isUrl ? TextDecoration.underline : null,
               ),
             ),
@@ -616,7 +617,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
             child: Chip(
               label: Text(displayName),
               avatar: const Icon(Icons.play_circle, size: 18),
-              backgroundColor: const Color(0xFFCE0000).withOpacity(0.1),  // TMZ Red
+              backgroundColor: AppColors.tmzRed.withValues(alpha: 0.1),
               labelStyle: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
@@ -639,7 +640,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFCE0000)),
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -650,9 +651,9 @@ class _JobDetailPageState extends State<JobDetailPage> {
                 const SizedBox(width: 8),
                 Chip(
                   label: Text('$_segmentsCompleted/$_segmentsTotal segments'),
-                  backgroundColor: const Color(0xFFCE0000).withOpacity(0.1),
-                  labelStyle: const TextStyle(
-                    color: Color(0xFFCE0000),
+                  backgroundColor: AppColors.tmzRed.withValues(alpha: 0.1),
+                  labelStyle: TextStyle(
+                    color: AppColors.tmzRed,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -729,7 +730,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
     final transcriptToShow = hasCleanedTranscript ? _job!.transcriptFinal! : _job!.fullTranscript!;
     final transcriptLabel = hasCleanedTranscript ? 'Cleaned Transcript' : 'Full Transcript (Raw)';
     final transcriptIcon = hasCleanedTranscript ? Icons.auto_fix_high : Icons.description;
-    final transcriptColor = hasCleanedTranscript ? Colors.green : const Color(0xFFCE0000);  // TMZ Red
+    final transcriptColor = hasCleanedTranscript ? Colors.green : AppColors.tmzRed;
 
     return Card(
       child: Padding(
@@ -749,7 +750,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
                   const SizedBox(width: 8),
                   Chip(
                     label: const Text('AI Cleaned'),
-                    backgroundColor: Colors.green.withOpacity(0.2),
+                    backgroundColor: Colors.green.withValues(alpha: 0.2),
                     labelStyle: const TextStyle(color: Colors.green, fontSize: 11),
                   ),
                 ],
@@ -778,7 +779,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
         color = Colors.green;
         break;
       case 'processing':
-        color = const Color(0xFFCE0000);  // TMZ Red
+        color = AppColors.tmzRed;
         break;
       case 'failed':
         color = Colors.red;
@@ -792,7 +793,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
 
     return Chip(
       label: Text(status.toUpperCase()),
-      backgroundColor: color.withOpacity(0.2),
+      backgroundColor: color.withValues(alpha: 0.2),
       labelStyle: TextStyle(color: color, fontWeight: FontWeight.bold),
     );
   }
@@ -846,7 +847,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.download, color: Color(0xFFCE0000)),  // TMZ Red
+                Icon(Icons.download, color: AppColors.tmzRed),
                 const SizedBox(width: 8),
                 Text(
                   'Downloads & Media',
@@ -876,7 +877,7 @@ class _JobDetailPageState extends State<JobDetailPage> {
 
             // Play Video
             ListTile(
-              leading: const Icon(Icons.play_circle_filled, color: Color(0xFFCE0000)),  // TMZ Red
+              leading: Icon(Icons.play_circle_filled, color: AppColors.tmzRed),
               title: const Text('Play Video'),
               subtitle: const Text('Watch in player'),
               trailing: const Icon(Icons.play_arrow),

@@ -398,7 +398,7 @@ class _UploadBodyState extends State<_UploadBody> {
                   const Icon(
                     Icons.video_library,
                     size: 80,
-                    color: AppColors.primary,
+                    color: AppColors.tmzRed,
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -730,8 +730,8 @@ class _UploadBodyState extends State<_UploadBody> {
                         onPressed: isDisabled ? null : _submitJob,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.all(16),
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.textOnPrimary,
+                          backgroundColor: AppColors.tmzRed,
+                          foregroundColor: AppColors.textMax,
                         ),
                         child: isDisabled
                             ? Row(
@@ -813,9 +813,9 @@ class _UploadBodyState extends State<_UploadBody> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        color: AppColors.tmzRed.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppColors.tmzRed.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -859,7 +859,7 @@ class _UploadBodyState extends State<_UploadBody> {
                   ? state.bytesUploaded! / state.totalBytes!
                   : null,
               backgroundColor: Colors.grey[300],
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
             ),
           ],
           const SizedBox(height: 8),
@@ -891,7 +891,7 @@ class _UploadBodyState extends State<_UploadBody> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: color, size: 24),
@@ -930,9 +930,9 @@ class _UploadBodyState extends State<_UploadBody> {
           height: 24,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: completed ? AppColors.primary : Colors.grey[300],
+            color: completed ? AppColors.tmzRed : Colors.grey[300],
             border: active
-                ? Border.all(color: AppColors.primary, width: 2)
+                ? Border.all(color: AppColors.tmzRed, width: 2)
                 : null,
           ),
           child: completed
@@ -944,7 +944,7 @@ class _UploadBodyState extends State<_UploadBody> {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: completed ? AppColors.primary : Colors.grey[600],
+            color: completed ? AppColors.tmzRed : Colors.grey[600],
             fontWeight: active ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -955,7 +955,7 @@ class _UploadBodyState extends State<_UploadBody> {
   Widget _buildStepLine(bool completed) {
     return Container(
       height: 2,
-      color: completed ? AppColors.primary : Colors.grey[300],
+      color: completed ? AppColors.tmzRed : Colors.grey[300],
     );
   }
 }

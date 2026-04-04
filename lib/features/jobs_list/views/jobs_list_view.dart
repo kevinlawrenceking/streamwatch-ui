@@ -194,7 +194,7 @@ class _JobCard extends StatelessWidget {
                             '${job.progressPct}%',
                             style: const TextStyle(
                               fontSize: 12,
-                              color: AppColors.primary,
+                              color: AppColors.tmzRed,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -238,7 +238,7 @@ class _StatusChip extends StatelessWidget {
         status.toUpperCase(),
         style: const TextStyle(fontSize: 11),
       ),
-      backgroundColor: color.withOpacity(0.2),
+      backgroundColor: color.withValues(alpha: 0.2),
       labelStyle: TextStyle(color: color, fontWeight: FontWeight.bold),
       padding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,

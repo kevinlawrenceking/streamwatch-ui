@@ -28,7 +28,7 @@ class SchedulerView extends StatelessWidget {
               Icon(
                 Icons.schedule,
                 size: 80,
-                color: AppColors.primary.withOpacity(0.5),
+                color: AppColors.tmzRed.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 24),
               Text(
@@ -69,7 +69,7 @@ class SchedulerView extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.2),
+                              color: Colors.grey.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Text(

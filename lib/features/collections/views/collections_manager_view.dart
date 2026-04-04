@@ -44,7 +44,7 @@ class _ManagerBodyState extends State<_ManagerBody> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.actionError!),
-                backgroundColor: TmzColors.error,
+                backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -91,12 +91,12 @@ class _ManagerBodyState extends State<_ManagerBody> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(Icons.error_outline,
-                              size: 64, color: TmzColors.error),
+                              size: 64, color: AppColors.error),
                           const SizedBox(height: 16),
                           Text(
                             'Error: ${state.failure.message}',
-                            style: TmzTextStyles.body
-                                .copyWith(color: TmzColors.textSecondary),
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(color: AppColors.textDim),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton(
@@ -126,14 +126,14 @@ class _ManagerBodyState extends State<_ManagerBody> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.folder_open,
-                                size: 64, color: TmzColors.gray50),
+                                size: 64, color: AppColors.textGhost),
                             const SizedBox(height: 16),
                             Text(
                               _showArchived
                                   ? 'No archived collections'
                                   : 'No collections yet',
-                              style: TmzTextStyles.body
-                                  .copyWith(color: TmzColors.textSecondary),
+                              style: Theme.of(context).textTheme.bodyMedium!
+                                  .copyWith(color: AppColors.textDim),
                             ),
                           ],
                         ),
@@ -299,7 +299,7 @@ class _ManagerBodyState extends State<_ManagerBody> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style: TextButton.styleFrom(foregroundColor: TmzColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context.read<CollectionsBloc>().add(
@@ -343,9 +343,9 @@ class _Toolbar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: TmzColors.gray90,
+        color: AppColors.surfaceElevated,
         border: Border(
-          bottom: BorderSide(color: TmzColors.gray70, width: 1),
+          bottom: BorderSide(color: AppColors.textGhost, width: 1),
         ),
       ),
       child: Row(
@@ -368,8 +368,8 @@ class _Toolbar extends StatelessWidget {
             icon: const Icon(Icons.create_new_folder, size: 18),
             label: const Text('New Collection'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: TmzColors.tmzRed,
-              foregroundColor: TmzColors.white,
+              backgroundColor: AppColors.tmzRed,
+              foregroundColor: AppColors.textMax,
             ),
           ),
         ],
@@ -405,7 +405,7 @@ class _CollectionsTable extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DataTable(
-            headingRowColor: WidgetStateProperty.all(TmzColors.gray90),
+            headingRowColor: WidgetStateProperty.all(AppColors.surfaceElevated),
             columns: const [
               DataColumn(label: Text('Name')),
               DataColumn(label: Text('Visibility')),
@@ -424,7 +424,7 @@ class _CollectionsTable extends StatelessWidget {
                         Icon(
                           c.isDefault ? Icons.folder_special : Icons.folder,
                           size: 18,
-                          color: c.isDefault ? TmzColors.tmzRed : null,
+                          color: c.isDefault ? AppColors.tmzRed : null,
                         ),
                         const SizedBox(width: 8),
                         Flexible(
@@ -503,7 +503,7 @@ class _CollectionsTable extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Text(
               '${collections.length} collection${collections.length == 1 ? '' : 's'}',
-              style: TmzTextStyles.caption,
+              style: Theme.of(context).textTheme.bodySmall!,
               textAlign: TextAlign.center,
             ),
           ),
@@ -522,7 +522,7 @@ class _VisibilityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPublic = visibility == 'public';
-    final color = isPublic ? Colors.blue : TmzColors.gray50;
+    final color = isPublic ? Colors.blue : AppColors.textGhost;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

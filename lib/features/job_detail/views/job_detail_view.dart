@@ -306,9 +306,9 @@ class _FlagBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        color: Colors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -597,7 +597,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                       const PopupMenuItem(
                         value: 'transcript_cleaned',
                         child: ListTile(
-                          leading: Icon(Icons.description, color: AppColors.primary),
+                          leading: Icon(Icons.description, color: AppColors.tmzRed),
                           title: Text('Transcript (Cleaned)'),
                           subtitle: Text('With speaker labels'),
                           contentPadding: EdgeInsets.zero,
@@ -617,7 +617,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                       const PopupMenuItem(
                         value: 'srt',
                         child: ListTile(
-                          leading: Icon(Icons.subtitles, color: AppColors.primary),
+                          leading: Icon(Icons.subtitles, color: AppColors.tmzRed),
                           title: Text('Subtitles (SRT)'),
                           subtitle: Text('For video players'),
                           contentPadding: EdgeInsets.zero,
@@ -628,7 +628,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                       const PopupMenuItem(
                         value: 'summary',
                         child: ListTile(
-                          leading: Icon(Icons.summarize, color: AppColors.primary),
+                          leading: Icon(Icons.summarize, color: AppColors.tmzRed),
                           title: Text('Summary'),
                           subtitle: Text('Overview + segments'),
                           contentPadding: EdgeInsets.zero,
@@ -698,7 +698,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
           fit: StackFit.expand,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.zero,
               child: Image.network(
                 thumbnailUrl,
                 fit: BoxFit.cover,
@@ -726,7 +726,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
             // Action button overlay
             Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.zero,
                 color: Colors.black.withValues(alpha: 0.3),
               ),
               child: Center(
@@ -767,7 +767,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -795,7 +795,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
           ),
           child: const Center(
             child: CircularProgressIndicator(),
@@ -809,7 +809,7 @@ class _JobInfoCardState extends State<_JobInfoCard> {
         AspectRatio(
           aspectRatio: _videoController!.value.aspectRatio,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
             child: VideoPlayer(_videoController!),
           ),
         ),
@@ -894,7 +894,7 @@ class _InlineVideoControlsState extends State<_InlineVideoControls> {
               onChanged: (value) {
                 widget.controller.seekTo(Duration(milliseconds: value.toInt()));
               },
-              activeColor: AppColors.primary,
+              activeColor: AppColors.tmzRed,
             ),
           ),
         ),
@@ -994,7 +994,7 @@ class _SourceRow extends StatelessWidget {
                       child: Text(
                         job.sourceUrl!,
                         style: const TextStyle(
-                          color: AppColors.primary,
+                          color: AppColors.tmzRed,
                         ),
                       ),
                     ),
@@ -1044,7 +1044,7 @@ class _ProviderRow extends StatelessWidget {
               child: Chip(
                 label: Text(displayName),
                 avatar: const Icon(Icons.play_circle, size: 18),
-                backgroundColor: AppColors.primary.withOpacity(0.1),
+                backgroundColor: AppColors.tmzRed.withValues(alpha: 0.1),
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -1091,7 +1091,7 @@ class _TypeRow extends StatelessWidget {
               child: Chip(
                 label: Text(displayName),
                 avatar: const Icon(Icons.category, size: 18),
-                backgroundColor: AppColors.info.withOpacity(0.1),
+                backgroundColor: AppColors.info.withValues(alpha: 0.1),
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -1114,9 +1114,9 @@ class _PollErrorBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        color: Colors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.zero,
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -1165,7 +1165,7 @@ class _ProgressCard extends StatelessWidget {
                         height: 12,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
                         ),
                       ),
                     ],
@@ -1180,7 +1180,7 @@ class _ProgressCard extends StatelessWidget {
               minHeight: 8,
               backgroundColor: Colors.grey[300],
               valueColor: AlwaysStoppedAnimation<Color>(
-                job.isFailed ? Colors.red : AppColors.primary,
+                job.isFailed ? Colors.red : AppColors.tmzRed,
               ),
             ),
             const SizedBox(height: 8),
@@ -1210,7 +1210,7 @@ class _StatusChip extends StatelessWidget {
 
     return Chip(
       label: Text(status.toUpperCase()),
-      backgroundColor: color.withOpacity(0.2),
+      backgroundColor: color.withValues(alpha: 0.2),
       labelStyle: TextStyle(color: color, fontWeight: FontWeight.bold),
     );
   }
@@ -1292,7 +1292,7 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
           children: [
             Row(
               children: [
-                const Icon(Icons.description, color: AppColors.primary),
+                const Icon(Icons.description, color: AppColors.tmzRed),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -1340,7 +1340,7 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.tmzRed.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -1348,7 +1348,7 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
-                  color: AppColors.primary,
+                  color: AppColors.tmzRed,
                 ),
               ),
             ),
@@ -1427,7 +1427,7 @@ class _ChunkTile extends StatelessWidget {
         children: [
           // Thumbnail on the left - 10% bigger (176x99)
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.zero,
             child: SizedBox(
               width: 176,
               height: 99,
@@ -1662,7 +1662,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const Icon(Icons.folder, color: AppColors.primary),
+                  const Icon(Icons.folder, color: AppColors.tmzRed),
                   const SizedBox(width: 8),
                   Text(
                     'Collections',
@@ -1896,7 +1896,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const Icon(Icons.people, color: AppColors.primary),
+                  const Icon(Icons.people, color: AppColors.tmzRed),
                   const SizedBox(width: 8),
                   Text(
                     'People',
@@ -1968,7 +1968,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
               // Header row
               TableRow(
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.tmzRed.withValues(alpha: 0.1),
                 ),
                 children: const [
                   Padding(
@@ -2072,7 +2072,7 @@ class _PeopleSectionState extends State<_PeopleSection> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
+        color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -2195,7 +2195,7 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
             // Header
             Row(
               children: [
-                const Icon(Icons.terminal, color: AppColors.primary),
+                const Icon(Icons.terminal, color: AppColors.tmzRed),
                 const SizedBox(width: 8),
                 Text(
                   'Worker Log',

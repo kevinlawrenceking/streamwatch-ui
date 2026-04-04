@@ -1,72 +1,26 @@
-/// StreamWatch Theme
+/// StreamWatch Theme Configuration
 ///
-/// This file wraps the global TMZ theme with StreamWatch-specific customizations.
-/// Import this in your StreamWatch pages.
+/// Delegates to TmzTheme.dark() from shared_ui with StreamWatch product accent.
+/// All tokens (AppColors, TmzSpacing, TmzTextStyles, ProductAccent) are
+/// re-exported from tmz_theme.dart which re-exports shared_ui/tokens/tokens.dart.
 
 import 'package:flutter/material.dart';
 import 'tmz_theme.dart';
 
-// Re-export TMZ theme classes for convenience
+// Re-export everything from tmz_theme.dart (which re-exports shared_ui tokens)
 export 'tmz_theme.dart';
-
-/// StreamWatch-specific colors (uses TmzColors under the hood)
-class AppColors {
-  // Brand colors
-  static const Color primary = TmzColors.tmzRed;
-  static const Color primaryLight = TmzColors.tmzRedLight;
-  static const Color primaryDark = TmzColors.tmzRedDark;
-
-  // Text colors
-  static const Color textPrimary = TmzColors.textPrimary;
-  static const Color textSecondary = TmzColors.textSecondary;
-  static const Color textOnPrimary = TmzColors.textOnPrimary;
-
-  // Surface colors
-  static const Color surface = TmzColors.surface;
-  static const Color canvas = TmzColors.canvas;
-  static const Color card = TmzColors.card;
-
-  // Status colors
-  static const Color success = TmzColors.success;
-  static const Color error = TmzColors.error;
-  static const Color warning = TmzColors.warning;
-  static const Color info = TmzColors.info;
-
-  // Job status colors
-  static const Color statusQueued = TmzColors.statusQueued;
-  static const Color statusProcessing = TmzColors.statusProcessing;
-  static const Color statusCompleted = TmzColors.statusCompleted;
-  static const Color statusFailed = TmzColors.statusFailed;
-
-  AppColors._();
-}
 
 /// Application theme configuration.
 class AppTheme {
-  /// Dark theme configuration - uses global TMZ theme.
-  static ThemeData get dark => TmzTheme.dark;
-
-  /// Light theme configuration (if needed in future).
-  static ThemeData get light {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.light,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textOnPrimary,
-        elevation: 0,
-      ),
-    );
-  }
+  /// Dark theme — canonical DS-001 theme with StreamWatch product accent.
+  static ThemeData get dark =>
+      TmzTheme.dark(productAccent: ProductAccent.streamWatch);
 
   AppTheme._();
 }
 
 /// Helper to get status color based on job status string.
+/// Delegates to getJobStatusColor from tmz_theme.dart.
 Color getStatusColor(String status) {
   return getJobStatusColor(status);
 }

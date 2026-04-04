@@ -163,8 +163,8 @@ class _UserFormDialogState extends State<UserFormDialog> {
         ElevatedButton(
           onPressed: _submit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: TmzColors.tmzRed,
-            foregroundColor: TmzColors.white,
+            backgroundColor: AppColors.tmzRed,
+            foregroundColor: AppColors.textMax,
           ),
           child: Text(_isEditMode ? 'Update' : 'Create'),
         ),

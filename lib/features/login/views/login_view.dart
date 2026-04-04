@@ -59,7 +59,7 @@ class _LoginBodyState extends State<_LoginBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.canvas,
+      backgroundColor: AppColors.surfaceElevated,
       body: BlocConsumer<LoginBloc, LoginState>(
         listener: (context, state) {
           if (state is LoginSuccess) {
@@ -90,7 +90,7 @@ class _LoginBodyState extends State<_LoginBody> {
                       const Icon(
                         Icons.videocam,
                         size: 64,
-                        color: AppColors.primary,
+                        color: AppColors.tmzRed,
                       ),
                       const SizedBox(height: 16),
 
@@ -100,7 +100,7 @@ class _LoginBodyState extends State<_LoginBody> {
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: AppColors.textMax,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -108,7 +108,7 @@ class _LoginBodyState extends State<_LoginBody> {
                         'Video Intelligence Newsroom',
                         style: TextStyle(
                           fontSize: 14,
-                          color: AppColors.textSecondary,
+                          color: AppColors.textDim,
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -170,8 +170,8 @@ class _LoginBodyState extends State<_LoginBody> {
                         child: ElevatedButton(
                           onPressed: isLoading ? null : _onSubmit,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.textOnPrimary,
+                            backgroundColor: AppColors.tmzRed,
+                            foregroundColor: AppColors.textMax,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -182,7 +182,7 @@ class _LoginBodyState extends State<_LoginBody> {
                                   height: 24,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: AppColors.textOnPrimary,
+                                    color: AppColors.textMax,
                                   ),
                                 )
                               : const Text(

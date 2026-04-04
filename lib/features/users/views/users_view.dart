@@ -82,7 +82,7 @@ class _UsersBodyState extends State<_UsersBody> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: TmzColors.error,
+              backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -99,9 +99,9 @@ class _UsersBodyState extends State<_UsersBody> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: TmzColors.gray90,
+                color: AppColors.surfaceElevated,
                 border: Border(
-                  bottom: BorderSide(color: TmzColors.gray70, width: 1),
+                  bottom: BorderSide(color: AppColors.textGhost, width: 1),
                 ),
               ),
               child: Row(
@@ -136,8 +136,8 @@ class _UsersBodyState extends State<_UsersBody> {
                     icon: const Icon(Icons.person_add, size: 18),
                     label: const Text('Add User'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: TmzColors.tmzRed,
-                      foregroundColor: TmzColors.white,
+                      backgroundColor: AppColors.tmzRed,
+                      foregroundColor: AppColors.textMax,
                     ),
                   ),
                 ],
@@ -157,12 +157,12 @@ class _UsersBodyState extends State<_UsersBody> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(Icons.error_outline,
-                              size: 64, color: TmzColors.error),
+                              size: 64, color: AppColors.error),
                           const SizedBox(height: 16),
                           Text(
                             'Error: ${state.failure.message}',
-                            style: TmzTextStyles.body
-                                .copyWith(color: TmzColors.textSecondary),
+                            style: Theme.of(context).textTheme.bodyMedium!
+                                .copyWith(color: AppColors.textDim),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton(
@@ -185,14 +185,14 @@ class _UsersBodyState extends State<_UsersBody> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.people_outline,
-                                size: 64, color: TmzColors.gray50),
+                                size: 64, color: AppColors.textGhost),
                             const SizedBox(height: 16),
                             Text(
                               state.query.isNotEmpty
                                   ? 'No users match your search'
                                   : 'No users found',
-                              style: TmzTextStyles.body
-                                  .copyWith(color: TmzColors.textSecondary),
+                              style: Theme.of(context).textTheme.bodyMedium!
+                                  .copyWith(color: AppColors.textDim),
                             ),
                           ],
                         ),
@@ -235,7 +235,7 @@ class _UsersTable extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DataTable(
-            headingRowColor: WidgetStateProperty.all(TmzColors.gray90),
+            headingRowColor: WidgetStateProperty.all(AppColors.surfaceElevated),
             columns: const [
               DataColumn(label: Text('Username')),
               DataColumn(label: Text('Name')),
@@ -265,7 +265,7 @@ class _UsersTable extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Text(
               '$total user${total == 1 ? '' : 's'}',
-              style: TmzTextStyles.caption,
+              style: Theme.of(context).textTheme.bodySmall!,
               textAlign: TextAlign.center,
             ),
           ),
@@ -287,7 +287,7 @@ class _RoleBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAdmin = role == 'admin';
-    final color = isAdmin ? TmzColors.tmzRed : TmzColors.gray50;
+    final color = isAdmin ? AppColors.tmzRed : AppColors.textGhost;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

@@ -228,7 +228,7 @@ class PodcastDataSource implements IPodcastDataSource {
         return tokenResult.fold(
           (failure) => Left(failure),
           (authToken) async {
-            final response = await _client.put(
+            final response = await _client.patch(
               endPoint: '/api/v1/podcasts/$id',
               authToken: authToken,
               body: body,
@@ -386,7 +386,7 @@ class PodcastDataSource implements IPodcastDataSource {
         return tokenResult.fold(
           (failure) => Left(failure),
           (authToken) async {
-            final response = await _client.put(
+            final response = await _client.patch(
               endPoint: '/api/v1/podcast-platforms/$platformId',
               authToken: authToken,
               body: body,
@@ -523,7 +523,7 @@ class PodcastDataSource implements IPodcastDataSource {
         return tokenResult.fold(
           (failure) => Left(failure),
           (authToken) async {
-            final response = await _client.put(
+            final response = await _client.patch(
               endPoint: '/api/v1/podcast-schedules/$scheduleId',
               authToken: authToken,
               body: body,
@@ -580,9 +580,10 @@ class PodcastDataSource implements IPodcastDataSource {
           (failure) => Left(failure),
           (authToken) async {
             final response = await _client.get(
-              endPoint: '/api/v1/podcasts/$podcastId/episodes',
+              endPoint: '/api/v1/podcast-episodes',
               authToken: authToken,
               queryParams: {
+                'podcast_id': podcastId,
                 'page': page.toString(),
                 'page_size': pageSize.toString(),
               },

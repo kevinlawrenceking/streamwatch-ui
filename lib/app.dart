@@ -17,6 +17,9 @@ import 'features/video_player/views/video_player_view.dart';
 import 'features/collections/views/collections_manager_view.dart';
 import 'features/type_control/views/type_list_view.dart';
 import 'features/type_control/views/type_detail_view.dart';
+import 'features/podcasts/presentation/views/podcast_list_view.dart';
+import 'features/podcasts/presentation/views/podcast_detail_view.dart';
+import 'features/podcasts/presentation/views/episode_list_view.dart';
 
 /// Root application widget.
 ///
@@ -237,6 +240,23 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
         final videoTypeId = settings.arguments as String;
         return MaterialPageRoute(
           builder: (context) => TypeDetailView(videoTypeId: videoTypeId),
+        );
+      case '/podcasts':
+        // Podcast list (admin-only)
+        return MaterialPageRoute(
+          builder: (context) => const PodcastListView(),
+        );
+      case '/podcasts/detail':
+        // Podcast detail with platforms/schedules
+        final podcastId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (context) => PodcastDetailView(podcastId: podcastId),
+        );
+      case '/episodes':
+        // Episode list for a podcast
+        final podcastId = settings.arguments as String;
+        return MaterialPageRoute(
+          builder: (context) => EpisodeListView(podcastId: podcastId),
         );
       case '/video':
         // Video player screen

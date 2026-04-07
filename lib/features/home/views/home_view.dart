@@ -178,6 +178,8 @@ class _HomeBodyState extends State<_HomeBody> {
                       Navigator.pushNamed(context, '/users');
                     } else if (value == 'type-control') {
                       Navigator.pushNamed(context, '/type-control');
+                    } else if (value == 'podcasts') {
+                      Navigator.pushNamed(context, '/podcasts');
                     }
                   },
                   itemBuilder: (context) => [
@@ -204,6 +206,15 @@ class _HomeBodyState extends State<_HomeBody> {
                           dense: true,
                           leading: Icon(Icons.category),
                           title: Text('Type Control'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'podcasts',
+                        child: ListTile(
+                          dense: true,
+                          leading: Icon(Icons.podcasts),
+                          title: Text('Podcasts'),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),

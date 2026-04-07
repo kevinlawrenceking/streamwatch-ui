@@ -148,7 +148,7 @@ class _PodcastListBody extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.podcasts,
+                      const Icon(Icons.podcasts,
                           size: 64, color: AppColors.textGhost),
                       const SizedBox(height: 16),
                       Text(

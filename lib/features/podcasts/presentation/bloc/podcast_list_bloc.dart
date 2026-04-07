@@ -42,7 +42,7 @@ class PodcastListBloc extends Bloc<PodcastListEvent, PodcastListState> {
       (response) {
         final allPodcasts = isLoadMore
             ? [
-                ...(currentState as PodcastListLoaded).podcasts,
+                ...currentState.podcasts,
                 ...response.items
               ]
             : response.items;

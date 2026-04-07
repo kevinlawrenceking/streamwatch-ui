@@ -87,7 +87,7 @@ class _EpisodeListBody extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.library_music,
+                    const Icon(Icons.library_music,
                         size: 64, color: AppColors.textGhost),
                     const SizedBox(height: 16),
                     Text(

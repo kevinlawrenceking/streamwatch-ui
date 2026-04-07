@@ -140,7 +140,7 @@ class _PodcastDetailBody extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (state.platforms.isEmpty)
-              _EmptySection(
+              const _EmptySection(
                 message: 'No platform links yet',
                 icon: Icons.link_off,
               )
@@ -162,7 +162,7 @@ class _PodcastDetailBody extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (state.schedules.isEmpty)
-              _EmptySection(
+              const _EmptySection(
                 message: 'No schedule slots yet',
                 icon: Icons.event_busy,
               )

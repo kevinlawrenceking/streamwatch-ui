@@ -97,7 +97,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedDay,
+              initialValue: _selectedDay,
               decoration: const InputDecoration(labelText: 'Day of Week'),
               items: _daysOfWeek
                   .map((d) => DropdownMenuItem(
@@ -143,7 +143,7 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedTimezone,
+              initialValue: _selectedTimezone,
               decoration: const InputDecoration(labelText: 'Timezone'),
               items: _timezones
                   .map((tz) => DropdownMenuItem(

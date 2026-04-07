@@ -39,7 +39,7 @@ class EpisodeListBloc extends Bloc<EpisodeListEvent, EpisodeListState> {
       (response) {
         final allEpisodes = isLoadMore
             ? [
-                ...(currentState as EpisodeListLoaded).episodes,
+                ...currentState.episodes,
                 ...response.items
               ]
             : response.items;

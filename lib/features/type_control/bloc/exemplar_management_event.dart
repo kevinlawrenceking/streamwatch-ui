@@ -62,3 +62,16 @@ class UpdateExemplarEvent extends ExemplarManagementEvent {
   @override
   List<Object?> get props => [exemplarId, weight, notes, exemplarKind];
 }
+
+class UploadExemplarImageEvent extends ExemplarManagementEvent {
+  final String exemplarId;
+  final String filePath;
+
+  const UploadExemplarImageEvent({
+    required this.exemplarId,
+    required this.filePath,
+  });
+
+  @override
+  List<Object?> get props => [exemplarId, filePath];
+}

@@ -21,7 +21,8 @@ abstract class IJobDataSource {
     String? description,
     String? celebrities, // Comma/newline separated celebrity names
     String? transcriptionEngine,
-    int? segmentDuration, // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
+    int?
+        segmentDuration, // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
     bool isLive = false, // Whether this is a live stream capture
     int? captureSeconds, // Duration to capture from live stream (60-3600)
     String? collectionId, // Optional: assign to a collection
@@ -36,7 +37,8 @@ abstract class IJobDataSource {
     String? description,
     String? celebrities, // Comma/newline separated celebrity names
     String? transcriptionEngine,
-    int? segmentDuration, // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
+    int?
+        segmentDuration, // Chunk duration in seconds: 60, 180, 300, 600, 900, 1800, 3600
   });
 
   /// Gets a job by ID.
@@ -50,8 +52,9 @@ abstract class IJobDataSource {
   /// Gets chunks for a job.
   Future<Either<Failure, List<ChunkModel>>> getJobChunks(String jobId);
 
-  /// Gets recent jobs with optional status and search query filters.
-  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20, String? status, String? searchQuery});
+  /// Gets recent jobs with optional status, source, and search query filters.
+  Future<Either<Failure, List<JobModel>>> getRecentJobs(
+      {int limit = 20, String? status, String? source, String? searchQuery});
 
   /// Gets the worker log file for a job.
   Future<Either<Failure, String>> getJobLog(String jobId, {int? tailLines});
@@ -132,8 +135,7 @@ class JobDataSource implements IJobDataSource {
               if (celebrities != null) 'celebrities_manual': celebrities,
               if (transcriptionEngine != null)
                 'transcription_engine': transcriptionEngine,
-              if (segmentDuration != null)
-                'segment_duration': segmentDuration,
+              if (segmentDuration != null) 'segment_duration': segmentDuration,
               if (collectionId != null) 'collection_id': collectionId,
             };
 
@@ -200,13 +202,14 @@ class JobDataSource implements IJobDataSource {
               request.files
                   .add(await http.MultipartFile.fromPath('file', filePath));
             } else {
-              return const Left(
-                  ValidationFailure(message: 'Either filePath or fileBytes must be provided'));
+              return const Left(ValidationFailure(
+                  message: 'Either filePath or fileBytes must be provided'));
             }
 
             // Add fields
             if (title != null) request.fields['title'] = title;
-            if (description != null) request.fields['description'] = description;
+            if (description != null)
+              request.fields['description'] = description;
             if (transcriptionEngine != null) {
               request.fields['transcription_engine'] = transcriptionEngine;
             }
@@ -214,7 +217,8 @@ class JobDataSource implements IJobDataSource {
               request.fields['segment_duration'] = segmentDuration.toString();
             }
 
-            final streamedResponse = await _client.sendMultipart(request: request);
+            final streamedResponse =
+                await _client.sendMultipart(request: request);
             final response = await http.Response.fromStream(streamedResponse);
 
             if (response.statusCode != HttpStatus.ok &&
@@ -256,48 +260,49 @@ class JobDataSource implements IJobDataSource {
   @override
   Future<Either<Failure, ({JobModel job, List<CelebrityModel> celebrities})>>
       getJobWithCelebrities(String jobId) =>
-      ExceptionHandler<({JobModel job, List<CelebrityModel> celebrities})>(() async {
-        final tokenResult = await _auth.getAuthToken();
+          ExceptionHandler<({JobModel job, List<CelebrityModel> celebrities})>(
+              () async {
+            final tokenResult = await _auth.getAuthToken();
 
-        return tokenResult.fold(
-          (failure) => Left(failure),
-          (authToken) async {
-            final response = await _client.get(
-              endPoint: '/api/v1/jobs/$jobId',
-              authToken: authToken,
+            return tokenResult.fold(
+              (failure) => Left(failure),
+              (authToken) async {
+                final response = await _client.get(
+                  endPoint: '/api/v1/jobs/$jobId',
+                  authToken: authToken,
+                );
+
+                if (response.statusCode != HttpStatus.ok) {
+                  return Left(HttpFailure.fromResponse(response));
+                }
+
+                final data = json.decode(response.body) as Map<String, dynamic>;
+                final jobObject = data['job'] as Map<String, dynamic>? ?? data;
+                final job = JobModel.fromJsonDto(jobObject);
+
+                // Parse celebrities defensively - empty list if missing/invalid
+                // Create mutable copy since parseCelebrities may return const []
+                final celebrities = List<CelebrityModel>.from(
+                    parseCelebrities(data['celebrities']));
+
+                // Stable sort: confidence desc (null last), then by name for ties
+                celebrities.sort((a, b) {
+                  // Null confidence goes last
+                  if (a.confidence == null && b.confidence == null) {
+                    return a.name.compareTo(b.name); // alphabetical for nulls
+                  }
+                  if (a.confidence == null) return 1; // a goes after b
+                  if (b.confidence == null) return -1; // b goes after a
+                  // Both have confidence: desc order, name as tiebreaker
+                  final confCompare = b.confidence!.compareTo(a.confidence!);
+                  if (confCompare != 0) return confCompare;
+                  return a.name.compareTo(b.name);
+                });
+
+                return Right((job: job, celebrities: celebrities));
+              },
             );
-
-            if (response.statusCode != HttpStatus.ok) {
-              return Left(HttpFailure.fromResponse(response));
-            }
-
-            final data = json.decode(response.body) as Map<String, dynamic>;
-            final jobObject = data['job'] as Map<String, dynamic>? ?? data;
-            final job = JobModel.fromJsonDto(jobObject);
-
-            // Parse celebrities defensively - empty list if missing/invalid
-            // Create mutable copy since parseCelebrities may return const []
-            final celebrities =
-                List<CelebrityModel>.from(parseCelebrities(data['celebrities']));
-
-            // Stable sort: confidence desc (null last), then by name for ties
-            celebrities.sort((a, b) {
-              // Null confidence goes last
-              if (a.confidence == null && b.confidence == null) {
-                return a.name.compareTo(b.name); // alphabetical for nulls
-              }
-              if (a.confidence == null) return 1; // a goes after b
-              if (b.confidence == null) return -1; // b goes after a
-              // Both have confidence: desc order, name as tiebreaker
-              final confCompare = b.confidence!.compareTo(a.confidence!);
-              if (confCompare != 0) return confCompare;
-              return a.name.compareTo(b.name);
-            });
-
-            return Right((job: job, celebrities: celebrities));
-          },
-        );
-      })();
+          })();
 
   @override
   Future<Either<Failure, List<ChunkModel>>> getJobChunks(String jobId) =>
@@ -334,7 +339,11 @@ class JobDataSource implements IJobDataSource {
       })();
 
   @override
-  Future<Either<Failure, List<JobModel>>> getRecentJobs({int limit = 20, String? status, String? searchQuery}) =>
+  Future<Either<Failure, List<JobModel>>> getRecentJobs(
+          {int limit = 20,
+          String? status,
+          String? source,
+          String? searchQuery}) =>
       ExceptionHandler<List<JobModel>>(() async {
         final tokenResult = await _auth.getAuthToken();
 
@@ -344,6 +353,9 @@ class JobDataSource implements IJobDataSource {
             final queryParams = <String, String>{'limit': limit.toString()};
             if (status != null && status.isNotEmpty) {
               queryParams['status'] = status;
+            }
+            if (source != null && source.isNotEmpty) {
+              queryParams['source'] = source;
             }
             if (searchQuery != null && searchQuery.isNotEmpty) {
               queryParams['q'] = searchQuery;

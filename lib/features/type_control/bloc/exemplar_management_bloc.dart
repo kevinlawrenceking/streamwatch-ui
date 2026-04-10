@@ -16,6 +16,7 @@ class ExemplarManagementBloc
     on<BulkCreateExemplarsEvent>(_onBulkCreateExemplars);
     on<DeleteExemplarEvent>(_onDeleteExemplar);
     on<UpdateExemplarEvent>(_onUpdateExemplar);
+    on<UploadExemplarImageEvent>(_onUploadExemplarImage);
   }
 
   Future<void> _onLoadExemplars(
@@ -27,8 +28,7 @@ class ExemplarManagementBloc
     final result = await _dataSource.getExemplars(event.videoTypeId);
     result.fold(
       (failure) => emit(ExemplarManagementError(failure)),
-      (exemplars) =>
-          emit(ExemplarManagementLoaded(exemplars: exemplars)),
+      (exemplars) => emit(ExemplarManagementLoaded(exemplars: exemplars)),
     );
   }
 
@@ -75,8 +75,7 @@ class ExemplarManagementBloc
     if (event.weight == null &&
         event.notes == null &&
         event.exemplarKind == null) {
-      emit(const ExemplarManagementError(
-          Failure('No fields to update')));
+      emit(const ExemplarManagementError(Failure('No fields to update')));
       return;
     }
 
@@ -107,6 +106,46 @@ class ExemplarManagementBloc
       return;
     }
 
+    final listResult = await _dataSource.getExemplars(_currentTypeId);
+    listResult.fold(
+      (failure) => emit(ExemplarManagementError(failure)),
+      (exemplars) => emit(ExemplarManagementLoaded(
+        exemplars: exemplars,
+        updatingExemplarIds: const {},
+      )),
+    );
+  }
+
+  Future<void> _onUploadExemplarImage(
+    UploadExemplarImageEvent event,
+    Emitter<ExemplarManagementState> emit,
+  ) async {
+    final current = state;
+    if (current is ExemplarManagementLoaded) {
+      emit(current.copyWith(
+        updatingExemplarIds: {...current.updatingExemplarIds, event.exemplarId},
+      ));
+    }
+
+    final result = await _dataSource.uploadExemplarImage(
+      event.exemplarId,
+      event.filePath,
+    );
+
+    if (result.isLeft()) {
+      final failure = result.fold((f) => f, (_) => null)!;
+      final current = state;
+      if (current is ExemplarManagementLoaded) {
+        emit(current.copyWith(
+          updatingExemplarIds: {...current.updatingExemplarIds}
+            ..remove(event.exemplarId),
+        ));
+      }
+      emit(ExemplarManagementError(failure));
+      return;
+    }
+
+    // Reload exemplars to pick up the new image URL
     final listResult = await _dataSource.getExemplars(_currentTypeId);
     listResult.fold(
       (failure) => emit(ExemplarManagementError(failure)),

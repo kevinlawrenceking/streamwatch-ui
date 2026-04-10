@@ -1,9 +1,9 @@
+import 'package:get_it/get_it.dart';
+
+import '../../data/sources/job_data_source.dart';
+import 'bloc/scheduler_dashboard_bloc.dart';
+
 /// Service locator for Scheduler feature.
-///
-/// This is a placeholder for Phase 2 development.
-/// When implemented, this will register:
-/// - SchedulerBloc for managing scheduled jobs
-/// - SchedulerRepository for API interactions
 class ServiceLocator {
   static bool _initialized = false;
 
@@ -11,9 +11,12 @@ class ServiceLocator {
     if (_initialized) {
       throw Exception('Scheduler ServiceLocator already initialized!');
     }
-    // Placeholder - no registrations yet
-    // final sl = GetIt.instance;
-    // sl.registerFactory<SchedulerBloc>(() => SchedulerBloc(...));
+    final sl = GetIt.instance;
+
+    sl.registerFactory<SchedulerDashboardBloc>(
+      () => SchedulerDashboardBloc(jobDataSource: sl<IJobDataSource>()),
+    );
+
     _initialized = true;
   }
 }

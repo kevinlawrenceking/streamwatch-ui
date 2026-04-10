@@ -11,6 +11,7 @@ import 'features/home/views/home_view.dart';
 import 'features/login/views/login_view.dart';
 import 'features/upload/views/upload_view.dart';
 import 'features/job_detail/views/job_detail_view.dart';
+import 'features/scheduler/bloc/scheduler_dashboard_bloc.dart';
 import 'features/scheduler/views/scheduler_view.dart';
 import 'features/users/views/users_view.dart';
 import 'features/video_player/views/video_player_view.dart';
@@ -55,7 +56,9 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
     try {
       // When auth is not required, skip login entirely
       if (!Config.instance.authRequired) {
-        setState(() { _initialRoute = '/'; });
+        setState(() {
+          _initialRoute = '/';
+        });
         return;
       }
 
@@ -65,7 +68,9 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
         _authActive = true;
         GetIt.instance<AuthSessionBloc>().add(const SessionRestoredEvent());
         _loadUserProfile();
-        setState(() { _initialRoute = '/'; });
+        setState(() {
+          _initialRoute = '/';
+        });
         return;
       }
 
@@ -75,16 +80,22 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
       final apiAuthLive = await _probeApiAuth();
       if (!apiAuthLive) {
         // API auth not enforced — bypass login, let requests through
-        setState(() { _initialRoute = '/'; });
+        setState(() {
+          _initialRoute = '/';
+        });
         return;
       }
 
       _authActive = true;
-      setState(() { _initialRoute = '/login'; });
+      setState(() {
+        _initialRoute = '/login';
+      });
     } catch (_) {
       // Safety net: if anything throws, show login rather than spin forever
       _authActive = true;
-      setState(() { _initialRoute = '/login'; });
+      setState(() {
+        _initialRoute = '/login';
+      });
     }
   }
 
@@ -97,7 +108,8 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
       result.fold(
         (_) {}, // Silently ignore errors - user can still use the app
         (profile) {
-          GetIt.instance<AuthSessionBloc>().add(UserProfileLoadedEvent(profile));
+          GetIt.instance<AuthSessionBloc>()
+              .add(UserProfileLoadedEvent(profile));
         },
       );
     } catch (_) {
@@ -148,7 +160,8 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
           }
           // Only redirect to login when auth is actually active
           if (_authActive &&
-              (state is AuthSessionExpired || state is AuthSessionUnauthenticated)) {
+              (state is AuthSessionExpired ||
+                  state is AuthSessionUnauthenticated)) {
             _navigatorKey.currentState?.pushNamedAndRemoveUntil(
               '/login',
               (route) => false,
@@ -171,11 +184,12 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
                         child: Text(
                           'DEV ADMIN SESSION',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                            color: AppColors.bg,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.0,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.labelSmall!.copyWith(
+                                    color: AppColors.bg,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.0,
+                                  ),
                         ),
                       ),
                       Expanded(child: child ?? const SizedBox.shrink()),
@@ -226,9 +240,12 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
           builder: (context) => const CollectionsManagerView(),
         );
       case '/scheduler':
-        // Scheduler screen (coming soon placeholder)
         return MaterialPageRoute(
-          builder: (context) => const SchedulerView(),
+          builder: (context) => BlocProvider(
+            create: (_) => GetIt.instance<SchedulerDashboardBloc>()
+              ..add(const LoadSchedulerDashboard()),
+            child: const SchedulerView(),
+          ),
         );
       case '/type-control':
         // TypeControl - video type list (admin-only)

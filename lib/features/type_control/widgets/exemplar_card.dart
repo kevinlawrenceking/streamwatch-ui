@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -170,7 +171,10 @@ class _ExemplarCardState extends State<ExemplarCard> {
               // Title
               Text(
                 widget.exemplar.displayName,
-                style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
+                    .copyWith(fontWeight: FontWeight.w600),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -191,7 +195,10 @@ class _ExemplarCardState extends State<ExemplarCard> {
                     const SizedBox(width: 2),
                     Text(
                       widget.exemplar.jobSource!,
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 10),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall!
+                          .copyWith(fontSize: 10),
                     ),
                   ],
                   if (widget.exemplar.jobTypeCode != null) ...[
@@ -199,9 +206,9 @@ class _ExemplarCardState extends State<ExemplarCard> {
                     Text(
                       widget.exemplar.jobTypeCode!,
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        fontSize: 10,
-                        color: AppColors.tmzRed,
-                      ),
+                            fontSize: 10,
+                            color: AppColors.tmzRed,
+                          ),
                     ),
                   ],
                 ],
@@ -217,9 +224,9 @@ class _ExemplarCardState extends State<ExemplarCard> {
                 Text(
                   widget.exemplar.jobId,
                   style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                    fontSize: 10,
-                    color: AppColors.textDim,
-                  ),
+                        fontSize: 10,
+                        color: AppColors.textDim,
+                      ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -227,10 +234,41 @@ class _ExemplarCardState extends State<ExemplarCard> {
             ],
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.delete_outline, size: 18),
-          tooltip: 'Delete exemplar',
-          onPressed: () => _showDeleteDialog(context),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, size: 18),
+          tooltip: 'Actions',
+          onSelected: (value) {
+            switch (value) {
+              case 'upload_image':
+                _pickAndUploadImage(context);
+                break;
+              case 'delete':
+                _showDeleteDialog(context);
+                break;
+            }
+          },
+          itemBuilder: (_) => [
+            const PopupMenuItem(
+              value: 'upload_image',
+              child: Row(
+                children: [
+                  Icon(Icons.image_outlined, size: 18),
+                  SizedBox(width: 8),
+                  Text('Upload Image'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                  SizedBox(width: 8),
+                  Text('Delete'),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -272,9 +310,9 @@ class _ExemplarCardState extends State<ExemplarCard> {
             Text(
               widget.exemplar.exemplarKind.replaceAll('_', ' ').toUpperCase(),
               style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                fontWeight: FontWeight.w600,
-                color: _getKindColor(widget.exemplar.exemplarKind),
-              ),
+                    fontWeight: FontWeight.w600,
+                    color: _getKindColor(widget.exemplar.exemplarKind),
+                  ),
             ),
             const SizedBox(width: 2),
             Icon(
@@ -322,7 +360,8 @@ class _ExemplarCardState extends State<ExemplarCard> {
             const SizedBox(width: 4),
             InkWell(
               onTap: () => _submitWeight(context),
-              child: const Icon(Icons.check, size: 16, color: AppColors.success),
+              child:
+                  const Icon(Icons.check, size: 16, color: AppColors.success),
             ),
             const SizedBox(width: 4),
             InkWell(
@@ -393,7 +432,10 @@ class _ExemplarCardState extends State<ExemplarCard> {
               child: TextFormField(
                 controller: _notesController,
                 autofocus: true,
-                style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 12),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall!
+                    .copyWith(fontSize: 12),
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding:
@@ -406,7 +448,8 @@ class _ExemplarCardState extends State<ExemplarCard> {
             const SizedBox(width: 4),
             InkWell(
               onTap: () => _submitNotes(context),
-              child: const Icon(Icons.check, size: 16, color: AppColors.success),
+              child:
+                  const Icon(Icons.check, size: 16, color: AppColors.success),
             ),
             const SizedBox(width: 4),
             InkWell(
@@ -432,9 +475,9 @@ class _ExemplarCardState extends State<ExemplarCard> {
               child: Text(
                 notes != null && notes.isNotEmpty ? notes : 'No notes',
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                  fontSize: 10,
-                  color: AppColors.textDim,
-                ),
+                      fontSize: 10,
+                      color: AppColors.textDim,
+                    ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -459,6 +502,25 @@ class _ExemplarCardState extends State<ExemplarCard> {
           UpdateExemplarEvent(
             exemplarId: widget.exemplar.id,
             notes: newNotes,
+          ),
+        );
+  }
+
+  Future<void> _pickAndUploadImage(BuildContext context) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final path = result.files.single.path;
+    if (path == null) return;
+
+    if (!context.mounted) return;
+    context.read<ExemplarManagementBloc>().add(
+          UploadExemplarImageEvent(
+            exemplarId: widget.exemplar.id,
+            filePath: path,
           ),
         );
   }

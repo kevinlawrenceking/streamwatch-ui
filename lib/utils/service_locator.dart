@@ -17,6 +17,7 @@ import '../features/job_detail/service_locator.dart' as job_detail;
 import '../features/login/service_locator.dart' as login;
 import '../features/collections/service_locator.dart' as collections;
 import '../features/podcasts/service_locator.dart' as podcasts;
+import '../features/scheduler/service_locator.dart' as scheduler;
 import '../features/type_control/service_locator.dart' as type_control;
 import '../features/users/service_locator.dart' as users;
 
@@ -53,9 +54,9 @@ Future<void> initServiceLocator() async {
   bool useAuth = config.authRequired && !config.isDevelopment;
   if (useAuth) {
     try {
-      final response = await sl<IRestClient>()
-          .get(endPoint: '/api/v1/jobs', queryParams: {'limit': '1'})
-          .timeout(const Duration(seconds: 5));
+      final response = await sl<IRestClient>().get(
+          endPoint: '/api/v1/jobs',
+          queryParams: {'limit': '1'}).timeout(const Duration(seconds: 5));
       useAuth = response.statusCode == 401;
     } catch (_) {
       useAuth = false;
@@ -140,6 +141,7 @@ Future<void> initServiceLocator() async {
   users.ServiceLocator.init();
   collections.ServiceLocator.init();
   type_control.ServiceLocator.init();
+  scheduler.ServiceLocator.init();
   podcasts.ServiceLocator.init();
 }
 

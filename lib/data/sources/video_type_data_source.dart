@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/video_type_model.dart';
 import '../providers/rest_client.dart';
@@ -85,6 +86,13 @@ abstract class IVideoTypeDataSource {
     String? notes,
     String? exemplarKind,
   });
+
+  /// Uploads an image for an exemplar via POST /exemplars/{exemplar_id}/image.
+  /// Returns the image URL on success.
+  Future<Either<Failure, String>> uploadExemplarImage(
+    String exemplarId,
+    String filePath,
+  );
 }
 
 /// HTTP implementation of IVideoTypeDataSource.
@@ -126,8 +134,7 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             }
 
             final types = decoded
-                .map(
-                    (e) => VideoTypeModel.fromJson(e as Map<String, dynamic>))
+                .map((e) => VideoTypeModel.fromJson(e as Map<String, dynamic>))
                 .toList();
             return Right(types);
           },
@@ -187,8 +194,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             }
 
             final versions = decoded
-                .map((e) => VideoTypeVersionModel.fromJson(
-                    e as Map<String, dynamic>))
+                .map((e) =>
+                    VideoTypeVersionModel.fromJson(e as Map<String, dynamic>))
                 .toList();
             return Right(versions);
           },
@@ -224,8 +231,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             }
 
             final rules = decoded
-                .map((e) => VideoTypeRuleModel.fromJson(
-                    e as Map<String, dynamic>))
+                .map((e) =>
+                    VideoTypeRuleModel.fromJson(e as Map<String, dynamic>))
                 .toList();
             return Right(rules);
           },
@@ -251,8 +258,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             }
 
             final decoded = json.decode(response.body);
-            return Right(RenderedPromptModel.fromJson(
-                decoded as Map<String, dynamic>));
+            return Right(
+                RenderedPromptModel.fromJson(decoded as Map<String, dynamic>));
           },
         );
       }).call();
@@ -276,8 +283,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             }
 
             final decoded = json.decode(response.body);
-            return Right(RenderedPromptModel.fromJson(
-                decoded as Map<String, dynamic>));
+            return Right(
+                RenderedPromptModel.fromJson(decoded as Map<String, dynamic>));
           },
         );
       }).call();
@@ -352,8 +359,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
               return Left(HttpFailure.fromResponse(response));
             }
             final decoded = json.decode(response.body);
-            return Right(VideoTypeRuleModel.fromJson(
-                decoded as Map<String, dynamic>));
+            return Right(
+                VideoTypeRuleModel.fromJson(decoded as Map<String, dynamic>));
           },
         );
       }).call();
@@ -375,8 +382,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
               return Left(HttpFailure.fromResponse(response));
             }
             final decoded = json.decode(response.body);
-            return Right(VideoTypeRuleModel.fromJson(
-                decoded as Map<String, dynamic>));
+            return Right(
+                VideoTypeRuleModel.fromJson(decoded as Map<String, dynamic>));
           },
         );
       }).call();
@@ -396,8 +403,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
               return Left(HttpFailure.fromResponse(response));
             }
             final decoded = json.decode(response.body);
-            return Right(VideoTypeRuleModel.fromJson(
-                decoded as Map<String, dynamic>));
+            return Right(
+                VideoTypeRuleModel.fromJson(decoded as Map<String, dynamic>));
           },
         );
       }).call();
@@ -411,8 +418,7 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
           (failure) => Left(failure),
           (authToken) async {
             final response = await _client.post(
-              endPoint:
-                  '/api/v1/typecontrol/versions/$versionId/rules/reorder',
+              endPoint: '/api/v1/typecontrol/versions/$versionId/rules/reorder',
               authToken: authToken,
               body: {'ordered_rule_ids': orderedRuleIds},
             );
@@ -422,8 +428,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             final decoded = json.decode(response.body);
             if (decoded is! List) return const Right([]);
             return Right(decoded
-                .map((e) => VideoTypeRuleModel.fromJson(
-                    e as Map<String, dynamic>))
+                .map((e) =>
+                    VideoTypeRuleModel.fromJson(e as Map<String, dynamic>))
                 .toList());
           },
         );
@@ -467,8 +473,7 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
           (failure) => Left(failure),
           (authToken) async {
             final response = await _client.post(
-              endPoint:
-                  '/api/v1/typecontrol/candidates/$candidateId/approve',
+              endPoint: '/api/v1/typecontrol/candidates/$candidateId/approve',
               authToken: authToken,
               body: body,
             );
@@ -491,8 +496,7 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
           (failure) => Left(failure),
           (authToken) async {
             final response = await _client.post(
-              endPoint:
-                  '/api/v1/typecontrol/candidates/$candidateId/reject',
+              endPoint: '/api/v1/typecontrol/candidates/$candidateId/reject',
               authToken: authToken,
               body: {'reason': reason},
             );
@@ -515,8 +519,7 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
           (failure) => Left(failure),
           (authToken) async {
             final response = await _client.post(
-              endPoint:
-                  '/api/v1/typecontrol/candidates/$candidateId/merge',
+              endPoint: '/api/v1/typecontrol/candidates/$candidateId/merge',
               authToken: authToken,
               body: body,
             );
@@ -552,8 +555,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             final decoded = json.decode(body);
             if (decoded is! List) return const Right([]);
             return Right(decoded
-                .map((e) => VideoTypeExemplarModel.fromJson(
-                    e as Map<String, dynamic>))
+                .map((e) =>
+                    VideoTypeExemplarModel.fromJson(e as Map<String, dynamic>))
                 .toList());
           },
         );
@@ -568,8 +571,7 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
           (failure) => Left(failure),
           (authToken) async {
             final response = await _client.post(
-              endPoint:
-                  '/api/v1/typecontrol/types/$videoTypeId/exemplars/bulk',
+              endPoint: '/api/v1/typecontrol/types/$videoTypeId/exemplars/bulk',
               authToken: authToken,
               body: body,
             );
@@ -580,8 +582,8 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
             final decoded = json.decode(response.body);
             if (decoded is! List) return const Right([]);
             return Right(decoded
-                .map((e) => VideoTypeExemplarModel.fromJson(
-                    e as Map<String, dynamic>))
+                .map((e) =>
+                    VideoTypeExemplarModel.fromJson(e as Map<String, dynamic>))
                 .toList());
           },
         );
@@ -633,6 +635,38 @@ class VideoTypeDataSource implements IVideoTypeDataSource {
               return Left(HttpFailure.fromResponse(response));
             }
             return const Right(null);
+          },
+        );
+      }).call();
+
+  @override
+  Future<Either<Failure, String>> uploadExemplarImage(
+    String exemplarId,
+    String filePath,
+  ) =>
+      ExceptionHandler<String>(() async {
+        final tokenResult = await _auth.getAuthToken();
+        return tokenResult.fold(
+          (failure) => Left(failure),
+          (authToken) async {
+            final uri = Uri.parse(
+                '${_client.baseUrl}/api/v1/typecontrol/exemplars/$exemplarId/image');
+            final request = http.MultipartRequest('POST', uri);
+            request.headers['Authorization'] = 'Bearer $authToken';
+            request.files.add(
+              await http.MultipartFile.fromPath('image', filePath),
+            );
+
+            final streamed = await _client.sendMultipart(request: request);
+            final response = await http.Response.fromStream(streamed);
+
+            if (response.statusCode != HttpStatus.ok) {
+              return Left(HttpFailure.fromResponse(response));
+            }
+
+            final decoded = json.decode(response.body);
+            final imageUrl = decoded['image_url'] as String? ?? '';
+            return Right(imageUrl);
           },
         );
       }).call();

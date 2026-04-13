@@ -61,101 +61,97 @@ class _ManagerBodyState extends State<_ManagerBody> {
           }
         }
       },
-      child: Scaffold(
-        appBar: TmzAppBar(
-          app: WatchAppIdentity.streamWatch,
-          customTitle: 'Collections',
-        ),
-        body: Column(
-          children: [
-            // Toolbar
-            _Toolbar(
-              showArchived: _showArchived,
-              onToggleArchived: (value) {
-                setState(() {
-                  _showArchived = value;
-                });
-              },
-              onCreateTap: () => _showCreateDialog(context),
-            ),
-            // Table
-            Expanded(
-              child: BlocBuilder<CollectionsBloc, CollectionsState>(
-                builder: (context, state) {
-                  if (state is CollectionsLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (state is CollectionsError) {
+      child: Column(
+        children: [
+          // Toolbar
+          _Toolbar(
+            showArchived: _showArchived,
+            onToggleArchived: (value) {
+              setState(() {
+                _showArchived = value;
+              });
+            },
+            onCreateTap: () => _showCreateDialog(context),
+          ),
+          // Table
+          Expanded(
+            child: BlocBuilder<CollectionsBloc, CollectionsState>(
+              builder: (context, state) {
+                if (state is CollectionsLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is CollectionsError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            size: 64, color: AppColors.error),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error: ${state.failure.message}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(color: AppColors.textDim),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<CollectionsBloc>()
+                                .add(const LoadCollectionsEvent());
+                          },
+                          child: const Text('RETRY'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                if (state is CollectionsLoaded) {
+                  final collections = _showArchived
+                      ? state.collections
+                          .where((c) => c.status == 'archived')
+                          .toList()
+                      : state.collections.where((c) => c.isActive).toList();
+
+                  if (collections.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline,
-                              size: 64, color: AppColors.error),
+                          Icon(Icons.folder_open,
+                              size: 64, color: AppColors.textGhost),
                           const SizedBox(height: 16),
                           Text(
-                            'Error: ${state.failure.message}',
-                            style: Theme.of(context).textTheme.bodyMedium!
+                            _showArchived
+                                ? 'No archived collections'
+                                : 'No collections yet',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
                                 .copyWith(color: AppColors.textDim),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              context
-                                  .read<CollectionsBloc>()
-                                  .add(const LoadCollectionsEvent());
-                            },
-                            child: const Text('RETRY'),
                           ),
                         ],
                       ),
                     );
                   }
-                  if (state is CollectionsLoaded) {
-                    final collections = _showArchived
-                        ? state.collections
-                            .where((c) => c.status == 'archived')
-                            .toList()
-                        : state.collections
-                            .where((c) => c.isActive)
-                            .toList();
 
-                    if (collections.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.folder_open,
-                                size: 64, color: AppColors.textGhost),
-                            const SizedBox(height: 16),
-                            Text(
-                              _showArchived
-                                  ? 'No archived collections'
-                                  : 'No collections yet',
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(color: AppColors.textDim),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return _CollectionsTable(
-                      collections: collections,
-                      showArchived: _showArchived,
-                      onRename: (c) => _showRenameDialog(context, c),
-                      onToggleVisibility: (c) => _toggleVisibility(context, c),
-                      onMakeDefault: (c) => _confirmMakeDefault(context, c),
-                      onArchive: (c) => _confirmArchive(context, c),
-                      onRestore: (c) => _restoreCollection(context, c),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+                  return _CollectionsTable(
+                    collections: collections,
+                    showArchived: _showArchived,
+                    onRename: (c) => _showRenameDialog(context, c),
+                    onToggleVisibility: (c) => _toggleVisibility(context, c),
+                    onMakeDefault: (c) => _confirmMakeDefault(context, c),
+                    onArchive: (c) => _confirmArchive(context, c),
+                    onRestore: (c) => _restoreCollection(context, c),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -474,9 +470,8 @@ class _CollectionsTable extends StatelessWidget {
                               c.isPublic ? Icons.lock_open : Icons.lock,
                               size: 18,
                             ),
-                            tooltip: c.isPublic
-                                ? 'Make Private'
-                                : 'Make Public',
+                            tooltip:
+                                c.isPublic ? 'Make Private' : 'Make Public',
                             onPressed: () => onToggleVisibility(c),
                           ),
                           if (!c.isDefault)
@@ -534,9 +529,9 @@ class _VisibilityBadge extends StatelessWidget {
       child: Text(
         visibility.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall!.copyWith(
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
       ),
     );
   }

@@ -24,55 +24,49 @@ class _JobsListBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TmzAppBar(
-        app: WatchAppIdentity.streamWatch,
-        customTitle: 'Recent Jobs',
-      ),
-      body: BlocBuilder<JobsListBloc, JobsListState>(
-        builder: (context, state) {
-          if (state is JobsListLoading) {
-            return const Center(child: CircularProgressIndicator());
+    return BlocBuilder<JobsListBloc, JobsListState>(
+      builder: (context, state) {
+        if (state is JobsListLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (state is JobsListError) {
+          return _ErrorView(
+            message: state.failure.message,
+            onRetry: () {
+              context.read<JobsListBloc>().add(const LoadJobsEvent());
+            },
+          );
+        }
+
+        if (state is JobsListLoaded || state is JobsListRefreshing) {
+          final jobs = state is JobsListLoaded
+              ? state.jobs
+              : (state as JobsListRefreshing).jobs;
+
+          if (jobs.isEmpty) {
+            return const _EmptyView();
           }
 
-          if (state is JobsListError) {
-            return _ErrorView(
-              message: state.failure.message,
-              onRetry: () {
-                context.read<JobsListBloc>().add(const LoadJobsEvent());
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<JobsListBloc>().add(const RefreshJobsEvent());
+              // Wait for state change
+              await context.read<JobsListBloc>().stream.firstWhere(
+                    (s) => s is JobsListLoaded || s is JobsListError,
+                  );
+            },
+            child: ListView.builder(
+              itemCount: jobs.length,
+              itemBuilder: (context, index) {
+                return _JobCard(job: jobs[index]);
               },
-            );
-          }
+            ),
+          );
+        }
 
-          if (state is JobsListLoaded || state is JobsListRefreshing) {
-            final jobs = state is JobsListLoaded
-                ? state.jobs
-                : (state as JobsListRefreshing).jobs;
-
-            if (jobs.isEmpty) {
-              return const _EmptyView();
-            }
-
-            return RefreshIndicator(
-              onRefresh: () async {
-                context.read<JobsListBloc>().add(const RefreshJobsEvent());
-                // Wait for state change
-                await context.read<JobsListBloc>().stream.firstWhere(
-                      (s) => s is JobsListLoaded || s is JobsListError,
-                    );
-              },
-              child: ListView.builder(
-                itemCount: jobs.length,
-                itemBuilder: (context, index) {
-                  return _JobCard(job: jobs[index]);
-                },
-              ),
-            );
-          }
-
-          return const SizedBox.shrink();
-        },
-      ),
+        return const SizedBox.shrink();
+      },
     );
   }
 }
@@ -147,9 +141,12 @@ class _JobCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             job.title ?? 'Job ${job.jobId.substring(0, 8)}',
-                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium!
+                                .copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -172,8 +169,10 @@ class _JobCard extends StatelessWidget {
                             job.source == 'url'
                                 ? job.sourceUrl ?? 'URL'
                                 : job.filePath ?? 'Uploaded file',
-                            style:
-                                Theme.of(context).textTheme.labelSmall!.copyWith(color: AppColors.textGhost),
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall!
+                                .copyWith(color: AppColors.textGhost),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -186,15 +185,19 @@ class _JobCard extends StatelessWidget {
                       children: [
                         Text(
                           _formatDateTime(job.createdAt),
-                          style: Theme.of(context).textTheme.labelSmall!.copyWith(color: AppColors.textGhost),
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall!
+                              .copyWith(color: AppColors.textGhost),
                         ),
                         if (job.isProcessing)
                           Text(
                             '${job.progressPct}%',
-                            style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                              color: AppColors.tmzRed,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall!.copyWith(
+                                      color: AppColors.tmzRed,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                           ),
                       ],
                     ),

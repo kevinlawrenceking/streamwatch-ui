@@ -27,86 +27,72 @@ class _TypeListBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TmzAppBar(
-        app: WatchAppIdentity.streamWatch,
-        customTitle: 'Type Control',
-        showBackButton: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: () {
-              context.read<TypeControlBloc>().add(const LoadTypesEvent());
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<TypeControlBloc, TypeControlState>(
-        builder: (context, state) {
-          if (state is TypeControlLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return BlocBuilder<TypeControlBloc, TypeControlState>(
+      builder: (context, state) {
+        if (state is TypeControlLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (state is TypeControlError) {
+        if (state is TypeControlError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline,
+                    size: 64, color: AppColors.error),
+                const SizedBox(height: 16),
+                Text(
+                  'Error: ${state.failure.message}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(color: AppColors.textDim),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<TypeControlBloc>().add(const LoadTypesEvent());
+                  },
+                  child: const Text('RETRY'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is TypeControlLoaded) {
+          if (state.types.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline,
-                      size: 64, color: AppColors.error),
+                  Icon(Icons.category_outlined,
+                      size: 64, color: AppColors.textGhost),
                   const SizedBox(height: 16),
                   Text(
-                    'Error: ${state.failure.message}',
-                    style: Theme.of(context).textTheme.bodyMedium!
+                    'No video types defined yet',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
                         .copyWith(color: AppColors.textDim),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context
-                          .read<TypeControlBloc>()
-                          .add(const LoadTypesEvent());
-                    },
-                    child: const Text('RETRY'),
                   ),
                 ],
               ),
             );
           }
 
-          if (state is TypeControlLoaded) {
-            if (state.types.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.category_outlined,
-                        size: 64, color: AppColors.textGhost),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No video types defined yet',
-                      style: Theme.of(context).textTheme.bodyMedium!
-                          .copyWith(color: AppColors.textDim),
-                    ),
-                  ],
-                ),
-              );
-            }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: state.types.length,
+            itemBuilder: (context, index) {
+              return _TypeCard(type: state.types[index]);
+            },
+          );
+        }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: state.types.length,
-              itemBuilder: (context, index) {
-                return _TypeCard(type: state.types[index]);
-              },
-            );
-          }
-
-          return const SizedBox.shrink();
-        },
-      ),
+        return const SizedBox.shrink();
+      },
     );
   }
 }
@@ -141,7 +127,10 @@ class _TypeCard extends StatelessWidget {
                   children: [
                     Text(
                       type.name,
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -184,9 +173,9 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         status.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall!.copyWith(
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
       ),
     );
   }

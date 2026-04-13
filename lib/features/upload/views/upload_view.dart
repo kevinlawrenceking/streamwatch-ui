@@ -68,7 +68,8 @@ class _UploadBodyState extends State<_UploadBody> {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _celebrityInputController = TextEditingController();
+  final TextEditingController _celebrityInputController =
+      TextEditingController();
 
   /// List of celebrity names as chips (case-preserved, deduplicated)
   List<String> _celebrityChips = [];
@@ -286,8 +287,8 @@ class _UploadBodyState extends State<_UploadBody> {
         Text(
           'Celebrities (optional)',
           style: Theme.of(context).textTheme.bodySmall!.copyWith(
-            color: Theme.of(context).hintColor,
-          ),
+                color: Theme.of(context).hintColor,
+              ),
         ),
         const SizedBox(height: 8),
 
@@ -346,8 +347,8 @@ class _UploadBodyState extends State<_UploadBody> {
           child: Text(
             'Type names and press Enter, or separate with commas. If provided, AI celebrity detection is skipped.',
             style: Theme.of(context).textTheme.bodySmall!.copyWith(
-              color: Theme.of(context).hintColor,
-            ),
+                  color: Theme.of(context).hintColor,
+                ),
           ),
         ),
 
@@ -358,8 +359,8 @@ class _UploadBodyState extends State<_UploadBody> {
             child: Text(
               _celebrityFeedback!,
               style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                color: AppColors.warning,
-              ),
+                    color: AppColors.warning,
+                  ),
             ),
           ),
       ],
@@ -376,389 +377,385 @@ class _UploadBodyState extends State<_UploadBody> {
           _showError('Failed to create job: ${state.failure.message}');
         }
       },
-      child: Scaffold(
-        appBar: TmzAppBar(
-          app: WatchAppIdentity.streamWatch,
-          showBackButton: true,
-          showHomeButton: true,
-          customTitle: 'INGEST',
-        ),
-        body: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 600),
-            padding: const EdgeInsets.all(24.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Logo/Header
-                  const Icon(
-                    Icons.video_library,
-                    size: 80,
-                    color: AppColors.tmzRed,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Ingest Video for Processing',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Ingest mode selector
-                  BlocBuilder<UploadBloc, UploadState>(
-                    builder: (context, state) {
-                      final isUploading = state is UploadSubmitting ||
-                          state is FileUploadInProgress;
-                      return SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(
-                            value: 'url',
-                            label: Text('URL'),
-                            icon: Icon(Icons.link),
-                          ),
-                          ButtonSegment(
-                            value: 'file',
-                            label: Text('File'),
-                            icon: Icon(Icons.upload_file),
-                          ),
-                        ],
-                        selected: {_uploadMode},
-                        onSelectionChanged: isUploading
-                            ? null
-                            : (Set<String> newSelection) {
-                                setState(() {
-                                  _uploadMode = newSelection.first;
-                                });
-                              },
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // URL input or file picker
-                  if (_uploadMode == 'url') ...[
-                    TextField(
-                      controller: _urlController,
-                      decoration: const InputDecoration(
-                        labelText: 'Video URL',
-                        hintText:
-                            'YouTube, Twitter/X, TikTok, Instagram, Vimeo, or direct video URL',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.link),
-                        helperText:
-                            'Paste a URL from YouTube, Twitter/X, TikTok, Instagram, Vimeo, Facebook, or a direct video link',
-                        helperMaxLines: 2,
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 600),
+          padding: const EdgeInsets.all(24.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Logo/Header
+                const Icon(
+                  Icons.video_library,
+                  size: 80,
+                  color: AppColors.tmzRed,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Ingest Video for Processing',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 16),
-                    // Live Stream toggle
-                    SwitchListTile(
-                      title: const Text('Live Stream'),
-                      subtitle: const Text('Record a clip from a live stream'),
-                      value: _isLive,
-                      onChanged: (value) {
-                        setState(() {
-                          _isLive = value;
-                        });
-                      },
-                      secondary: const Icon(Icons.live_tv),
-                    ),
-                    // Capture duration dropdown (only shown when Live Stream is ON)
-                    if (_isLive) ...[
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<int>(
-                        value: _captureSeconds,
-                        decoration: const InputDecoration(
-                          labelText: 'Capture Duration',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.timer),
-                          helperText: 'How long to record from the live stream',
+                ),
+                const SizedBox(height: 32),
+
+                // Ingest mode selector
+                BlocBuilder<UploadBloc, UploadState>(
+                  builder: (context, state) {
+                    final isUploading = state is UploadSubmitting ||
+                        state is FileUploadInProgress;
+                    return SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(
+                          value: 'url',
+                          label: Text('URL'),
+                          icon: Icon(Icons.link),
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 300,
-                            child: Text('5 minutes'),
-                          ),
-                          DropdownMenuItem(
-                            value: 900,
-                            child: Text('15 minutes (default)'),
-                          ),
-                          DropdownMenuItem(
-                            value: 1800,
-                            child: Text('30 minutes'),
-                          ),
-                          DropdownMenuItem(
-                            value: 3600,
-                            child: Text('60 minutes'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _captureSeconds = value;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ] else ...[
-                    BlocBuilder<UploadBloc, UploadState>(
-                      builder: (context, state) {
-                        final isUploading = state is FileUploadInProgress;
-                        final isDisabled = isUploading || _isPickingFile;
-                        return OutlinedButton.icon(
-                          onPressed: isDisabled ? null : _pickFile,
-                          icon: _isPickingFile
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.folder_open),
-                          label: Text(_isPickingFile
-                              ? 'Loading file...'
-                              : (_selectedFileName ?? 'Select Video File')),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.all(16),
-                          ),
-                        );
-                      },
-                    ),
-                    if (_selectedFileName != null && !_isPickingFile) ...[
-                      const SizedBox(height: 8),
-                      _buildFileInfo(),
-                    ],
-                  ],
+                        ButtonSegment(
+                          value: 'file',
+                          label: Text('File'),
+                          icon: Icon(Icons.upload_file),
+                        ),
+                      ],
+                      selected: {_uploadMode},
+                      onSelectionChanged: isUploading
+                          ? null
+                          : (Set<String> newSelection) {
+                              setState(() {
+                                _uploadMode = newSelection.first;
+                              });
+                            },
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
 
-                  const SizedBox(height: 16),
-
-                  // Title (optional)
+                // URL input or file picker
+                if (_uploadMode == 'url') ...[
                   TextField(
-                    controller: _titleController,
+                    controller: _urlController,
                     decoration: const InputDecoration(
-                      labelText: 'Title (optional)',
-                      hintText: 'My Video Title',
+                      labelText: 'Video URL',
+                      hintText:
+                          'YouTube, Twitter/X, TikTok, Instagram, Vimeo, or direct video URL',
                       border: OutlineInputBorder(),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Description (optional)
-                  TextField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Description (optional)',
-                      hintText: 'Video description...',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Celebrities (optional) - Chip input
-                  _buildCelebrityChipsInput(),
-
-                  const SizedBox(height: 16),
-
-                  // Collection picker
-                  if (_collectionsLoading)
-                    const LinearProgressIndicator()
-                  else if (_collections.isNotEmpty)
-                    DropdownButtonFormField<String>(
-                      value: _selectedCollectionId,
-                      decoration: const InputDecoration(
-                        labelText: 'Collection',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.folder),
-                        helperText: 'Assign this video to a collection',
-                      ),
-                      items: _collections
-                          .map((c) => DropdownMenuItem(
-                                value: c.id,
-                                child: Text(
-                                  c.isDefault
-                                      ? '${c.name} (default)'
-                                      : c.name,
-                                ),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedCollectionId = value;
-                        });
-                      },
-                    ),
-
-                  const SizedBox(height: 16),
-
-                  // Transcription Engine selector
-                  DropdownButtonFormField<String>(
-                    value: _transcriptionEngine,
-                    decoration: const InputDecoration(
-                      labelText: 'Transcription Engine',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.mic),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'aws',
-                        child: Text('AWS Transcribe (Recommended)'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'gemini',
-                        child: Text('Google Gemini'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _transcriptionEngine = value;
-                        });
-                      }
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Chunk Duration selector
-                  DropdownButtonFormField<int>(
-                    value: _segmentDuration,
-                    decoration: const InputDecoration(
-                      labelText: 'Chunk Duration',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.timer),
+                      prefixIcon: Icon(Icons.link),
                       helperText:
-                          'Shorter chunks = faster initial results, more updates',
+                          'Paste a URL from YouTube, Twitter/X, TikTok, Instagram, Vimeo, Facebook, or a direct video link',
                       helperMaxLines: 2,
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 60,
-                        child: Text('1 minute (fastest updates)'),
-                      ),
-                      DropdownMenuItem(
-                        value: 180,
-                        child: Text('3 minutes (recommended)'),
-                      ),
-                      DropdownMenuItem(
-                        value: 300,
-                        child: Text('5 minutes'),
-                      ),
-                      DropdownMenuItem(
-                        value: 600,
-                        child: Text('10 minutes'),
-                      ),
-                      DropdownMenuItem(
-                        value: 900,
-                        child: Text('15 minutes'),
-                      ),
-                      DropdownMenuItem(
-                        value: 1800,
-                        child: Text('30 minutes'),
-                      ),
-                      DropdownMenuItem(
-                        value: 3600,
-                        child: Text('1 hour'),
-                      ),
-                    ],
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+                  // Live Stream toggle
+                  SwitchListTile(
+                    title: const Text('Live Stream'),
+                    subtitle: const Text('Record a clip from a live stream'),
+                    value: _isLive,
                     onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _segmentDuration = value;
-                        });
-                      }
+                      setState(() {
+                        _isLive = value;
+                      });
                     },
+                    secondary: const Icon(Icons.live_tv),
                   ),
-
-                  const SizedBox(height: 32),
-
-                  // Upload progress indicator for file uploads
-                  BlocBuilder<UploadBloc, UploadState>(
-                    builder: (context, state) {
-                      if (state is FileUploadInProgress) {
-                        return _buildUploadProgress(state);
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-
-                  // Submit button
-                  BlocBuilder<UploadBloc, UploadState>(
-                    builder: (context, state) {
-                      final blocSubmitting = state is UploadSubmitting;
-                      final uploadProgress = state is FileUploadInProgress ? state : null;
-                      final isUploading = uploadProgress != null;
-                      final isError = state is UploadError;
-                      // Disable if local flag OR bloc state indicates submission
-                      final isDisabled = _isSubmitting || blocSubmitting || isUploading;
-
-                      if (isError && state.canRetry) {
-                        return Column(
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _retryUpload,
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Try Again'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.all(16),
-                                backgroundColor: AppColors.warning,
-                                foregroundColor: AppColors.textMax,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Error: ${state.failure.message}',
-                              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                                  color: AppColors.error),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        );
-                      }
-
-                      return ElevatedButton(
-                        onPressed: isDisabled ? null : _submitJob,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.all(16),
-                          backgroundColor: AppColors.tmzRed,
-                          foregroundColor: AppColors.textMax,
+                  // Capture duration dropdown (only shown when Live Stream is ON)
+                  if (_isLive) ...[
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<int>(
+                      value: _captureSeconds,
+                      decoration: const InputDecoration(
+                        labelText: 'Capture Duration',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.timer),
+                        helperText: 'How long to record from the live stream',
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 300,
+                          child: Text('5 minutes'),
                         ),
-                        child: isDisabled
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.textMax,
-                                    ),
-                                  ),
-                                  if (uploadProgress != null) ...[
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      uploadProgress.statusMessage,
-                                      style: Theme.of(context).textTheme.labelLarge!,
-                                    ),
-                                  ],
-                                ],
+                        DropdownMenuItem(
+                          value: 900,
+                          child: Text('15 minutes (default)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 1800,
+                          child: Text('30 minutes'),
+                        ),
+                        DropdownMenuItem(
+                          value: 3600,
+                          child: Text('60 minutes'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _captureSeconds = value;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ] else ...[
+                  BlocBuilder<UploadBloc, UploadState>(
+                    builder: (context, state) {
+                      final isUploading = state is FileUploadInProgress;
+                      final isDisabled = isUploading || _isPickingFile;
+                      return OutlinedButton.icon(
+                        onPressed: isDisabled ? null : _pickFile,
+                        icon: _isPickingFile
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
-                            : Text(
-                                'Start Processing',
-                                style: Theme.of(context).textTheme.titleMedium!,
-                              ),
+                            : const Icon(Icons.folder_open),
+                        label: Text(_isPickingFile
+                            ? 'Loading file...'
+                            : (_selectedFileName ?? 'Select Video File')),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.all(16),
+                        ),
                       );
                     },
                   ),
+                  if (_selectedFileName != null && !_isPickingFile) ...[
+                    const SizedBox(height: 8),
+                    _buildFileInfo(),
+                  ],
                 ],
-              ),
+
+                const SizedBox(height: 16),
+
+                // Title (optional)
+                TextField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title (optional)',
+                    hintText: 'My Video Title',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Description (optional)
+                TextField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    hintText: 'Video description...',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Celebrities (optional) - Chip input
+                _buildCelebrityChipsInput(),
+
+                const SizedBox(height: 16),
+
+                // Collection picker
+                if (_collectionsLoading)
+                  const LinearProgressIndicator()
+                else if (_collections.isNotEmpty)
+                  DropdownButtonFormField<String>(
+                    value: _selectedCollectionId,
+                    decoration: const InputDecoration(
+                      labelText: 'Collection',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.folder),
+                      helperText: 'Assign this video to a collection',
+                    ),
+                    items: _collections
+                        .map((c) => DropdownMenuItem(
+                              value: c.id,
+                              child: Text(
+                                c.isDefault ? '${c.name} (default)' : c.name,
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCollectionId = value;
+                      });
+                    },
+                  ),
+
+                const SizedBox(height: 16),
+
+                // Transcription Engine selector
+                DropdownButtonFormField<String>(
+                  value: _transcriptionEngine,
+                  decoration: const InputDecoration(
+                    labelText: 'Transcription Engine',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.mic),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'aws',
+                      child: Text('AWS Transcribe (Recommended)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'gemini',
+                      child: Text('Google Gemini'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _transcriptionEngine = value;
+                      });
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                // Chunk Duration selector
+                DropdownButtonFormField<int>(
+                  value: _segmentDuration,
+                  decoration: const InputDecoration(
+                    labelText: 'Chunk Duration',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.timer),
+                    helperText:
+                        'Shorter chunks = faster initial results, more updates',
+                    helperMaxLines: 2,
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 60,
+                      child: Text('1 minute (fastest updates)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 180,
+                      child: Text('3 minutes (recommended)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 300,
+                      child: Text('5 minutes'),
+                    ),
+                    DropdownMenuItem(
+                      value: 600,
+                      child: Text('10 minutes'),
+                    ),
+                    DropdownMenuItem(
+                      value: 900,
+                      child: Text('15 minutes'),
+                    ),
+                    DropdownMenuItem(
+                      value: 1800,
+                      child: Text('30 minutes'),
+                    ),
+                    DropdownMenuItem(
+                      value: 3600,
+                      child: Text('1 hour'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _segmentDuration = value;
+                      });
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 32),
+
+                // Upload progress indicator for file uploads
+                BlocBuilder<UploadBloc, UploadState>(
+                  builder: (context, state) {
+                    if (state is FileUploadInProgress) {
+                      return _buildUploadProgress(state);
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+
+                // Submit button
+                BlocBuilder<UploadBloc, UploadState>(
+                  builder: (context, state) {
+                    final blocSubmitting = state is UploadSubmitting;
+                    final uploadProgress =
+                        state is FileUploadInProgress ? state : null;
+                    final isUploading = uploadProgress != null;
+                    final isError = state is UploadError;
+                    // Disable if local flag OR bloc state indicates submission
+                    final isDisabled =
+                        _isSubmitting || blocSubmitting || isUploading;
+
+                    if (isError && state.canRetry) {
+                      return Column(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: _retryUpload,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Try Again'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.all(16),
+                              backgroundColor: AppColors.warning,
+                              foregroundColor: AppColors.textMax,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Error: ${state.failure.message}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall!
+                                .copyWith(color: AppColors.error),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      );
+                    }
+
+                    return ElevatedButton(
+                      onPressed: isDisabled ? null : _submitJob,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.all(16),
+                        backgroundColor: AppColors.tmzRed,
+                        foregroundColor: AppColors.textMax,
+                      ),
+                      child: isDisabled
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.textMax,
+                                  ),
+                                ),
+                                if (uploadProgress != null) ...[
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    uploadProgress.statusMessage,
+                                    style:
+                                        Theme.of(context).textTheme.labelLarge!,
+                                  ),
+                                ],
+                              ],
+                            )
+                          : Text(
+                              'Start Processing',
+                              style: Theme.of(context).textTheme.titleMedium!,
+                            ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),
@@ -793,8 +790,8 @@ class _UploadBodyState extends State<_UploadBody> {
             Text(
               '$sizeInMB MB${isLarge ? ' (direct S3 upload)' : ''}',
               style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                color: isLarge ? AppColors.info : AppColors.textGhost,
-              ),
+                    color: isLarge ? AppColors.info : AppColors.textGhost,
+                  ),
             ),
           ],
         ),
@@ -826,16 +823,16 @@ class _UploadBodyState extends State<_UploadBody> {
                     Text(
                       state.statusMessage,
                       style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     if (state.uploadId != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         'Upload ID: ${state.uploadId}',
                         style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                          color: AppColors.textGhost,
-                        ),
+                              color: AppColors.textGhost,
+                            ),
                       ),
                     ],
                   ],
@@ -924,9 +921,8 @@ class _UploadBodyState extends State<_UploadBody> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: completed ? AppColors.tmzRed : AppColors.textGhost,
-            border: active
-                ? Border.all(color: AppColors.tmzRed, width: 2)
-                : null,
+            border:
+                active ? Border.all(color: AppColors.tmzRed, width: 2) : null,
           ),
           child: completed
               ? const Icon(Icons.check, size: 14, color: AppColors.textMax)
@@ -936,9 +932,9 @@ class _UploadBodyState extends State<_UploadBody> {
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall!.copyWith(
-            color: completed ? AppColors.tmzRed : AppColors.textGhost,
-            fontWeight: active ? FontWeight.bold : FontWeight.normal,
-          ),
+                color: completed ? AppColors.tmzRed : AppColors.textGhost,
+                fontWeight: active ? FontWeight.bold : FontWeight.normal,
+              ),
         ),
       ],
     );

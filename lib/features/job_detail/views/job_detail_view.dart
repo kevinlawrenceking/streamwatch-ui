@@ -139,31 +139,15 @@ class _JobDetailBody extends StatelessWidget {
       child: BlocBuilder<JobDetailBloc, JobDetailState>(
         builder: (context, state) {
           if (state is JobDetailLoading) {
-            return Scaffold(
-              appBar: TmzAppBar(
-                app: WatchAppIdentity.streamWatch,
-                showBackButton: true,
-                showHomeButton: true,
-                customTitle: 'Loading...',
-              ),
-              body: const Center(child: CircularProgressIndicator()),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state is JobDetailError) {
-            return Scaffold(
-              appBar: TmzAppBar(
-                app: WatchAppIdentity.streamWatch,
-                showBackButton: true,
-                showHomeButton: true,
-                customTitle: 'Error',
-              ),
-              body: _ErrorView(
-                message: state.failure.message,
-                onRetry: () {
-                  context.read<JobDetailBloc>().add(const LoadJobDetailEvent());
-                },
-              ),
+            return _ErrorView(
+              message: state.failure.message,
+              onRetry: () {
+                context.read<JobDetailBloc>().add(const LoadJobDetailEvent());
+              },
             );
           }
 
@@ -171,91 +155,128 @@ class _JobDetailBody extends StatelessWidget {
             final job = state.job;
             final isActionInFlight = state.inFlightAction != null;
 
-            return Scaffold(
-              appBar: TmzAppBar(
-                app: WatchAppIdentity.streamWatch,
-                showBackButton: true,
-                showHomeButton: true,
-                customTitle: job.title ?? 'Video ${job.jobId}',
-                actions: [
-                  // Pause/Resume button
-                  if (job.canPause || job.canResume)
-                    _buildActionButton(
-                      context: context,
-                      icon: job.isPaused || job.pauseRequested ? Icons.play_arrow : Icons.pause,
-                      tooltip: job.isPaused || job.pauseRequested ? 'Resume' : 'Pause',
-                      isLoading: isActionInFlight &&
-                          (state.inFlightAction == JobDetailActionType.pause ||
-                              state.inFlightAction == JobDetailActionType.resume),
-                      isDisabled: isActionInFlight,
-                      onPressed: () {
-                        if (job.isPaused || job.pauseRequested) {
-                          context.read<JobDetailBloc>().add(const ResumeJobDetailEvent());
-                        } else {
-                          context.read<JobDetailBloc>().add(const PauseJobDetailEvent());
-                        }
-                      },
+            return Column(
+              children: [
+                // Action toolbar
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevated,
+                    border: Border(
+                      bottom: BorderSide(color: AppColors.textGhost, width: 1),
                     ),
-                  // Flag button
-                  _buildActionButton(
-                    context: context,
-                    icon: job.isFlagged ? Icons.flag : Icons.flag_outlined,
-                    tooltip: job.isFlagged ? 'Unflag' : 'Flag',
-                    iconColor: job.isFlagged ? AppColors.warning : null,
-                    isLoading: isActionInFlight && state.inFlightAction == JobDetailActionType.flag,
-                    isDisabled: isActionInFlight,
-                    onPressed: () => _showFlagDialog(context, job.isFlagged),
                   ),
-                  // Delete button
-                  _buildActionButton(
-                    context: context,
-                    icon: Icons.delete_outline,
-                    tooltip: job.canDelete ? 'Delete' : 'Cannot delete (processing or flagged)',
-                    iconColor: job.canDelete ? AppColors.tmzRed : AppColors.textGhost,
-                    isLoading: isActionInFlight && state.inFlightAction == JobDetailActionType.delete,
-                    isDisabled: isActionInFlight || !job.canDelete,
-                    onPressed: job.canDelete ? () => _showDeleteDialog(context) : null,
-                  ),
-                  // View Log button
-                  IconButton(
-                    icon: const Icon(Icons.terminal),
-                    tooltip: 'View Worker Log',
-                    onPressed: () => _showLogViewer(context, job.jobId),
-                  ),
-                ],
-              ),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Poll error banner (non-blocking warning)
-                    if (state.pollError != null)
-                      _PollErrorBanner(message: state.pollError!),
-                    // Flag indicator banner
-                    if (job.isFlagged)
-                      _FlagBanner(flagNote: job.flagNote),
-                    _JobInfoCard(job: job, celebrities: state.celebrities),
-                    const SizedBox(height: 16),
-                    _CollectionsSection(jobId: job.jobId),
-                    const SizedBox(height: 16),
-                    // Only show progress bar when NOT completed
-                    if (!job.isCompleted) ...[
-                      _ProgressCard(job: job, isPolling: state.isPolling),
-                      const SizedBox(height: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          job.title ?? 'Video ${job.jobId}',
+                          style: Theme.of(context).textTheme.titleMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      // Pause/Resume button
+                      if (job.canPause || job.canResume)
+                        _buildActionButton(
+                          context: context,
+                          icon: job.isPaused || job.pauseRequested
+                              ? Icons.play_arrow
+                              : Icons.pause,
+                          tooltip: job.isPaused || job.pauseRequested
+                              ? 'Resume'
+                              : 'Pause',
+                          isLoading: isActionInFlight &&
+                              (state.inFlightAction ==
+                                      JobDetailActionType.pause ||
+                                  state.inFlightAction ==
+                                      JobDetailActionType.resume),
+                          isDisabled: isActionInFlight,
+                          onPressed: () {
+                            if (job.isPaused || job.pauseRequested) {
+                              context
+                                  .read<JobDetailBloc>()
+                                  .add(const ResumeJobDetailEvent());
+                            } else {
+                              context
+                                  .read<JobDetailBloc>()
+                                  .add(const PauseJobDetailEvent());
+                            }
+                          },
+                        ),
+                      // Flag button
+                      _buildActionButton(
+                        context: context,
+                        icon: job.isFlagged ? Icons.flag : Icons.flag_outlined,
+                        tooltip: job.isFlagged ? 'Unflag' : 'Flag',
+                        iconColor: job.isFlagged ? AppColors.warning : null,
+                        isLoading: isActionInFlight &&
+                            state.inFlightAction == JobDetailActionType.flag,
+                        isDisabled: isActionInFlight,
+                        onPressed: () =>
+                            _showFlagDialog(context, job.isFlagged),
+                      ),
+                      // Delete button
+                      _buildActionButton(
+                        context: context,
+                        icon: Icons.delete_outline,
+                        tooltip: job.canDelete
+                            ? 'Delete'
+                            : 'Cannot delete (processing or flagged)',
+                        iconColor: job.canDelete
+                            ? AppColors.tmzRed
+                            : AppColors.textGhost,
+                        isLoading: isActionInFlight &&
+                            state.inFlightAction == JobDetailActionType.delete,
+                        isDisabled: isActionInFlight || !job.canDelete,
+                        onPressed: job.canDelete
+                            ? () => _showDeleteDialog(context)
+                            : null,
+                      ),
+                      // View Log button
+                      IconButton(
+                        icon: const Icon(Icons.terminal),
+                        tooltip: 'View Worker Log',
+                        onPressed: () => _showLogViewer(context, job.jobId),
+                      ),
                     ],
-                    if (job.isCompleted) ...[
-                      _FinalSummarySection(job: job),
-                      const SizedBox(height: 16),
-                      _PeopleSection(jobId: job.jobId),
-                      const SizedBox(height: 16),
-                      _FullTranscriptSection(job: job, chunks: state.chunks),
-                      const SizedBox(height: 16),
-                    ],
-                    _ChunksSection(chunks: state.chunks, jobId: job.jobId),
-                  ],
+                  ),
                 ),
-              ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Poll error banner (non-blocking warning)
+                        if (state.pollError != null)
+                          _PollErrorBanner(message: state.pollError!),
+                        // Flag indicator banner
+                        if (job.isFlagged) _FlagBanner(flagNote: job.flagNote),
+                        _JobInfoCard(job: job, celebrities: state.celebrities),
+                        const SizedBox(height: 16),
+                        _CollectionsSection(jobId: job.jobId),
+                        const SizedBox(height: 16),
+                        // Only show progress bar when NOT completed
+                        if (!job.isCompleted) ...[
+                          _ProgressCard(job: job, isPolling: state.isPolling),
+                          const SizedBox(height: 16),
+                        ],
+                        if (job.isCompleted) ...[
+                          _FinalSummarySection(job: job),
+                          const SizedBox(height: 16),
+                          _PeopleSection(jobId: job.jobId),
+                          const SizedBox(height: 16),
+                          _FullTranscriptSection(
+                              job: job, chunks: state.chunks),
+                          const SizedBox(height: 16),
+                        ],
+                        _ChunksSection(chunks: state.chunks, jobId: job.jobId),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           }
 
@@ -280,7 +301,8 @@ class _JobDetailBody extends StatelessWidget {
         child: SizedBox(
           width: 20,
           height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textMax),
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: AppColors.textMax),
         ),
       );
     }
@@ -317,7 +339,10 @@ class _FlagBanner extends StatelessWidget {
           Expanded(
             child: Text(
               flagNote ?? 'This job has been flagged for review',
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.warning),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall!
+                  .copyWith(color: AppColors.warning),
             ),
           ),
         ],
@@ -399,7 +424,8 @@ class _JobInfoCardState extends State<_JobInfoCard> {
 
   bool _isS3Url(String? url) {
     if (url == null) return false;
-    return url.contains('.s3.amazonaws.com/') || url.contains('.s3.us-east-1.amazonaws.com/');
+    return url.contains('.s3.amazonaws.com/') ||
+        url.contains('.s3.us-east-1.amazonaws.com/');
   }
 
   bool _isExternalVideoUrl(String? url) {
@@ -443,11 +469,16 @@ class _JobInfoCardState extends State<_JobInfoCard> {
     if (filename == null) return true; // Assume playable if unknown
     final lower = filename.toLowerCase();
     // Web-playable formats (h.264/h.265 in mp4/webm containers)
-    if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.m4v')) {
+    if (lower.endsWith('.mp4') ||
+        lower.endsWith('.webm') ||
+        lower.endsWith('.m4v')) {
       return true;
     }
     // Formats that often don't play in browser (ProRes, etc)
-    if (lower.endsWith('.mov') || lower.endsWith('.avi') || lower.endsWith('.mkv') || lower.endsWith('.wmv')) {
+    if (lower.endsWith('.mov') ||
+        lower.endsWith('.avi') ||
+        lower.endsWith('.mkv') ||
+        lower.endsWith('.wmv')) {
       return false;
     }
     return true; // Default to trying in-app
@@ -580,16 +611,28 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                     onSelected: (value) {
                       switch (value) {
                         case 'transcript_cleaned':
-                          _launchDownload(context, dataSource.getTranscriptDownloadUrl(widget.job.jobId, cleaned: true));
+                          _launchDownload(
+                              context,
+                              dataSource.getTranscriptDownloadUrl(
+                                  widget.job.jobId,
+                                  cleaned: true));
                           break;
                         case 'transcript_raw':
-                          _launchDownload(context, dataSource.getTranscriptDownloadUrl(widget.job.jobId, cleaned: false));
+                          _launchDownload(
+                              context,
+                              dataSource.getTranscriptDownloadUrl(
+                                  widget.job.jobId,
+                                  cleaned: false));
                           break;
                         case 'srt':
-                          _launchDownload(context, dataSource.getSrtDownloadUrl(widget.job.jobId));
+                          _launchDownload(context,
+                              dataSource.getSrtDownloadUrl(widget.job.jobId));
                           break;
                         case 'summary':
-                          _launchDownload(context, dataSource.getSummaryDownloadUrl(widget.job.jobId));
+                          _launchDownload(
+                              context,
+                              dataSource
+                                  .getSummaryDownloadUrl(widget.job.jobId));
                           break;
                       }
                     },
@@ -597,7 +640,8 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                       const PopupMenuItem(
                         value: 'transcript_cleaned',
                         child: ListTile(
-                          leading: Icon(Icons.description, color: AppColors.tmzRed),
+                          leading:
+                              Icon(Icons.description, color: AppColors.tmzRed),
                           title: Text('Transcript (Cleaned)'),
                           subtitle: Text('With speaker labels'),
                           contentPadding: EdgeInsets.zero,
@@ -617,7 +661,8 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                       const PopupMenuItem(
                         value: 'srt',
                         child: ListTile(
-                          leading: Icon(Icons.subtitles, color: AppColors.tmzRed),
+                          leading:
+                              Icon(Icons.subtitles, color: AppColors.tmzRed),
                           title: Text('Subtitles (SRT)'),
                           subtitle: Text('For video players'),
                           contentPadding: EdgeInsets.zero,
@@ -628,7 +673,8 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                       const PopupMenuItem(
                         value: 'summary',
                         child: ListTile(
-                          leading: Icon(Icons.summarize, color: AppColors.tmzRed),
+                          leading:
+                              Icon(Icons.summarize, color: AppColors.tmzRed),
                           title: Text('Summary'),
                           subtitle: Text('Overview + segments'),
                           contentPadding: EdgeInsets.zero,
@@ -663,19 +709,30 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                       if (widget.celebrities.isNotEmpty)
                         _InfoRow(
                           label: 'Celebrities',
-                          value: widget.celebrities.map((c) => c.name).join(', '),
+                          value:
+                              widget.celebrities.map((c) => c.name).join(', '),
                         ),
                       // Combined Source row - shows URL link or file path
                       _SourceRow(job: widget.job),
                       if (widget.job.sourceProvider != null)
-                        _ProviderRow(label: 'Platform', provider: widget.job.sourceProvider!),
+                        _ProviderRow(
+                            label: 'Platform',
+                            provider: widget.job.sourceProvider!),
                       if (widget.job.typeCode != null)
-                        _TypeRow(typeCode: widget.job.typeCode!, confidence: widget.job.typeConfidence),
+                        _TypeRow(
+                            typeCode: widget.job.typeCode!,
+                            confidence: widget.job.typeConfidence),
                       if (widget.job.description != null)
-                        _InfoRow(label: 'Description', value: widget.job.description!),
-                      _InfoRow(label: 'Created', value: _formatDateTime(widget.job.createdAt)),
+                        _InfoRow(
+                            label: 'Description',
+                            value: widget.job.description!),
+                      _InfoRow(
+                          label: 'Created',
+                          value: _formatDateTime(widget.job.createdAt)),
                       if (widget.job.completedAt != null)
-                        _InfoRow(label: 'Completed', value: _formatDateTime(widget.job.completedAt!)),
+                        _InfoRow(
+                            label: 'Completed',
+                            value: _formatDateTime(widget.job.completedAt!)),
                     ],
                   ),
                 ),
@@ -740,14 +797,18 @@ class _JobInfoCardState extends State<_JobInfoCard> {
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.bg.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         hasUrl ? 'Watch Original' : 'Download Video',
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textMax),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall!
+                            .copyWith(color: AppColors.textMax),
                       ),
                     ),
                   ],
@@ -776,7 +837,10 @@ class _JobInfoCardState extends State<_JobInfoCard> {
               const SizedBox(height: 8),
               Text(
                 'Video unavailable',
-                style: Theme.of(context).textTheme.labelLarge!.copyWith(color: AppColors.textGhost),
+                style: Theme.of(context)
+                    .textTheme
+                    .labelLarge!
+                    .copyWith(color: AppColors.textGhost),
               ),
               const SizedBox(height: 8),
               TextButton(
@@ -1125,7 +1189,10 @@ class _PollErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.warning),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall!
+                  .copyWith(color: AppColors.warning),
             ),
           ),
         ],
@@ -1165,7 +1232,8 @@ class _ProgressCard extends StatelessWidget {
                         height: 12,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
                         ),
                       ),
                     ],
@@ -1186,7 +1254,10 @@ class _ProgressCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '${job.progressPct}%',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge!
+                  .copyWith(fontWeight: FontWeight.bold),
             ),
             Text(
               '${job.completedChunks} segments processed',
@@ -1246,7 +1317,10 @@ class _FinalSummarySection extends StatelessWidget {
             const Divider(),
             Text(
               job.summaryText!,
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(height: 1.5),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium!
+                  .copyWith(height: 1.5),
             ),
           ],
         ),
@@ -1271,9 +1345,12 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
   @override
   Widget build(BuildContext context) {
     // Priority: fullTranscript (merged with speaker labels) > transcriptFinal > chunk transcripts
-    final hasFullTranscript = widget.job.fullTranscript != null && widget.job.fullTranscript!.isNotEmpty;
-    final hasFinalTranscript = widget.job.transcriptFinal != null && widget.job.transcriptFinal!.isNotEmpty;
-    final hasChunkTranscripts = widget.chunks.any((c) => c.transcript != null && c.transcript!.isNotEmpty);
+    final hasFullTranscript = widget.job.fullTranscript != null &&
+        widget.job.fullTranscript!.isNotEmpty;
+    final hasFinalTranscript = widget.job.transcriptFinal != null &&
+        widget.job.transcriptFinal!.isNotEmpty;
+    final hasChunkTranscripts = widget.chunks
+        .any((c) => c.transcript != null && c.transcript!.isNotEmpty);
 
     if (!hasFullTranscript && !hasFinalTranscript && !hasChunkTranscripts) {
       return const SizedBox.shrink();
@@ -1303,8 +1380,10 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
                 // Toggle button only if we have both full transcript AND chunk transcripts
                 if (displayTranscript != null && hasChunkTranscripts)
                   TextButton.icon(
-                    onPressed: () => setState(() => _showBySegment = !_showBySegment),
-                    icon: Icon(_showBySegment ? Icons.article : Icons.segment, size: 18),
+                    onPressed: () =>
+                        setState(() => _showBySegment = !_showBySegment),
+                    icon: Icon(_showBySegment ? Icons.article : Icons.segment,
+                        size: 18),
                     label: Text(_showBySegment ? 'Full View' : 'By Segment'),
                   ),
               ],
@@ -1336,7 +1415,8 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int i = 0; i < widget.chunks.length; i++) ...[
-          if (widget.chunks[i].transcript != null && widget.chunks[i].transcript!.isNotEmpty) ...[
+          if (widget.chunks[i].transcript != null &&
+              widget.chunks[i].transcript!.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -1346,15 +1426,16 @@ class _FullTranscriptSectionState extends State<_FullTranscriptSection> {
               child: Text(
                 'Segment ${i + 1} (${widget.chunks[i].formattedTimeRange})',
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.tmzRed,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.tmzRed,
+                    ),
               ),
             ),
             const SizedBox(height: 8),
             SelectableText(
               widget.chunks[i].transcript!,
-              style: Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.5),
+              style:
+                  Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.5),
             ),
             const SizedBox(height: 20),
           ],
@@ -1469,12 +1550,18 @@ class _ChunkTile extends StatelessWidget {
                   children: [
                     Text(
                       'Segment $displaySegmentNum',
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium!
+                          .copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       chunk.formattedTimeRange,
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall!
+                          .copyWith(color: AppColors.textGhost),
                     ),
                   ],
                 ),
@@ -1482,7 +1569,10 @@ class _ChunkTile extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     chunk.summary!,
-                    style: Theme.of(context).textTheme.labelLarge!.copyWith(height: 1.4),
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge!
+                        .copyWith(height: 1.4),
                   ),
                 ],
               ],
@@ -1601,8 +1691,7 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
   Future<void> _addToCollection(String collectionId) async {
     setState(() => _actionInFlight = true);
     final ds = GetIt.instance<ICollectionDataSource>();
-    final result =
-        await ds.addVideosToCollection(collectionId, [widget.jobId]);
+    final result = await ds.addVideosToCollection(collectionId, [widget.jobId]);
 
     if (!mounted) return;
 
@@ -1677,7 +1766,10 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
                   else ...[
                     Text(
                       '${_memberships?.length ?? 0}',
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall!
+                          .copyWith(color: AppColors.textGhost),
                     ),
                     const SizedBox(width: 8),
                     Icon(_expanded ? Icons.expand_less : Icons.expand_more),
@@ -1696,7 +1788,8 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(_error!, style: const TextStyle(color: AppColors.error)),
+                child: Text(_error!,
+                    style: const TextStyle(color: AppColors.error)),
               )
             else
               _buildContent(),
@@ -1717,22 +1810,27 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _memberships!.map((c) => Chip(
-                label: Text(c.name),
-                avatar: Icon(
-                  c.isPublic ? Icons.public : Icons.lock,
-                  size: 16,
-                ),
-                deleteIcon: const Icon(Icons.close, size: 16),
-                onDeleted: _actionInFlight
-                    ? null
-                    : () => _removeFromCollection(c),
-              )).toList(),
+              children: _memberships!
+                  .map((c) => Chip(
+                        label: Text(c.name),
+                        avatar: Icon(
+                          c.isPublic ? Icons.public : Icons.lock,
+                          size: 16,
+                        ),
+                        deleteIcon: const Icon(Icons.close, size: 16),
+                        onDeleted: _actionInFlight
+                            ? null
+                            : () => _removeFromCollection(c),
+                      ))
+                  .toList(),
             )
           else
             Text(
               'Not in any collections',
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall!
+                  .copyWith(color: AppColors.textGhost),
             ),
           const SizedBox(height: 12),
           // Add to collection row
@@ -1768,8 +1866,8 @@ class _CollectionsSectionState extends State<_CollectionsSection> {
                         .toList(),
                     onChanged: _actionInFlight
                         ? null
-                        : (value) => setState(
-                            () => _selectedCollectionId = value),
+                        : (value) =>
+                            setState(() => _selectedCollectionId = value),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1836,8 +1934,10 @@ class _PeopleSectionState extends State<_PeopleSection> {
 
       // Load both speakers and cast in parallel
       final results = await Future.wait([
-        http.get(Uri.parse('$baseUrl/api/v1/jobs/${widget.jobId}/speakers'), headers: headers),
-        http.get(Uri.parse('$baseUrl/api/v1/jobs/${widget.jobId}/cast'), headers: headers),
+        http.get(Uri.parse('$baseUrl/api/v1/jobs/${widget.jobId}/speakers'),
+            headers: headers),
+        http.get(Uri.parse('$baseUrl/api/v1/jobs/${widget.jobId}/cast'),
+            headers: headers),
       ]);
 
       final speakersResponse = results[0];
@@ -1911,7 +2011,10 @@ class _PeopleSectionState extends State<_PeopleSection> {
                   else ...[
                     Text(
                       '${_speakers?.length ?? 0} speakers',
-                      style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall!
+                          .copyWith(color: AppColors.textGhost),
                     ),
                     const SizedBox(width: 8),
                     Icon(_expanded ? Icons.expand_less : Icons.expand_more),
@@ -1931,7 +2034,8 @@ class _PeopleSectionState extends State<_PeopleSection> {
             else if (_error != null)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(_error!, style: const TextStyle(color: AppColors.error)),
+                child: Text(_error!,
+                    style: const TextStyle(color: AppColors.error)),
               )
             else
               _buildContent(),
@@ -1972,63 +2076,74 @@ class _PeopleSectionState extends State<_PeopleSection> {
                 children: const [
                   Padding(
                     padding: EdgeInsets.all(8),
-                    child: Text('Speaker', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text('Speaker',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   Padding(
                     padding: EdgeInsets.all(8),
-                    child: Text('Name', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text('Name',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   Padding(
                     padding: EdgeInsets.all(8),
-                    child: Text('Confidence', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text('Confidence',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   Padding(
                     padding: EdgeInsets.all(8),
-                    child: Text('Source', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text('Source',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
               // Data rows
               ..._speakers!.map((speaker) => TableRow(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      speaker.speakerLabel,
-                      style: TmzTextStyles.mono,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      speaker.resolvedName ?? 'Unknown',
-                      style: TextStyle(
-                        fontWeight: speaker.resolvedName != null ? FontWeight.w500 : FontWeight.normal,
-                        color: speaker.resolvedName != null ? null : AppColors.textGhost,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(
+                          speaker.speakerLabel,
+                          style: TmzTextStyles.mono,
+                        ),
                       ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: _buildConfidenceBadge(speaker.confidence),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: _buildSourceBadge(speaker.resolutionSource),
-                  ),
-                ],
-              )),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Text(
+                          speaker.resolvedName ?? 'Unknown',
+                          style: TextStyle(
+                            fontWeight: speaker.resolvedName != null
+                                ? FontWeight.w500
+                                : FontWeight.normal,
+                            color: speaker.resolvedName != null
+                                ? null
+                                : AppColors.textGhost,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _buildConfidenceBadge(speaker.confidence),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _buildSourceBadge(speaker.resolutionSource),
+                      ),
+                    ],
+                  )),
             ],
           ),
           // AI reasoning if available
-          if (_speakers!.any((s) => s.aiReasoning != null && s.aiReasoning!.isNotEmpty)) ...[
+          if (_speakers!.any(
+              (s) => s.aiReasoning != null && s.aiReasoning!.isNotEmpty)) ...[
             const SizedBox(height: 16),
             ExpansionTile(
-              title: Text('AI Reasoning', style: Theme.of(context).textTheme.labelLarge!),
+              title: Text('AI Reasoning',
+                  style: Theme.of(context).textTheme.labelLarge!),
               tilePadding: EdgeInsets.zero,
               children: [
                 ..._speakers!
-                    .where((s) => s.aiReasoning != null && s.aiReasoning!.isNotEmpty)
+                    .where((s) =>
+                        s.aiReasoning != null && s.aiReasoning!.isNotEmpty)
                     .map((s) => Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Row(
@@ -2036,12 +2151,18 @@ class _PeopleSectionState extends State<_PeopleSection> {
                             children: [
                               Text(
                                 '${s.speakerLabel}: ',
-                                style: Theme.of(context).textTheme.bodySmall!.copyWith(fontWeight: FontWeight.bold),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall!
+                                    .copyWith(fontWeight: FontWeight.bold),
                               ),
                               Expanded(
                                 child: Text(
                                   s.aiReasoning!,
-                                  style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall!
+                                      .copyWith(color: AppColors.textGhost),
                                 ),
                               ),
                             ],
@@ -2076,7 +2197,10 @@ class _PeopleSectionState extends State<_PeopleSection> {
       ),
       child: Text(
         '$percent%',
-        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: color, fontWeight: FontWeight.bold),
+        style: Theme.of(context)
+            .textTheme
+            .bodySmall!
+            .copyWith(color: color, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -2118,7 +2242,9 @@ class _PeopleSectionState extends State<_PeopleSection> {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(label, style: Theme.of(context).textTheme.labelSmall!.copyWith(color: color)),
+        Text(label,
+            style:
+                Theme.of(context).textTheme.labelSmall!.copyWith(color: color)),
       ],
     );
   }
@@ -2174,7 +2300,8 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
         // Scroll to bottom after build
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
-            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+            _scrollController
+                .jumpTo(_scrollController.position.maxScrollExtent);
           }
         });
       }),
@@ -2224,9 +2351,12 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error, color: AppColors.error, size: 48),
+                              const Icon(Icons.error,
+                                  color: AppColors.error, size: 48),
                               const SizedBox(height: 16),
-                              Text(_error!, style: const TextStyle(color: AppColors.error)),
+                              Text(_error!,
+                                  style:
+                                      const TextStyle(color: AppColors.error)),
                               const SizedBox(height: 16),
                               ElevatedButton(
                                 onPressed: _loadLog,
@@ -2259,9 +2389,9 @@ class _LogViewerDialogState extends State<_LogViewerDialog> {
             Text(
               'Look for "GEMINI SPEAKER RESOLUTION" section to verify speaker attribution',
               style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                fontStyle: FontStyle.italic,
-                color: AppColors.textGhost,
-              ),
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textGhost,
+                  ),
             ),
           ],
         ),

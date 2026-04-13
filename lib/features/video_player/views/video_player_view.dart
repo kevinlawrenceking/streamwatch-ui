@@ -74,12 +74,18 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
                 const SizedBox(height: 16),
                 Text(
                   'Playback error',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(color: AppColors.textGhost),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium!
+                      .copyWith(color: AppColors.textGhost),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   errorMessage,
-                  style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall!
+                      .copyWith(color: AppColors.textGhost),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -107,21 +113,29 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.title,
-          style: Theme.of(context).textTheme.titleMedium!,
-          overflow: TextOverflow.ellipsis,
+    return Column(
+      children: [
+        Container(
+          color: AppColors.tmzRed,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close, color: AppColors.textMax),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: Theme.of(context).textTheme.titleMedium!,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
-        backgroundColor: AppColors.tmzRed,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      backgroundColor: AppColors.bg,
-      body: _buildBody(),
+        Expanded(child: _buildBody()),
+      ],
     );
   }
 
@@ -137,12 +151,18 @@ class _VideoPlayerViewState extends State<VideoPlayerView> {
               const SizedBox(height: 16),
               Text(
                 'Failed to load video',
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(color: AppColors.textMax),
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge!
+                    .copyWith(color: AppColors.textMax),
               ),
               const SizedBox(height: 8),
               Text(
                 _error!,
-                style: Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.textGhost),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall!
+                    .copyWith(color: AppColors.textGhost),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),

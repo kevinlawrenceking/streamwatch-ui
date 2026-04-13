@@ -16,24 +16,7 @@ class SchedulerView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<SchedulerDashboardBloc, SchedulerDashboardState>(
       builder: (context, state) {
-        return Scaffold(
-          appBar: TmzAppBar(
-            app: WatchAppIdentity.streamWatch,
-            showBackButton: true,
-            showHomeButton: true,
-            customTitle: 'Scheduler',
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
-                onPressed: () => context
-                    .read<SchedulerDashboardBloc>()
-                    .add(const RefreshSchedulerDashboard()),
-              ),
-            ],
-          ),
-          body: _buildBody(context, state),
-        );
+        return _buildBody(context, state);
       },
     );
   }

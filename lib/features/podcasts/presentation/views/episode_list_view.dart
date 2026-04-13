@@ -29,119 +29,101 @@ class _EpisodeListBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TmzAppBar(
-        app: WatchAppIdentity.streamWatch,
-        customTitle: 'Episodes',
-        showBackButton: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: () {
-              context
-                  .read<EpisodeListBloc>()
-                  .add(FetchEpisodesEvent(podcastId: podcastId));
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<EpisodeListBloc, EpisodeListState>(
-        builder: (context, state) {
-          if (state is EpisodeListLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return BlocBuilder<EpisodeListBloc, EpisodeListState>(
+      builder: (context, state) {
+        if (state is EpisodeListLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (state is EpisodeListError) {
+        if (state is EpisodeListError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline,
+                    size: 64, color: AppColors.error),
+                const SizedBox(height: 16),
+                Text(
+                  'Error: ${state.message}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(color: AppColors.textDim),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    context
+                        .read<EpisodeListBloc>()
+                        .add(FetchEpisodesEvent(podcastId: podcastId));
+                  },
+                  child: const Text('RETRY'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is EpisodeListLoaded) {
+          if (state.episodes.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline,
-                      size: 64, color: AppColors.error),
+                  const Icon(Icons.library_music,
+                      size: 64, color: AppColors.textGhost),
                   const SizedBox(height: 16),
                   Text(
-                    'Error: ${state.message}',
+                    'No episodes yet',
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium!
                         .copyWith(color: AppColors.textDim),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.read<EpisodeListBloc>().add(
-                          FetchEpisodesEvent(podcastId: podcastId));
-                    },
-                    child: const Text('RETRY'),
                   ),
                 ],
               ),
             );
           }
 
-          if (state is EpisodeListLoaded) {
-            if (state.episodes.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.library_music,
-                        size: 64, color: AppColors.textGhost),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No episodes yet',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium!
-                          .copyWith(color: AppColors.textDim),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                if (notification is ScrollEndNotification &&
-                    notification.metrics.extentAfter < 200 &&
-                    state.hasMore) {
-                  context.read<EpisodeListBloc>().add(FetchEpisodesEvent(
-                        podcastId: podcastId,
-                        page: state.currentPage + 1,
-                      ));
-                }
-                return false;
+          return NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollEndNotification &&
+                  notification.metrics.extentAfter < 200 &&
+                  state.hasMore) {
+                context.read<EpisodeListBloc>().add(FetchEpisodesEvent(
+                      podcastId: podcastId,
+                      page: state.currentPage + 1,
+                    ));
+              }
+              return false;
+            },
+            child: RefreshIndicator(
+              onRefresh: () async {
+                context
+                    .read<EpisodeListBloc>()
+                    .add(FetchEpisodesEvent(podcastId: podcastId));
               },
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  context.read<EpisodeListBloc>().add(
-                      FetchEpisodesEvent(podcastId: podcastId));
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: state.episodes.length + (state.hasMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index >= state.episodes.length) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  return _EpisodeCard(episode: state.episodes[index]);
                 },
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount:
-                      state.episodes.length + (state.hasMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index >= state.episodes.length) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child:
-                            Center(child: CircularProgressIndicator()),
-                      );
-                    }
-
-                    return _EpisodeCard(episode: state.episodes[index]);
-                  },
-                ),
               ),
-            );
-          }
+            ),
+          );
+        }
 
-          return const SizedBox.shrink();
-        },
-      ),
+        return const SizedBox.shrink();
+      },
     );
   }
 }
@@ -180,26 +162,22 @@ class _EpisodeCard extends StatelessWidget {
                       if (episode.source != null) ...[
                         Text(
                           episode.source!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall!
-                              .copyWith(
-                                color: AppColors.tmzRed,
-                                fontSize: 10,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall!.copyWith(
+                                    color: AppColors.tmzRed,
+                                    fontSize: 10,
+                                  ),
                         ),
                         const SizedBox(width: 8),
                       ],
                       if (episode.publishedAt != null)
                         Text(
                           _formatDate(episode.publishedAt!),
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall!
-                              .copyWith(
-                                color: AppColors.textDim,
-                                fontSize: 10,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall!.copyWith(
+                                    color: AppColors.textDim,
+                                    fontSize: 10,
+                                  ),
                         ),
                     ],
                   ),

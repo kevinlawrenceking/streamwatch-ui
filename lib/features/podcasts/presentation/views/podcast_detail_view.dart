@@ -46,39 +46,7 @@ class _PodcastDetailBody extends StatelessWidget {
       },
       child: BlocBuilder<PodcastDetailBloc, PodcastDetailState>(
         builder: (context, state) {
-          return Scaffold(
-            appBar: TmzAppBar(
-              app: WatchAppIdentity.streamWatch,
-              customTitle: state is PodcastDetailLoaded
-                  ? state.podcast.name
-                  : 'Podcast Detail',
-              showBackButton: true,
-              actions: [
-                if (state is PodcastDetailLoaded)
-                  IconButton(
-                    icon: const Icon(Icons.list_alt),
-                    tooltip: 'View Episodes',
-                    onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/episodes',
-                        arguments: podcastId,
-                      );
-                    },
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh',
-                  onPressed: () {
-                    context
-                        .read<PodcastDetailBloc>()
-                        .add(FetchPodcastDetailEvent(podcastId));
-                  },
-                ),
-              ],
-            ),
-            body: _buildBody(context, state),
-          );
+          return _buildBody(context, state);
         },
       ),
     );
@@ -94,8 +62,7 @@ class _PodcastDetailBody extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
-                size: 64, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               'Error: ${state.message}',
@@ -147,8 +114,7 @@ class _PodcastDetailBody extends StatelessWidget {
             else
               ...state.platforms.map((platform) => PlatformCard(
                     platform: platform,
-                    onEdit: () =>
-                        _showEditPlatformDialog(context, platform),
+                    onEdit: () => _showEditPlatformDialog(context, platform),
                     onDelete: () => _confirmDeletePlatform(
                         context, platform.id, platform.platformName),
                   )),
@@ -169,8 +135,7 @@ class _PodcastDetailBody extends StatelessWidget {
             else
               ...state.schedules.map((schedule) => ScheduleSlotCard(
                     schedule: schedule,
-                    onEdit: () =>
-                        _showEditScheduleDialog(context, schedule),
+                    onEdit: () => _showEditScheduleDialog(context, schedule),
                     onDelete: () => _confirmDeleteSchedule(
                         context, schedule.id, schedule.dayOfWeek),
                   )),
@@ -182,10 +147,8 @@ class _PodcastDetailBody extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  void _showEditDialog(
-      BuildContext context, PodcastDetailLoaded state) async {
-    final nameController =
-        TextEditingController(text: state.podcast.name);
+  void _showEditDialog(BuildContext context, PodcastDetailLoaded state) async {
+    final nameController = TextEditingController(text: state.podcast.name);
     final descController =
         TextEditingController(text: state.podcast.description ?? '');
 
@@ -198,14 +161,12 @@ class _PodcastDetailBody extends StatelessWidget {
           children: [
             TextField(
               controller: nameController,
-              decoration:
-                  const InputDecoration(labelText: 'Podcast Name'),
+              decoration: const InputDecoration(labelText: 'Podcast Name'),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: descController,
-              decoration:
-                  const InputDecoration(labelText: 'Description'),
+              decoration: const InputDecoration(labelText: 'Description'),
               maxLines: 3,
             ),
           ],
@@ -216,8 +177,7 @@ class _PodcastDetailBody extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style:
-                TextButton.styleFrom(foregroundColor: AppColors.tmzRed),
+            style: TextButton.styleFrom(foregroundColor: AppColors.tmzRed),
             onPressed: () {
               final name = nameController.text.trim();
               if (name.isEmpty) return;
@@ -254,16 +214,14 @@ class _PodcastDetailBody extends StatelessWidget {
     }
   }
 
-  void _showEditPlatformDialog(
-      BuildContext context, platform) async {
+  void _showEditPlatformDialog(BuildContext context, platform) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (_) => PlatformFormDialog(existing: platform),
     );
     if (result != null && context.mounted) {
       context.read<PodcastDetailBloc>().add(
-            UpdatePlatformEvent(
-                platformId: platform.id, body: result),
+            UpdatePlatformEvent(platformId: platform.id, body: result),
           );
     }
   }
@@ -281,8 +239,7 @@ class _PodcastDetailBody extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style:
-                TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context
@@ -308,16 +265,14 @@ class _PodcastDetailBody extends StatelessWidget {
     }
   }
 
-  void _showEditScheduleDialog(
-      BuildContext context, schedule) async {
+  void _showEditScheduleDialog(BuildContext context, schedule) async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (_) => ScheduleFormDialog(existing: schedule),
     );
     if (result != null && context.mounted) {
       context.read<PodcastDetailBloc>().add(
-            UpdateScheduleEvent(
-                scheduleId: schedule.id, body: result),
+            UpdateScheduleEvent(scheduleId: schedule.id, body: result),
           );
     }
   }
@@ -336,8 +291,7 @@ class _PodcastDetailBody extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            style:
-                TextButton.styleFrom(foregroundColor: AppColors.error),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogContext).pop();
               context
@@ -373,9 +327,8 @@ class _PodcastInfoSection extends StatelessWidget {
             children: [
               Icon(
                 Icons.podcasts,
-                color: podcast.isActive
-                    ? AppColors.success
-                    : AppColors.textGhost,
+                color:
+                    podcast.isActive ? AppColors.success : AppColors.textGhost,
                 size: 32,
               ),
               const SizedBox(width: 12),
@@ -411,9 +364,8 @@ class _PodcastInfoSection extends StatelessWidget {
             children: [
               TmzStatusBadge(
                 status: podcast.isActive ? 'active' : 'inactive',
-                color: podcast.isActive
-                    ? AppColors.success
-                    : AppColors.textGhost,
+                color:
+                    podcast.isActive ? AppColors.success : AppColors.textGhost,
               ),
               const SizedBox(width: 12),
               Text(

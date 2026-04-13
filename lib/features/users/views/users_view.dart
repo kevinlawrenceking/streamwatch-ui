@@ -88,130 +88,128 @@ class _UsersBodyState extends State<_UsersBody> {
           );
         }
       },
-      child: Scaffold(
-        appBar: TmzAppBar(
-          app: WatchAppIdentity.streamWatch,
-          customTitle: 'Users',
-        ),
-        body: Column(
-          children: [
-            // Search bar
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceElevated,
-                border: Border(
-                  bottom: BorderSide(color: AppColors.textGhost, width: 1),
-                ),
+      child: Column(
+        children: [
+          // Search bar
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              border: Border(
+                bottom: BorderSide(color: AppColors.textGhost, width: 1),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: _onSearchChanged,
-                      decoration: InputDecoration(
-                        hintText: 'Search users...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _onSearchChanged('');
-                                },
-                              )
-                            : null,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                    decoration: InputDecoration(
+                      hintText: 'Search users...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                              },
+                            )
+                          : null,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: _showCreateDialog,
-                    icon: const Icon(Icons.person_add, size: 18),
-                    label: const Text('Add User'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.tmzRed,
-                      foregroundColor: AppColors.textMax,
-                    ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _showCreateDialog,
+                  icon: const Icon(Icons.person_add, size: 18),
+                  label: const Text('Add User'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.tmzRed,
+                    foregroundColor: AppColors.textMax,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            // Users table
-            Expanded(
-              child: BlocBuilder<UsersBloc, UsersState>(
-                builder: (context, state) {
-                  if (state is UsersLoading || state is UserSaving) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+          ),
+          // Users table
+          Expanded(
+            child: BlocBuilder<UsersBloc, UsersState>(
+              builder: (context, state) {
+                if (state is UsersLoading || state is UserSaving) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  if (state is UsersError) {
+                if (state is UsersError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            size: 64, color: AppColors.error),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error: ${state.failure.message}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(color: AppColors.textDim),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<UsersBloc>()
+                                .add(const LoadUsersEvent());
+                          },
+                          child: const Text('RETRY'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                if (state is UsersLoaded) {
+                  if (state.users.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline,
-                              size: 64, color: AppColors.error),
+                          Icon(Icons.people_outline,
+                              size: 64, color: AppColors.textGhost),
                           const SizedBox(height: 16),
                           Text(
-                            'Error: ${state.failure.message}',
-                            style: Theme.of(context).textTheme.bodyMedium!
+                            state.query.isNotEmpty
+                                ? 'No users match your search'
+                                : 'No users found',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
                                 .copyWith(color: AppColors.textDim),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              context
-                                  .read<UsersBloc>()
-                                  .add(const LoadUsersEvent());
-                            },
-                            child: const Text('RETRY'),
                           ),
                         ],
                       ),
                     );
                   }
 
-                  if (state is UsersLoaded) {
-                    if (state.users.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.people_outline,
-                                size: 64, color: AppColors.textGhost),
-                            const SizedBox(height: 16),
-                            Text(
-                              state.query.isNotEmpty
-                                  ? 'No users match your search'
-                                  : 'No users found',
-                              style: Theme.of(context).textTheme.bodyMedium!
-                                  .copyWith(color: AppColors.textDim),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
+                  return _UsersTable(
+                    users: state.users,
+                    total: state.total,
+                    onEdit: _showEditDialog,
+                  );
+                }
 
-                    return _UsersTable(
-                      users: state.users,
-                      total: state.total,
-                      onEdit: _showEditDialog,
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              ),
+                return const SizedBox.shrink();
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -299,9 +297,9 @@ class _RoleBadge extends StatelessWidget {
       child: Text(
         role.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall!.copyWith(
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
       ),
     );
   }

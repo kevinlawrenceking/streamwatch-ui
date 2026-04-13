@@ -14,8 +14,8 @@ class PodcastListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<PodcastListBloc>(
-      create: (_) => GetIt.instance<PodcastListBloc>()
-        ..add(const FetchPodcastsEvent()),
+      create: (_) =>
+          GetIt.instance<PodcastListBloc>()..add(const FetchPodcastsEvent()),
       child: const _PodcastListBody(),
     );
   }
@@ -53,185 +53,144 @@ class _PodcastListBody extends StatelessWidget {
           }
         }
       },
-      child: Scaffold(
-        appBar: TmzAppBar(
-          app: WatchAppIdentity.streamWatch,
-          customTitle: 'Podcasts',
-          showBackButton: true,
-          actions: [
-            // Toggle inactive filter
-            BlocBuilder<PodcastListBloc, PodcastListState>(
-              buildWhen: (prev, curr) {
-                final prevInactive =
-                    prev is PodcastListLoaded && prev.includeInactive;
-                final currInactive =
-                    curr is PodcastListLoaded && curr.includeInactive;
-                return prevInactive != currInactive;
-              },
-              builder: (context, state) {
-                final includeInactive =
-                    state is PodcastListLoaded && state.includeInactive;
-                return IconButton(
-                  icon: Icon(includeInactive
-                      ? Icons.visibility
-                      : Icons.visibility_off),
-                  tooltip: includeInactive
-                      ? 'Hide inactive'
-                      : 'Show inactive',
-                  onPressed: () {
-                    context.read<PodcastListBloc>().add(FetchPodcastsEvent(
-                          includeInactive: !includeInactive,
-                        ));
-                  },
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Refresh',
-              onPressed: () {
-                final bloc = context.read<PodcastListBloc>();
-                final includeInactive = bloc.state is PodcastListLoaded
-                    ? (bloc.state as PodcastListLoaded).includeInactive
-                    : false;
-                bloc.add(FetchPodcastsEvent(
-                    includeInactive: includeInactive));
-              },
-            ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: AppColors.tmzRed,
-          foregroundColor: AppColors.textMax,
-          tooltip: 'Create Podcast',
-          onPressed: () => _showCreateDialog(context),
-          child: const Icon(Icons.add),
-        ),
-        body: BlocBuilder<PodcastListBloc, PodcastListState>(
-          builder: (context, state) {
-            if (state is PodcastListLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      child: Stack(
+        children: [
+          BlocBuilder<PodcastListBloc, PodcastListState>(
+            builder: (context, state) {
+              if (state is PodcastListLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            if (state is PodcastListError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 64, color: AppColors.error),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error: ${state.message}',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            color: AppColors.textDim,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context
-                            .read<PodcastListBloc>()
-                            .add(const FetchPodcastsEvent());
-                      },
-                      child: const Text('RETRY'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (state is PodcastListLoaded) {
-              if (state.podcasts.isEmpty) {
+              if (state is PodcastListError) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.podcasts,
-                          size: 64, color: AppColors.textGhost),
+                      const Icon(Icons.error_outline,
+                          size: 64, color: AppColors.error),
                       const SizedBox(height: 16),
                       Text(
-                        'No podcasts yet',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium!
-                            .copyWith(color: AppColors.textDim),
+                        'Error: ${state.message}',
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              color: AppColors.textDim,
+                            ),
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tap + to create one',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall!
-                            .copyWith(color: AppColors.textGhost),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          context
+                              .read<PodcastListBloc>()
+                              .add(const FetchPodcastsEvent());
+                        },
+                        child: const Text('RETRY'),
                       ),
                     ],
                   ),
                 );
               }
 
-              return NotificationListener<ScrollNotification>(
-                onNotification: (notification) {
-                  if (notification is ScrollEndNotification &&
-                      notification.metrics.extentAfter < 200 &&
-                      state.hasMore) {
-                    context.read<PodcastListBloc>().add(FetchPodcastsEvent(
-                          page: state.currentPage + 1,
-                          includeInactive: state.includeInactive,
-                        ));
-                  }
-                  return false;
-                },
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    context.read<PodcastListBloc>().add(FetchPodcastsEvent(
-                          includeInactive: state.includeInactive,
-                        ));
+              if (state is PodcastListLoaded) {
+                if (state.podcasts.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.podcasts,
+                            size: 64, color: AppColors.textGhost),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No podcasts yet',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(color: AppColors.textDim),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tap + to create one',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
+                              .copyWith(color: AppColors.textGhost),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification is ScrollEndNotification &&
+                        notification.metrics.extentAfter < 200 &&
+                        state.hasMore) {
+                      context.read<PodcastListBloc>().add(FetchPodcastsEvent(
+                            page: state.currentPage + 1,
+                            includeInactive: state.includeInactive,
+                          ));
+                    }
+                    return false;
                   },
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount:
-                        state.podcasts.length + (state.hasMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index >= state.podcasts.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Center(
-                              child: CircularProgressIndicator()),
-                        );
-                      }
-
-                      final podcast = state.podcasts[index];
-                      return PodcastCard(
-                        podcast: podcast,
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/podcasts/detail',
-                            arguments: podcast.id,
-                          );
-                        },
-                        onDeactivate: () {
-                          context.read<PodcastListBloc>().add(
-                                DeactivatePodcastEvent(podcast.id),
-                              );
-                        },
-                        onActivate: () {
-                          context.read<PodcastListBloc>().add(
-                                ActivatePodcastEvent(podcast.id),
-                              );
-                        },
-                      );
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      context.read<PodcastListBloc>().add(FetchPodcastsEvent(
+                            includeInactive: state.includeInactive,
+                          ));
                     },
-                  ),
-                ),
-              );
-            }
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount:
+                          state.podcasts.length + (state.hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= state.podcasts.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
 
-            return const SizedBox.shrink();
-          },
-        ),
+                        final podcast = state.podcasts[index];
+                        return PodcastCard(
+                          podcast: podcast,
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/podcasts/detail',
+                              arguments: podcast.id,
+                            );
+                          },
+                          onDeactivate: () {
+                            context.read<PodcastListBloc>().add(
+                                  DeactivatePodcastEvent(podcast.id),
+                                );
+                          },
+                          onActivate: () {
+                            context.read<PodcastListBloc>().add(
+                                  ActivatePodcastEvent(podcast.id),
+                                );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
+          ),
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: FloatingActionButton(
+              backgroundColor: AppColors.tmzRed,
+              foregroundColor: AppColors.textMax,
+              tooltip: 'Create Podcast',
+              onPressed: () => _showCreateDialog(context),
+              child: const Icon(Icons.add),
+            ),
+          ),
+        ],
       ),
     );
   }

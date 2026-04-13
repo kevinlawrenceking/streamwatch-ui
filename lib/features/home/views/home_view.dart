@@ -3,15 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:tmz_ui/tmz_ui.dart' as tmz_ui;
 import 'package:url_launcher/url_launcher.dart';
-import '../../../data/models/collection_model.dart';
 import '../../../data/models/job_model.dart';
-import '../../../data/sources/auth_data_source.dart';
 import '../../../data/sources/job_data_source.dart';
-import '../../../shared/bloc/auth_session_bloc.dart';
 import '../../../themes/app_theme.dart';
-import '../../collections/bloc/collections_bloc.dart';
-import '../../collections/bloc/collections_event.dart';
-import '../../collections/bloc/collections_state.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
 import '../bloc/home_state.dart';
@@ -24,16 +18,8 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<HomeBloc>(
-          create: (_) => GetIt.instance<HomeBloc>()..add(const LoadJobsEvent()),
-        ),
-        BlocProvider<CollectionsBloc>(
-          create: (_) => GetIt.instance<CollectionsBloc>()
-            ..add(const LoadCollectionsEvent()),
-        ),
-      ],
+    return BlocProvider<HomeBloc>(
+      create: (_) => GetIt.instance<HomeBloc>()..add(const LoadJobsEvent()),
       child: const _HomeBody(),
     );
   }
@@ -49,8 +35,6 @@ class _HomeBody extends StatefulWidget {
 class _HomeBodyState extends State<_HomeBody> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedStatus;
-  String? _selectedCollectionId;
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -70,27 +54,6 @@ class _HomeBodyState extends State<_HomeBody> {
 
   void _navigateToIngest() {
     Navigator.pushNamed(context, '/ingest');
-  }
-
-  void _onCollectionSelected(String? collectionId) {
-    setState(() {
-      _selectedCollectionId = collectionId;
-    });
-    if (collectionId == null) {
-      // Show all videos
-      context.read<HomeBloc>().add(const LoadJobsEvent());
-    } else {
-      // Load collection videos
-      context.read<HomeBloc>().add(LoadCollectionVideosEvent(collectionId));
-    }
-  }
-
-  Future<void> _handleLogout(BuildContext context) async {
-    final auth = GetIt.instance<IAuthDataSource>();
-    await auth.logout();
-    if (context.mounted) {
-      GetIt.instance<AuthSessionBloc>().add(const LogoutRequestedEvent());
-    }
   }
 
   @override
@@ -121,227 +84,126 @@ class _HomeBodyState extends State<_HomeBody> {
           }
         }
       },
-      child: Scaffold(
-        appBar: TmzAppBar(
-          app: WatchAppIdentity.streamWatch,
-          actions: [
-            // View mode toggle button
-            BlocBuilder<HomeBloc, HomeState>(
-              buildWhen: (prev, curr) {
-                final prevMode = prev is HomeLoaded ? prev.viewMode : ViewMode.list;
-                final currMode = curr is HomeLoaded ? curr.viewMode : ViewMode.list;
-                return prevMode != currMode;
-              },
-              builder: (context, state) {
-                final isGridView = state is HomeLoaded && state.viewMode == ViewMode.grid;
-                return IconButton(
-                  icon: Icon(isGridView ? Icons.view_list : Icons.grid_view),
-                  tooltip: isGridView ? 'List view' : 'Grid view',
-                  onPressed: () {
-                    context.read<HomeBloc>().add(const ToggleViewModeEvent());
+      child: Column(
+        children: [
+          // Search and Filter Bar
+          _SearchFilterBar(
+            searchController: _searchController,
+            selectedStatus: _selectedStatus,
+            onSearchChanged: _onSearchChanged,
+            onStatusFilterChanged: _onStatusFilterChanged,
+            onIngestTap: _navigateToIngest,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // View mode toggle
+                BlocBuilder<HomeBloc, HomeState>(
+                  buildWhen: (prev, curr) {
+                    final prevMode =
+                        prev is HomeLoaded ? prev.viewMode : ViewMode.list;
+                    final currMode =
+                        curr is HomeLoaded ? curr.viewMode : ViewMode.list;
+                    return prevMode != currMode;
                   },
-                );
-              },
-            ),
-            // Scheduler button (coming soon)
-            IconButton(
-              icon: const Icon(Icons.schedule),
-              tooltip: 'Scheduler (Coming Soon)',
-              onPressed: () {
-                Navigator.pushNamed(context, '/scheduler');
-              },
-            ),
-            // Refresh button
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Refresh',
-              onPressed: () {
-                context.read<HomeBloc>().add(const RefreshJobsEvent());
-              },
-            ),
-            // User menu
-            BlocBuilder<AuthSessionBloc, AuthSessionState>(
-              builder: (context, authState) {
-                final profile = authState is AuthSessionAuthenticated
-                    ? authState.userProfile
-                    : null;
-                final displayName = profile?.displayName ?? 'User';
-                final isAdmin = profile?.isAdmin ?? false;
-
-                return PopupMenuButton<String>(
-                  tooltip: displayName,
-                  offset: const Offset(0, 40),
-                  onSelected: (value) {
-                    if (value == 'logout') {
-                      _handleLogout(context);
-                    } else if (value == 'users') {
-                      Navigator.pushNamed(context, '/users');
-                    } else if (value == 'type-control') {
-                      Navigator.pushNamed(context, '/type-control');
-                    } else if (value == 'podcasts') {
-                      Navigator.pushNamed(context, '/podcasts');
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      enabled: false,
-                      child: Text(
-                        displayName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    if (isAdmin) ...[
-                      const PopupMenuItem<String>(
-                        value: 'users',
-                        child: ListTile(
-                          dense: true,
-                          leading: Icon(Icons.people),
-                          title: Text('Manage Users'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'type-control',
-                        child: ListTile(
-                          dense: true,
-                          leading: Icon(Icons.category),
-                          title: Text('Type Control'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'podcasts',
-                        child: ListTile(
-                          dense: true,
-                          leading: Icon(Icons.podcasts),
-                          title: Text('Podcasts'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ],
-                    const PopupMenuDivider(),
-                    const PopupMenuItem<String>(
-                      value: 'logout',
-                      child: ListTile(
-                        dense: true,
-                        leading: Icon(Icons.logout),
-                        title: Text('Logout'),
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
-                  ],
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.person, size: 20),
-                        const SizedBox(width: 4),
-                        Text(
-                          displayName,
-                          style: Theme.of(context).textTheme.bodySmall!,
-                        ),
-                        const Icon(Icons.arrow_drop_down, size: 18),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-        drawer: _buildDrawer(context),
-        body: Column(
-          children: [
-            // Search and Filter Bar
-            _SearchFilterBar(
-              searchController: _searchController,
-              selectedStatus: _selectedStatus,
-              onSearchChanged: _onSearchChanged,
-              onStatusFilterChanged: _onStatusFilterChanged,
-              onIngestTap: _navigateToIngest,
-            ),
-            // Jobs List
-            Expanded(
-              child: BlocBuilder<HomeBloc, HomeState>(
-                builder: (context, state) {
-                  if (state is HomeLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (state is HomeError) {
-                    return _ErrorView(
-                      message: state.failure.message,
-                      onRetry: () {
-                        context.read<HomeBloc>().add(const LoadJobsEvent());
+                  builder: (context, state) {
+                    final isGridView =
+                        state is HomeLoaded && state.viewMode == ViewMode.grid;
+                    return IconButton(
+                      icon:
+                          Icon(isGridView ? Icons.view_list : Icons.grid_view),
+                      tooltip: isGridView ? 'List view' : 'Grid view',
+                      onPressed: () {
+                        context
+                            .read<HomeBloc>()
+                            .add(const ToggleViewModeEvent());
                       },
+                    );
+                  },
+                ),
+                // Refresh
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh',
+                  onPressed: () {
+                    context.read<HomeBloc>().add(const RefreshJobsEvent());
+                  },
+                ),
+              ],
+            ),
+          ),
+          // Jobs List
+          Expanded(
+            child: BlocBuilder<HomeBloc, HomeState>(
+              builder: (context, state) {
+                if (state is HomeLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state is HomeError) {
+                  return _ErrorView(
+                    message: state.failure.message,
+                    onRetry: () {
+                      context.read<HomeBloc>().add(const LoadJobsEvent());
+                    },
+                  );
+                }
+
+                if (state is HomeLoaded || state is HomeRefreshing) {
+                  final jobs = state is HomeLoaded
+                      ? state.filteredJobs
+                      : (state as HomeRefreshing).filteredJobs;
+                  final isRefreshing = state is HomeRefreshing;
+                  final inFlightActions = state is HomeLoaded
+                      ? state.inFlightActions
+                      : const <String, JobActionType>{};
+                  final viewMode = state is HomeLoaded
+                      ? state.viewMode
+                      : (state as HomeRefreshing).viewMode;
+
+                  if (jobs.isEmpty) {
+                    return _EmptyView(
+                      hasFilters: _searchController.text.isNotEmpty ||
+                          _selectedStatus != null,
+                      onIngestTap: _navigateToIngest,
                     );
                   }
 
-                  if (state is HomeLoaded || state is HomeRefreshing) {
-                    final jobs = state is HomeLoaded
-                        ? state.filteredJobs
-                        : (state as HomeRefreshing).filteredJobs;
-                    final isRefreshing = state is HomeRefreshing;
-                    final inFlightActions = state is HomeLoaded
-                        ? state.inFlightActions
-                        : const <String, JobActionType>{};
-                    final viewMode = state is HomeLoaded
-                        ? state.viewMode
-                        : (state as HomeRefreshing).viewMode;
-
-                    if (jobs.isEmpty) {
-                      return _EmptyView(
-                        hasFilters: _searchController.text.isNotEmpty ||
-                            _selectedStatus != null,
-                        onIngestTap: _navigateToIngest,
-                      );
-                    }
-
-                    return RefreshIndicator(
-                      onRefresh: () async {
-                        context.read<HomeBloc>().add(const RefreshJobsEvent());
-                        await context.read<HomeBloc>().stream.firstWhere(
-                              (s) => s is HomeLoaded || s is HomeError,
-                            );
-                      },
-                      child: Stack(
-                        children: [
-                          viewMode == ViewMode.grid
-                              ? _buildGridView(jobs, inFlightActions)
-                              : _buildListView(jobs, inFlightActions),
-                          if (isRefreshing)
-                            const Positioned(
-                              top: 8,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                ),
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      context.read<HomeBloc>().add(const RefreshJobsEvent());
+                      await context.read<HomeBloc>().stream.firstWhere(
+                            (s) => s is HomeLoaded || s is HomeError,
+                          );
+                    },
+                    child: Stack(
+                      children: [
+                        viewMode == ViewMode.grid
+                            ? _buildGridView(jobs, inFlightActions)
+                            : _buildListView(jobs, inFlightActions),
+                        if (isRefreshing)
+                          const Positioned(
+                            top: 8,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                             ),
-                        ],
-                      ),
-                    );
-                  }
+                          ),
+                      ],
+                    ),
+                  );
+                }
 
-                  return const SizedBox.shrink();
-                },
-              ),
+                return const SizedBox.shrink();
+              },
             ),
-          ],
-        ),
-        // Floating Ingest Button
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _navigateToIngest,
-          icon: const Icon(Icons.add),
-          label: const Text('INGEST'),
-          backgroundColor: AppColors.tmzRed,
-          foregroundColor: AppColors.textMax,
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -407,267 +269,6 @@ class _HomeBodyState extends State<_HomeBody> {
       },
     );
   }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: Column(
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(color: AppColors.tmzRed),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const Icon(Icons.videocam, size: 48, color: AppColors.textMax),
-                const SizedBox(height: 8),
-                Text(
-                  'StreamWatch',
-                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                    color: AppColors.textMax,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Video Transcription',
-                  style: TextStyle(color: AppColors.textMax.withValues(alpha: 0.8)),
-                ),
-              ],
-            ),
-          ),
-          // Navigation items
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('All Videos'),
-            selected: _selectedCollectionId == null,
-            onTap: () {
-              _onCollectionSelected(null);
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.add_circle_outline),
-            title: const Text('Ingest'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/ingest');
-            },
-          ),
-          const Divider(),
-          // Collections section
-          Expanded(
-            child: BlocBuilder<CollectionsBloc, CollectionsState>(
-              builder: (context, state) {
-                if (state is CollectionsLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state is CollectionsError) {
-                  return Center(
-                    child: Text(
-                      'Error loading collections',
-                      style: Theme.of(context).textTheme.bodySmall!,
-                    ),
-                  );
-                }
-                if (state is CollectionsLoaded) {
-                  final myCollections = state.collections
-                      .where((c) => c.isActive)
-                      .toList();
-
-                  if (myCollections.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'No collections yet',
-                        style: Theme.of(context).textTheme.bodySmall!,
-                      ),
-                    );
-                  }
-
-                  return ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                        child: Row(
-                          children: [
-                            Text(
-                              'COLLECTIONS',
-                              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              icon: const Icon(Icons.settings, size: 18),
-                              tooltip: 'Manage Collections',
-                              onPressed: () {
-                                Navigator.pop(context);
-                                Navigator.pushNamed(context, '/collections');
-                              },
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 32,
-                                minHeight: 32,
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add, size: 20),
-                              tooltip: 'New Collection',
-                              onPressed: () => _showCreateCollectionDialog(context),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 32,
-                                minHeight: 32,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      ...myCollections.map((c) => _CollectionTile(
-                            collection: c,
-                            isSelected: _selectedCollectionId == c.id,
-                            onTap: () {
-                              _onCollectionSelected(c.id);
-                              Navigator.pop(context);
-                            },
-                          )),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ),
-          const Divider(),
-          // Bottom navigation items
-          ListTile(
-            leading: const Icon(Icons.schedule),
-            title: const Text('Scheduler'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, '/scheduler');
-            },
-          ),
-          BlocBuilder<AuthSessionBloc, AuthSessionState>(
-            builder: (context, authState) {
-              final isAdmin = authState is AuthSessionAuthenticated &&
-                  authState.userProfile?.isAdmin == true;
-              if (!isAdmin) return const SizedBox.shrink();
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.people),
-                    title: const Text('Users'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/users');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.category),
-                    title: const Text('Type Control'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/type-control');
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showCreateCollectionDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('New Collection'),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Collection name',
-          ),
-          onSubmitted: (value) {
-            if (value.trim().isNotEmpty) {
-              context.read<CollectionsBloc>().add(
-                    CreateCollectionEvent(name: value.trim()),
-                  );
-              Navigator.of(dialogContext).pop();
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              if (name.isNotEmpty) {
-                context.read<CollectionsBloc>().add(
-                      CreateCollectionEvent(name: name),
-                    );
-                Navigator.of(dialogContext).pop();
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A single collection entry in the drawer.
-class _CollectionTile extends StatelessWidget {
-  final CollectionModel collection;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _CollectionTile({
-    required this.collection,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(
-        collection.isDefault ? Icons.folder_special : Icons.folder,
-        color: isSelected ? AppColors.tmzRed : null,
-      ),
-      title: Text(
-        collection.name,
-        style: TextStyle(
-          fontWeight: collection.isDefault ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? AppColors.tmzRed : null,
-        ),
-      ),
-      trailing: Text(
-        '${collection.videoCount}',
-        style: Theme.of(context).textTheme.bodySmall!,
-      ),
-      selected: isSelected,
-      dense: true,
-      onTap: onTap,
-    );
-  }
 }
 
 /// Search and filter bar component.
@@ -677,6 +278,7 @@ class _SearchFilterBar extends StatelessWidget {
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String?> onStatusFilterChanged;
   final VoidCallback onIngestTap;
+  final Widget? trailing;
 
   const _SearchFilterBar({
     required this.searchController,
@@ -684,6 +286,7 @@ class _SearchFilterBar extends StatelessWidget {
     required this.onSearchChanged,
     required this.onStatusFilterChanged,
     required this.onIngestTap,
+    this.trailing,
   });
 
   @override
@@ -693,7 +296,9 @@ class _SearchFilterBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated,
         border: Border(
-          bottom: BorderSide(color: AppColors.textGhost, width: 1), // DS-001: was gray70 border
+          bottom: BorderSide(
+              color: AppColors.textGhost,
+              width: 1), // DS-001: was gray70 border
         ),
       ),
       child: Row(
@@ -759,6 +364,10 @@ class _SearchFilterBar extends StatelessWidget {
               onChanged: onStatusFilterChanged,
             ),
           ),
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ],
         ],
       ),
     );
@@ -852,7 +461,10 @@ class _JobCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             job.title ?? 'Job ${job.jobId.substring(0, 8)}...',
-                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium!
+                                .copyWith(fontWeight: FontWeight.w600),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -895,10 +507,11 @@ class _JobCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             '${job.progressPct}%',
-                            style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                              color: AppColors.tmzRed,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall!.copyWith(
+                                      color: AppColors.tmzRed,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                           ),
                         ],
                         const Spacer(),
@@ -1026,7 +639,8 @@ class _JobGridCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             color: AppColors.bg.withValues(alpha: 0.7),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -1042,10 +656,13 @@ class _JobGridCard extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Text(
                                   '${job.progressPct}%',
-                                  style: Theme.of(context).textTheme.labelSmall!.copyWith(
-                                    color: AppColors.textMax,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall!
+                                      .copyWith(
+                                        color: AppColors.textMax,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
                               ],
                             ),
@@ -1053,8 +670,10 @@ class _JobGridCard extends StatelessWidget {
                           LinearProgressIndicator(
                             value: job.progressPct / 100,
                             minHeight: 2,
-                            backgroundColor: AppColors.bg.withValues(alpha: 0.38),
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.tmzRed),
+                            backgroundColor:
+                                AppColors.bg.withValues(alpha: 0.38),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.tmzRed),
                           ),
                         ],
                       ),
@@ -1075,10 +694,10 @@ class _JobGridCard extends StatelessWidget {
                     Text(
                       job.title ?? 'Video ${job.jobId.substring(0, 8)}',
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        height: 1.2,
-                      ),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            height: 1.2,
+                          ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1100,7 +719,10 @@ class _JobGridCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           _formatDate(job.createdAt),
-                          style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 12),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
+                              .copyWith(fontSize: 12),
                         ),
                         if (job.typeCode != null) ...[
                           const SizedBox(width: 8),
@@ -1123,7 +745,10 @@ class _JobGridCard extends StatelessWidget {
                             job.source == 'url'
                                 ? _extractDomain(job.sourceUrl)
                                 : (job.filename ?? 'File'),
-                            style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 12),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall!
+                                .copyWith(fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1137,7 +762,8 @@ class _JobGridCard extends StatelessWidget {
                     ],
                     const Spacer(),
                     // Action row - bottom aligned
-                    const Divider(height: 12, thickness: 1, color: AppColors.textGhost),
+                    const Divider(
+                        height: 12, thickness: 1, color: AppColors.textGhost),
                     _GridCardActionRow(job: job),
                   ],
                 ),
@@ -1158,7 +784,8 @@ class _JobGridCard extends StatelessWidget {
     try {
       final uri = Uri.parse(url);
       final host = uri.host.replaceFirst('www.', '');
-      if (host.contains('s3.amazonaws.com') || host.endsWith('.s3.amazonaws.com')) {
+      if (host.contains('s3.amazonaws.com') ||
+          host.endsWith('.s3.amazonaws.com')) {
         return 'S3 Upload';
       }
       return host;
@@ -1186,11 +813,11 @@ class _CompactStatusBadge extends StatelessWidget {
       child: Text(
         status.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall!.copyWith(
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textMax,
-          letterSpacing: 0.3,
-        ),
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textMax,
+              letterSpacing: 0.3,
+            ),
       ),
     );
   }
@@ -1215,10 +842,10 @@ class _CompactTypeBadge extends StatelessWidget {
       child: Text(
         typeCode.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall!.copyWith(
-          fontSize: 9,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
       ),
     );
   }
@@ -1234,7 +861,8 @@ class _GridCardActionRow extends StatelessWidget {
 
   const _GridCardActionRow({required this.job});
 
-  Future<void> _downloadFile(BuildContext context, String url, String type) async {
+  Future<void> _downloadFile(
+      BuildContext context, String url, String type) async {
     final uri = Uri.tryParse(url);
     if (uri != null) {
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
@@ -1331,7 +959,9 @@ class _GridCardActionRow extends StatelessWidget {
         // Delete button
         _GridActionIcon(
           icon: Icons.delete_outline,
-          tooltip: job.canDelete ? 'Delete' : 'Cannot delete (processing or flagged)',
+          tooltip: job.canDelete
+              ? 'Delete'
+              : 'Cannot delete (processing or flagged)',
           enabled: job.canDelete,
           onTap: () => _showDeleteDialog(context),
           iconColor: job.canDelete ? AppColors.error : null,
@@ -1359,9 +989,8 @@ class _GridActionIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = enabled
-        ? (iconColor ?? AppColors.textDim)
-        : AppColors.textGhost;
+    final color =
+        enabled ? (iconColor ?? AppColors.textDim) : AppColors.textGhost;
 
     return Tooltip(
       message: tooltip,
@@ -1421,14 +1050,17 @@ class _JobActionButtons extends StatelessWidget {
             icon: Icons.cancel_outlined,
             tooltip: 'Cancel',
             iconColor: AppColors.error,
-            isLoading: isActionInFlight && inFlightAction == JobActionType.cancel,
+            isLoading:
+                isActionInFlight && inFlightAction == JobActionType.cancel,
             isDisabled: isActionInFlight,
             onPressed: () => _showCancelDialog(context),
           ),
         // Pause/Resume button (only for pausable/resumable jobs)
         if (job.canPause || job.canResume)
           _ActionButton(
-            icon: job.isPaused || job.pauseRequested ? Icons.play_arrow : Icons.pause,
+            icon: job.isPaused || job.pauseRequested
+                ? Icons.play_arrow
+                : Icons.pause,
             tooltip: job.isPaused || job.pauseRequested ? 'Resume' : 'Pause',
             isLoading: isActionInFlight &&
                 (inFlightAction == JobActionType.pause ||
@@ -1454,7 +1086,9 @@ class _JobActionButtons extends StatelessWidget {
         // Delete button
         _ActionButton(
           icon: Icons.delete_outline,
-          tooltip: job.canDelete ? 'Delete' : 'Cannot delete (processing or flagged)',
+          tooltip: job.canDelete
+              ? 'Delete'
+              : 'Cannot delete (processing or flagged)',
           iconColor: job.canDelete ? AppColors.error : AppColors.textGhost,
           isLoading: isActionInFlight && inFlightAction == JobActionType.delete,
           isDisabled: isActionInFlight || !job.canDelete,
@@ -1611,7 +1245,10 @@ class _EmptyView extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             hasFilters ? 'No jobs match your search' : 'No jobs yet',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(color: AppColors.textDim),
           ),
           const SizedBox(height: 24),
           if (!hasFilters)
@@ -1643,7 +1280,10 @@ class _ErrorView extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Error: $message',
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium!
+                .copyWith(color: AppColors.textDim),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),

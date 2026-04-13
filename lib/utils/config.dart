@@ -1,11 +1,3 @@
-/// Application configuration loaded from environment variables.
-///
-/// Configure at build time using:
-/// ```bash
-/// flutter run --dart-define=API_BASE_URL=http://localhost:8081 --dart-define=ENV=development
-/// flutter build web --dart-define=AUTH_REQUIRED=false  # disable auth gate
-/// flutter build web --dart-define=DEV_ASSUME_ADMIN=false  # disable dev admin stub
-/// ```
 class Config {
   final String apiBaseUrl;
   final String environment;
@@ -31,11 +23,11 @@ class Config {
     return const Config._(
       apiBaseUrl: String.fromEnvironment(
         'API_BASE_URL',
-        defaultValue: 'http://localhost:8081',
+        defaultValue: 'https://u0o3w9ciwh.execute-api.us-east-1.amazonaws.com',
       ),
       environment: String.fromEnvironment(
         'ENV',
-        defaultValue: 'development',
+        defaultValue: 'production',
       ),
       authRequired: bool.fromEnvironment(
         'AUTH_REQUIRED',
@@ -43,7 +35,7 @@ class Config {
       ),
       devAssumeAdmin: bool.fromEnvironment(
         'DEV_ASSUME_ADMIN',
-        defaultValue: true,
+        defaultValue: false,
       ),
     );
   }

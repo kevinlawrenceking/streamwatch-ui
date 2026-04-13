@@ -165,73 +165,66 @@ class _TypeDetailBodyState extends State<_TypeDetailBody>
         },
         builder: (context, state) {
           if (state is TypeDetailLoading) {
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Type Detail'),
-                backgroundColor: AppColors.surfaceElevated,
-              ),
-              body: const Center(child: CircularProgressIndicator()),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state is TypeDetailError) {
-            return Scaffold(
-              appBar: AppBar(
-                title: const Text('Type Detail'),
-                backgroundColor: AppColors.surfaceElevated,
-              ),
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 64, color: AppColors.error),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error: ${state.failure.message}',
-                      style: Theme.of(context).textTheme.bodyMedium!
-                          .copyWith(color: AppColors.textDim),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('GO BACK'),
-                    ),
-                  ],
-                ),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 64, color: AppColors.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error: ${state.failure.message}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium!
+                        .copyWith(color: AppColors.textDim),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('GO BACK'),
+                  ),
+                ],
               ),
             );
           }
 
           if (state is TypeDetailLoaded) {
-            return Scaffold(
-              appBar: AppBar(
-                title: Text(state.type.name),
-                backgroundColor: AppColors.surfaceElevated,
-                bottom: TabBar(
-                  controller: _tabController,
-                  tabs: const [
-                    Tab(text: 'Versions'),
-                    Tab(text: 'Rules'),
-                    Tab(text: 'Candidates'),
-                    Tab(text: 'Exemplars'),
-                    Tab(text: 'Prompt'),
-                  ],
-                ),
-              ),
-              body: TabBarView(
-                controller: _tabController,
-                children: [
-                  _VersionsTab(state: state),
-                  _RulesTab(
-                    state: state,
-                    videoTypeId: widget.videoTypeId,
+            return Column(
+              children: [
+                Material(
+                  color: AppColors.surfaceElevated,
+                  child: TabBar(
+                    controller: _tabController,
+                    tabs: const [
+                      Tab(text: 'Versions'),
+                      Tab(text: 'Rules'),
+                      Tab(text: 'Candidates'),
+                      Tab(text: 'Exemplars'),
+                      Tab(text: 'Prompt'),
+                    ],
                   ),
-                  _CandidatesTab(videoTypeId: widget.videoTypeId),
-                  _ExemplarsTab(videoTypeId: widget.videoTypeId),
-                  _PromptTab(state: state),
-                ],
-              ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _VersionsTab(state: state),
+                      _RulesTab(
+                        state: state,
+                        videoTypeId: widget.videoTypeId,
+                      ),
+                      _CandidatesTab(videoTypeId: widget.videoTypeId),
+                      _ExemplarsTab(videoTypeId: widget.videoTypeId),
+                      _PromptTab(state: state),
+                    ],
+                  ),
+                ),
+              ],
             );
           }
 
@@ -262,8 +255,10 @@ class _VersionsTab extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'No versions yet',
-              style:
-                  Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(color: AppColors.textDim),
             ),
           ],
         ),
@@ -316,7 +311,10 @@ class _VersionCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'Version ${version.versionNumber}',
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
+                      .copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 8),
                 _StatusChip(status: version.status),
@@ -335,7 +333,9 @@ class _VersionCard extends StatelessWidget {
                 version.definitionJson!.isNotEmpty) ...[
               Text(
                 'Definition',
-                style: Theme.of(context).textTheme.bodySmall!
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall!
                     .copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
@@ -347,8 +347,7 @@ class _VersionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(color: AppColors.textGhost),
                 ),
-                child: _DefinitionFields(
-                    definition: version.definitionJson!),
+                child: _DefinitionFields(definition: version.definitionJson!),
               ),
             ],
             const SizedBox(height: 8),
@@ -370,9 +369,7 @@ class _VersionCard extends StatelessWidget {
               icon: const Icon(Icons.rule, size: 16),
               label: const Text('View Rules'),
               onPressed: () {
-                context
-                    .read<TypeDetailBloc>()
-                    .add(LoadRulesEvent(version.id));
+                context.read<TypeDetailBloc>().add(LoadRulesEvent(version.id));
               },
               style: OutlinedButton.styleFrom(
                 padding:
@@ -420,7 +417,6 @@ class _VersionCard extends StatelessWidget {
       ),
     );
   }
-
 }
 
 /// Renders definition_json fields as labeled rows instead of raw JSON.
@@ -463,7 +459,9 @@ class _DefinitionFields extends StatelessWidget {
     if (entries.isEmpty) {
       return Text(
         'No definition fields',
-        style: Theme.of(context).textTheme.bodySmall!
+        style: Theme.of(context)
+            .textTheme
+            .bodySmall!
             .copyWith(color: AppColors.textDim),
       );
     }
@@ -494,10 +492,10 @@ class _DefinitionFields extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDim,
-                fontSize: 11,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDim,
+                    fontSize: 11,
+                  ),
             ),
             const SizedBox(height: 3),
             ...value.map((item) => Padding(
@@ -506,12 +504,16 @@ class _DefinitionFields extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('•  ',
-                          style: Theme.of(context).textTheme.bodySmall!
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
                               .copyWith(fontSize: 11)),
                       Expanded(
                         child: Text(
                           '$item',
-                          style: Theme.of(context).textTheme.bodySmall!
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall!
                               .copyWith(fontSize: 11),
                         ),
                       ),
@@ -538,16 +540,15 @@ class _DefinitionFields extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDim,
-                fontSize: 11,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDim,
+                    fontSize: 11,
+                  ),
             ),
             const SizedBox(height: 3),
             ...mapEntries.map((e) {
-              final entryValue = e.value is List
-                  ? (e.value as List).join(', ')
-                  : '${e.value}';
+              final entryValue =
+                  e.value is List ? (e.value as List).join(', ') : '${e.value}';
               return Padding(
                 padding: const EdgeInsets.only(left: 12, bottom: 2),
                 child: Row(
@@ -556,15 +557,18 @@ class _DefinitionFields extends StatelessWidget {
                     Text(
                       '${_formatLabel(e.key)}:  ',
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textDim,
-                        fontSize: 11,
-                      ),
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textDim,
+                            fontSize: 11,
+                          ),
                     ),
                     Expanded(
                       child: Text(
                         entryValue,
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 11),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall!
+                            .copyWith(fontSize: 11),
                       ),
                     ),
                   ],
@@ -585,15 +589,16 @@ class _DefinitionFields extends StatelessWidget {
           Text(
             '$label:  ',
             style: Theme.of(context).textTheme.bodySmall!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textDim,
-              fontSize: 11,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDim,
+                  fontSize: 11,
+                ),
           ),
           Expanded(
             child: Text(
               '$value',
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 11),
+              style:
+                  Theme.of(context).textTheme.bodySmall!.copyWith(fontSize: 11),
             ),
           ),
         ],
@@ -605,8 +610,7 @@ class _DefinitionFields extends StatelessWidget {
     return key
         .replaceAll('_', ' ')
         .split(' ')
-        .map((w) =>
-            w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+        .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
         .join(' ');
   }
 }
@@ -637,8 +641,10 @@ class _RulesTab extends StatelessWidget {
             Text(
               'Select a version from the Versions tab\nto view its rules',
               textAlign: TextAlign.center,
-              style:
-                  Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(color: AppColors.textDim),
             ),
           ],
         ),
@@ -664,7 +670,9 @@ class _RulesTab extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'No rules defined for this version',
-                  style: Theme.of(context).textTheme.bodyMedium!
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
                       .copyWith(color: AppColors.textDim),
                 ),
               ],
@@ -675,8 +683,8 @@ class _RulesTab extends StatelessWidget {
               right: 16,
               bottom: 16,
               child: FloatingActionButton(
-                onPressed: () => _showCreateRuleDialog(
-                    context, state.selectedVersionId!),
+                onPressed: () =>
+                    _showCreateRuleDialog(context, state.selectedVersionId!),
                 child: const Icon(Icons.add),
               ),
             ),
@@ -693,8 +701,7 @@ class _RulesTab extends StatelessWidget {
           onReorder: isDraft && state.selectedVersionId != null
               ? (oldIndex, newIndex) {
                   if (newIndex > oldIndex) newIndex--;
-                  final ids =
-                      state.rules!.map((r) => r.id).toList();
+                  final ids = state.rules!.map((r) => r.id).toList();
                   final moved = ids.removeAt(oldIndex);
                   ids.insert(newIndex, moved);
                   context.read<RuleManagementBloc>().add(
@@ -720,8 +727,8 @@ class _RulesTab extends StatelessWidget {
             right: 16,
             bottom: 16,
             child: FloatingActionButton(
-              onPressed: () => _showCreateRuleDialog(
-                  context, state.selectedVersionId!),
+              onPressed: () =>
+                  _showCreateRuleDialog(context, state.selectedVersionId!),
               child: const Icon(Icons.add),
             ),
           ),
@@ -823,9 +830,11 @@ class _RuleCard extends StatelessWidget {
               child: Text(
                 '${rule.ruleOrder}',
                 style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: rule.isActive ? AppColors.success : AppColors.textGhost,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: rule.isActive
+                          ? AppColors.success
+                          : AppColors.textGhost,
+                    ),
               ),
             ),
             const SizedBox(width: 12),
@@ -836,13 +845,11 @@ class _RuleCard extends StatelessWidget {
                   Text(
                     rule.ruleText,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      decoration: rule.isDeprecated
-                          ? TextDecoration.lineThrough
-                          : null,
-                      color: rule.isDeprecated
-                          ? AppColors.textDim
-                          : null,
-                    ),
+                          decoration: rule.isDeprecated
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: rule.isDeprecated ? AppColors.textDim : null,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -881,8 +888,7 @@ class _RuleCard extends StatelessWidget {
 
   void _showEditRuleDialog(BuildContext context, VideoTypeRuleModel rule) {
     final textController = TextEditingController(text: rule.ruleText);
-    final sourceController =
-        TextEditingController(text: rule.source ?? '');
+    final sourceController = TextEditingController(text: rule.source ?? '');
 
     showDialog(
       context: context,
@@ -1014,7 +1020,9 @@ class _CandidatesTabState extends State<_CandidatesTab> {
                 const SizedBox(height: 16),
                 Text(
                   'Error: ${state.failure.message}',
-                  style: Theme.of(context).textTheme.bodyMedium!
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
                       .copyWith(color: AppColors.textDim),
                 ),
                 const SizedBox(height: 12),
@@ -1058,29 +1066,25 @@ class _CandidatesTabState extends State<_CandidatesTab> {
                     _FilterChip(
                       label: 'Pending',
                       selected: _statusFilter == 'pending',
-                      onTap: () =>
-                          setState(() => _statusFilter = 'pending'),
+                      onTap: () => setState(() => _statusFilter = 'pending'),
                     ),
                     const SizedBox(width: 8),
                     _FilterChip(
                       label: 'Approved',
                       selected: _statusFilter == 'approved',
-                      onTap: () =>
-                          setState(() => _statusFilter = 'approved'),
+                      onTap: () => setState(() => _statusFilter = 'approved'),
                     ),
                     const SizedBox(width: 8),
                     _FilterChip(
                       label: 'Rejected',
                       selected: _statusFilter == 'rejected',
-                      onTap: () =>
-                          setState(() => _statusFilter = 'rejected'),
+                      onTap: () => setState(() => _statusFilter = 'rejected'),
                     ),
                     const SizedBox(width: 8),
                     _FilterChip(
                       label: 'Merged',
                       selected: _statusFilter == 'merged',
-                      onTap: () =>
-                          setState(() => _statusFilter = 'merged'),
+                      onTap: () => setState(() => _statusFilter = 'merged'),
                     ),
                     const Spacer(),
                     if (state.isSubmitting)
@@ -1100,7 +1104,9 @@ class _CandidatesTabState extends State<_CandidatesTab> {
                           _statusFilter == 'all'
                               ? 'No candidates yet'
                               : 'No $_statusFilter candidates',
-                          style: Theme.of(context).textTheme.bodyMedium!
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
                               .copyWith(color: AppColors.textDim),
                         ),
                       )
@@ -1128,7 +1134,9 @@ class _CandidatesTabState extends State<_CandidatesTab> {
               const SizedBox(height: 16),
               Text(
                 'Loading candidates...',
-                style: Theme.of(context).textTheme.bodyMedium!
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
                     .copyWith(color: AppColors.textDim),
               ),
             ],
@@ -1195,8 +1203,8 @@ class _CandidateCard extends StatelessWidget {
                   TextButton.icon(
                     icon: const Icon(Icons.check, size: 16),
                     label: const Text('Approve'),
-                    style:
-                        TextButton.styleFrom(foregroundColor: AppColors.success),
+                    style: TextButton.styleFrom(
+                        foregroundColor: AppColors.success),
                     onPressed: () =>
                         _showApproveDialog(context, candidate, videoTypeId),
                   ),
@@ -1213,8 +1221,8 @@ class _CandidateCard extends StatelessWidget {
                   TextButton.icon(
                     icon: const Icon(Icons.merge_type, size: 16),
                     label: const Text('Merge'),
-                    style:
-                        TextButton.styleFrom(foregroundColor: AppColors.warning),
+                    style: TextButton.styleFrom(
+                        foregroundColor: AppColors.warning),
                     onPressed: () =>
                         _showMergeDialog(context, candidate, videoTypeId),
                   ),
@@ -1445,7 +1453,9 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                 const SizedBox(height: 16),
                 Text(
                   'Error: ${state.failure.message}',
-                  style: Theme.of(context).textTheme.bodyMedium!
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium!
                       .copyWith(color: AppColors.textDim),
                 ),
                 const SizedBox(height: 12),
@@ -1485,8 +1495,7 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                         _FilterChip(
                           label: 'All',
                           selected: _kindFilter == 'all',
-                          onTap: () =>
-                              setState(() => _kindFilter = 'all'),
+                          onTap: () => setState(() => _kindFilter = 'all'),
                         ),
                         const SizedBox(width: 8),
                         _FilterChip(
@@ -1499,8 +1508,8 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                         _FilterChip(
                           label: 'Counter',
                           selected: _kindFilter == 'counter_example',
-                          onTap: () => setState(
-                              () => _kindFilter = 'counter_example'),
+                          onTap: () =>
+                              setState(() => _kindFilter = 'counter_example'),
                         ),
                         const SizedBox(width: 8),
                         _FilterChip(
@@ -1514,8 +1523,7 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                           const SizedBox(
                             width: 20,
                             height: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                       ],
                     ),
@@ -1528,8 +1536,10 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                               _kindFilter == 'all'
                                   ? 'No exemplars yet'
                                   : 'No $_kindFilter exemplars',
-                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                  color: AppColors.textDim),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(color: AppColors.textDim),
                             ),
                           )
                         : ListView.builder(
@@ -1569,7 +1579,9 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
               const SizedBox(height: 16),
               Text(
                 'Loading exemplars...',
-                style: Theme.of(context).textTheme.bodyMedium!
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium!
                     .copyWith(color: AppColors.textDim),
               ),
             ],
@@ -1642,8 +1654,8 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                               height: 20,
                               child: Padding(
                                 padding: EdgeInsets.all(12),
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                             )
                           : null,
@@ -1656,8 +1668,7 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                     Text(
                       '${selectedJobIds.length} job(s) selected',
                       style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: AppColors.tmzRed,
-                          fontWeight: FontWeight.bold),
+                          color: AppColors.tmzRed, fontWeight: FontWeight.bold),
                     ),
                   ],
                   const SizedBox(height: 8),
@@ -1668,8 +1679,10 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                         ? Center(
                             child: Text(
                               'Type to search completed jobs',
-                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                  color: AppColors.textDim),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(color: AppColors.textDim),
                             ),
                           )
                         : searchResults.isEmpty
@@ -1678,39 +1691,44 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                                   isSearching
                                       ? 'Searching...'
                                       : 'No jobs found',
-                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                      color: AppColors.textDim),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium!
+                                      .copyWith(color: AppColors.textDim),
                                 ),
                               )
                             : ListView.builder(
                                 itemCount: searchResults.length,
                                 itemBuilder: (context, index) {
                                   final job = searchResults[index];
-                                  final isSelected = selectedJobIds
-                                      .contains(job.jobId);
+                                  final isSelected =
+                                      selectedJobIds.contains(job.jobId);
                                   return CheckboxListTile(
                                     value: isSelected,
                                     dense: true,
                                     title: Text(
-                                      job.title ??
-                                          job.filename ??
-                                          job.jobId,
+                                      job.title ?? job.filename ?? job.jobId,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context).textTheme.bodyMedium!
-                                          .copyWith(fontWeight: FontWeight.w600, fontSize: 13),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium!
+                                          .copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13),
                                     ),
                                     subtitle: Text(
                                       '${job.source}  •  ${job.typeCode ?? 'untyped'}  •  ${_formatDate(job.createdAt)}',
-                                      style: Theme.of(context).textTheme.bodySmall!,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall!,
                                     ),
                                     onChanged: (checked) {
                                       setDialogState(() {
                                         if (checked == true) {
                                           selectedJobIds.add(job.jobId);
                                         } else {
-                                          selectedJobIds
-                                              .remove(job.jobId);
+                                          selectedJobIds.remove(job.jobId);
                                         }
                                       });
                                     },
@@ -1729,14 +1747,12 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                     ),
                     items: const [
                       DropdownMenuItem(
-                          value: 'canonical',
-                          child: Text('Canonical')),
+                          value: 'canonical', child: Text('Canonical')),
                       DropdownMenuItem(
                           value: 'counter_example',
                           child: Text('Counter Example')),
                       DropdownMenuItem(
-                          value: 'edge_case',
-                          child: Text('Edge Case')),
+                          value: 'edge_case', child: Text('Edge Case')),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -1773,10 +1789,9 @@ class _ExemplarsTabState extends State<_ExemplarsTab> {
                                 videoTypeId: widget.videoTypeId,
                                 jobIds: selectedJobIds.toList(),
                                 exemplarKind: selectedKind,
-                                notes:
-                                    notesController.text.trim().isEmpty
-                                        ? null
-                                        : notesController.text.trim(),
+                                notes: notesController.text.trim().isEmpty
+                                    ? null
+                                    : notesController.text.trim(),
                               ),
                             );
                       },
@@ -1868,15 +1883,12 @@ class _PromptTab extends StatelessWidget {
                 ),
               ],
               // Rollback button
-              if (state.versions
-                  .where((v) => v.isArchived)
-                  .isNotEmpty) ...[
+              if (state.versions.where((v) => v.isArchived).isNotEmpty) ...[
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   icon: const Icon(Icons.undo, size: 16),
                   label: const Text('Rollback'),
-                  onPressed: () =>
-                      _showRollbackDialog(context, state.type.id),
+                  onPressed: () => _showRollbackDialog(context, state.type.id),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.warning,
                     side: const BorderSide(color: AppColors.warning),
@@ -1910,8 +1922,10 @@ class _PromptTab extends StatelessWidget {
             Text(
               'Click "Render Prompt" to generate\nthe classification prompt',
               textAlign: TextAlign.center,
-              style:
-                  Theme.of(context).textTheme.bodyMedium!.copyWith(color: AppColors.textDim),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium!
+                  .copyWith(color: AppColors.textDim),
             ),
           ],
         ),
@@ -2021,9 +2035,9 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         status.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall!.copyWith(
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
       ),
     );
   }
@@ -2077,17 +2091,15 @@ class _FilterChip extends StatelessWidget {
               : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: selected
-                ? AppColors.success
-                : AppColors.textGhost,
+            color: selected ? AppColors.success : AppColors.textGhost,
           ),
         ),
         child: Text(
           label,
           style: Theme.of(context).textTheme.bodySmall!.copyWith(
-            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            color: selected ? AppColors.success : AppColors.textDim,
-          ),
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                color: selected ? AppColors.success : AppColors.textDim,
+              ),
         ),
       ),
     );

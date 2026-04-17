@@ -25,8 +25,10 @@ class PodcastScheduleModel extends Equatable {
       id: json['id'] as String,
       podcastId: json['podcast_id'] as String,
       dayOfWeek: json['day_of_week'] as String,
-      startTime: json['start_time'] as String,
-      endTime: json['end_time'] as String,
+      startTime: json['start_time'] as String? ??
+          json['start_time_pt'] as String? ??
+          '',
+      endTime: json['end_time'] as String? ?? '',
       timezone: json['timezone'] as String? ?? 'America/Los_Angeles',
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_ui/shared_ui.dart';
 
+import '../../config/build_info.dart';
 import '../../data/sources/auth_data_source.dart';
 import '../../shared/bloc/auth_session_bloc.dart';
 
@@ -113,6 +114,14 @@ class _LogoutFooter extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+          child: Text(
+            'build ${BuildInfo.gitSha}',
+            style: const TextStyle(color: AppColors.textGhost, fontSize: 10),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         if (displayName != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

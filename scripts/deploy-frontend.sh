@@ -126,7 +126,7 @@ if [ "$USE_EXISTING_BUILD" = false ]; then
   flutter build web --release \
     --dart-define="API_BASE_URL=$API_BASE_URL" \
     --dart-define=ENV=production \
-    --dart-define="GIT_SHA=$commit_sha"
+    --dart-define=GIT_SHA=$commit_sha
   echo "  Build complete: $BUILD_DIR"
 else
   echo ""

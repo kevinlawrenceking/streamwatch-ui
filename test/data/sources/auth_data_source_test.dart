@@ -1,18 +1,18 @@
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:streamwatch_frontend/data/providers/rest_client.dart';
+import 'package:streamwatch_frontend/data/providers/token_store.dart';
 import 'package:streamwatch_frontend/data/sources/auth_data_source.dart';
 import 'package:streamwatch_frontend/shared/bloc/auth_session_bloc.dart';
 import 'package:streamwatch_frontend/shared/errors/failures/failure.dart';
 
 class MockRestClient extends Mock implements IRestClient {}
 
-class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
+class MockTokenStore extends Mock implements TokenStore {}
 
 class MockAuthSessionBloc extends Mock implements AuthSessionBloc {}
 
@@ -26,13 +26,13 @@ String _makeJwt({required int exp}) {
 
 void main() {
   late MockRestClient mockClient;
-  late MockFlutterSecureStorage mockStorage;
+  late MockTokenStore mockStorage;
   late MockAuthSessionBloc mockAuthBloc;
   late ProdAuthDataSource dataSource;
 
   setUp(() {
     mockClient = MockRestClient();
-    mockStorage = MockFlutterSecureStorage();
+    mockStorage = MockTokenStore();
     mockAuthBloc = MockAuthSessionBloc();
 
     // Stub void methods

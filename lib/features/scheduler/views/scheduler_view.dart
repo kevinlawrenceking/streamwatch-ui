@@ -4,64 +4,216 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../data/models/job_model.dart';
 import '../../../themes/app_theme.dart';
 import '../bloc/scheduler_dashboard_bloc.dart';
+import '../reports/bloc/reports_dashboard_bloc.dart';
+import '../reports/constants/report_keys.dart';
+import '../reports/widgets/report_count_card.dart';
 import '../widgets/scheduler_job_card.dart';
 import '../widgets/summary_card.dart';
 
 /// Scheduler dashboard view.
-/// Shows summary stats and recent podcast-originated jobs.
+///
+/// Layout (top-level Column, per E8):
+///   1. Summary row    — SchedulerDashboardBloc state branches
+///   2. Reports row    — independent BlocBuilder on ReportsDashboardBloc;
+///                       renders even when jobs fail (graceful degradation)
+///   3. Job sections   — SchedulerDashboardBloc state branches
 class SchedulerView extends StatelessWidget {
   const SchedulerView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        context
+            .read<SchedulerDashboardBloc>()
+            .add(const RefreshSchedulerDashboard());
+        context
+            .read<ReportsDashboardBloc>()
+            .add(const RefreshReportsDashboard());
+      },
+      child: const SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SummarySection(),
+            SizedBox(height: 24),
+            _ReportsRow(),
+            SizedBox(height: 24),
+            _JobsSection(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Summary section (LSW-010)
+// =============================================================================
+
+class _SummarySection extends StatelessWidget {
+  const _SummarySection();
+
+  @override
+  Widget build(BuildContext context) {
     return BlocBuilder<SchedulerDashboardBloc, SchedulerDashboardState>(
       builder: (context, state) {
-        return _buildBody(context, state);
+        if (state is SchedulerDashboardLoaded) {
+          return _summaryRow(
+            queued: state.queuedJobs.length,
+            processing: state.processingJobs.length,
+            completed: state.completedJobs.length,
+            failed: state.failedJobs.length,
+          );
+        }
+        // Placeholder cards while loading or on error — keeps the row
+        // footprint stable so the reports row below does not jump.
+        return _summaryRow(
+          queued: 0,
+          processing: 0,
+          completed: 0,
+          failed: 0,
+        );
       },
     );
   }
 
-  Widget _buildBody(BuildContext context, SchedulerDashboardState state) {
-    if (state is SchedulerDashboardLoading ||
-        state is SchedulerDashboardInitial) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (state is SchedulerDashboardError) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(state.message),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context
-                  .read<SchedulerDashboardBloc>()
-                  .add(const LoadSchedulerDashboard()),
-              child: const Text('Retry'),
-            ),
-          ],
+  Widget _summaryRow({
+    required int queued,
+    required int processing,
+    required int completed,
+    required int failed,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: SchedulerSummaryCard(
+            label: 'Queued',
+            count: queued,
+            icon: Icons.schedule,
+            color: AppColors.warning,
+          ),
         ),
-      );
-    }
+        const SizedBox(width: 8),
+        Expanded(
+          child: SchedulerSummaryCard(
+            label: 'Processing',
+            count: processing,
+            icon: Icons.sync,
+            color: AppColors.tmzRed,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SchedulerSummaryCard(
+            label: 'Completed',
+            count: completed,
+            icon: Icons.check_circle_outline,
+            color: AppColors.success,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SchedulerSummaryCard(
+            label: 'Failed',
+            count: failed,
+            icon: Icons.error_outline,
+            color: AppColors.error,
+          ),
+        ),
+      ],
+    );
+  }
+}
 
-    if (state is SchedulerDashboardLoaded) {
-      return RefreshIndicator(
-        onRefresh: () async {
-          context
-              .read<SchedulerDashboardBloc>()
-              .add(const RefreshSchedulerDashboard());
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
+// =============================================================================
+// Reports row (WO-076 / LSW-014)
+// =============================================================================
+
+class _ReportsRow extends StatelessWidget {
+  const _ReportsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ReportsDashboardBloc, ReportsDashboardState>(
+      builder: (context, state) {
+        final isLoading = state is ReportsDashboardInitial ||
+            state is ReportsDashboardLoading;
+        Map<String, int> counts = const {};
+        Map<String, String> errors = const {};
+        if (state is ReportsDashboardLoaded) {
+          counts = state.counts;
+          errors = state.errors;
+        }
+        return SizedBox(
+          height: 116,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: kReports.length,
+            itemBuilder: (context, index) {
+              final meta = kReports[index];
+              return ReportCountCard(
+                meta: meta,
+                loading: isLoading,
+                count: counts[meta.key],
+                error: errors[meta.key],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+// =============================================================================
+// Jobs section (LSW-010)
+// =============================================================================
+
+class _JobsSection extends StatelessWidget {
+  const _JobsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<SchedulerDashboardBloc, SchedulerDashboardState>(
+      builder: (context, state) {
+        if (state is SchedulerDashboardLoading ||
+            state is SchedulerDashboardInitial) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (state is SchedulerDashboardError) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Column(
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 48, color: AppColors.error),
+                  const SizedBox(height: 12),
+                  Text(state.message),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () => context
+                        .read<SchedulerDashboardBloc>()
+                        .add(const LoadSchedulerDashboard()),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (state is SchedulerDashboardLoaded) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSummaryRow(context, state),
-              const SizedBox(height: 24),
               _buildJobSection(
                 context,
                 title: 'Processing',
@@ -120,54 +272,11 @@ class SchedulerView extends StatelessWidget {
                   ),
                 ),
             ],
-          ),
-        ),
-      );
-    }
+          );
+        }
 
-    return const SizedBox.shrink();
-  }
-
-  Widget _buildSummaryRow(
-      BuildContext context, SchedulerDashboardLoaded state) {
-    return Row(
-      children: [
-        Expanded(
-          child: SchedulerSummaryCard(
-            label: 'Queued',
-            count: state.queuedJobs.length,
-            icon: Icons.schedule,
-            color: AppColors.warning,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SchedulerSummaryCard(
-            label: 'Processing',
-            count: state.processingJobs.length,
-            icon: Icons.sync,
-            color: AppColors.tmzRed,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SchedulerSummaryCard(
-            label: 'Completed',
-            count: state.completedJobs.length,
-            icon: Icons.check_circle_outline,
-            color: AppColors.success,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SchedulerSummaryCard(
-            label: 'Failed',
-            count: state.failedJobs.length,
-            icon: Icons.error_outline,
-            color: AppColors.error,
-          ),
-        ),
-      ],
+        return const SizedBox.shrink();
+      },
     );
   }
 

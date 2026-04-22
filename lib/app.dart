@@ -12,6 +12,11 @@ import 'features/login/views/login_view.dart';
 import 'features/upload/views/upload_view.dart';
 import 'features/job_detail/views/job_detail_view.dart';
 import 'features/scheduler/bloc/scheduler_dashboard_bloc.dart';
+import 'features/scheduler/reports/bloc/reported_episodes_bloc.dart';
+import 'features/scheduler/reports/bloc/reported_slots_bloc.dart';
+import 'features/scheduler/reports/bloc/reports_dashboard_bloc.dart';
+import 'features/scheduler/reports/views/reports_drill_down_episodes_view.dart';
+import 'features/scheduler/reports/views/reports_drill_down_slots_view.dart';
 import 'features/scheduler/views/scheduler_view.dart';
 import 'features/shell/main_shell.dart';
 import 'features/users/views/users_view.dart';
@@ -237,12 +242,49 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
         return _shellRoute(
           settings,
           '/scheduler',
-          BlocProvider(
-            create: (_) => GetIt.instance<SchedulerDashboardBloc>()
-              ..add(const LoadSchedulerDashboard()),
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<SchedulerDashboardBloc>(
+                create: (_) => GetIt.instance<SchedulerDashboardBloc>()
+                  ..add(const LoadSchedulerDashboard()),
+              ),
+              BlocProvider<ReportsDashboardBloc>.value(
+                value: GetIt.instance<ReportsDashboardBloc>()
+                  ..add(const LoadReportsDashboard()),
+              ),
+            ],
             child: const SchedulerView(),
           ),
           title: 'Scheduler',
+        );
+      case '/scheduler/reports':
+        final args = settings.arguments as Map<String, String>;
+        final reportKey = args['reportKey']!;
+        final label = args['label'] ?? 'Report';
+        final isSlotReport =
+            reportKey == 'expected-today' || reportKey == 'late';
+        return _shellRoute(
+          settings,
+          '/scheduler',
+          isSlotReport
+              ? BlocProvider<ReportedSlotsBloc>(
+                  create: (_) => GetIt.instance<ReportedSlotsBloc>()
+                    ..add(FetchReportedSlotsEvent(reportKey: reportKey)),
+                  child: ReportsDrillDownSlotsView(
+                    reportKey: reportKey,
+                    label: label,
+                  ),
+                )
+              : BlocProvider<ReportedEpisodesBloc>(
+                  create: (_) => GetIt.instance<ReportedEpisodesBloc>()
+                    ..add(FetchReportedEpisodesEvent(reportKey: reportKey)),
+                  child: ReportsDrillDownEpisodesView(
+                    reportKey: reportKey,
+                    label: label,
+                  ),
+                ),
+          title: label,
+          showBackButton: true,
         );
       case '/type-control':
         return _shellRoute(settings, '/type-control', const TypeListView(),

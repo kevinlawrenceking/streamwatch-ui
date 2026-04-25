@@ -138,12 +138,24 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# SW auto-activation patch (idempotent)
-#   - install handler: ensure self.skipWaiting() follows the anchor
-#       (current Flutter template already includes this -- guard no-ops)
-#   - activate handler: inject event.waitUntil(self.clients.claim()) as the
-#     FIRST statement of the handler body, augmenting existing in-try-block
-#     claims so claim happens even if the inner async cache work throws.
+# SW auto-activation verification (read-only; no SW byte modification)
+#
+#   Modern Flutter (3.10+) ships a self-recovering service worker:
+#     install:  self.skipWaiting()                  -- new SW activates immediately
+#     activate: self.registration.unregister()      -- SW removes itself; next
+#                                                       fetch loads fresh bytes
+#               + client.navigate(client.url)       -- existing pages reload
+#
+#   The legacy pattern (pre-3.10) used self.clients.claim() in activate to
+#   take over existing pages. Either pattern satisfies the deploy invariant
+#   "users see new builds without manual cache clear" -- we accept both.
+#
+#   We verify rather than inject because (a) modern Flutter already meets
+#   the invariant and (b) byte-level injection is brittle against Flutter
+#   template churn (anchor strings change between versions).
+#
+#   Hard-fails the deploy if the SW lacks self-recovery -- defends against
+#   a future Flutter regression.
 # ---------------------------------------------------------------------------
 SW="$BUILD_DIR/flutter_service_worker.js"
 if [ ! -f "$SW" ]; then
@@ -151,25 +163,22 @@ if [ ! -f "$SW" ]; then
   exit 1
 fi
 
-# Install handler patch (idempotent)
-if ! grep -A1 'self\.addEventListener("install", (event) => {' "$SW" \
-     | grep -q 'self\.skipWaiting();'; then
-  if ! sed -i 's|self\.addEventListener("install", (event) => {|&\n  self.skipWaiting();|' "$SW" 2>/dev/null; then
-    sed 's|self\.addEventListener("install", (event) => {|&\n  self.skipWaiting();|' "$SW" > "$SW.tmp" && mv "$SW.tmp" "$SW"
-  fi
-  echo "  SW install: injected self.skipWaiting()"
+sw_skipwaiting_count=$(grep -c 'self\.skipWaiting()' "$SW" || true)
+if [ "${sw_skipwaiting_count:-0}" -ge 1 ]; then
+  echo "  SW install: self.skipWaiting() verified (count=${sw_skipwaiting_count})"
 else
-  echo "  SW install: self.skipWaiting() already present (no-op)"
+  echo "ERROR: SW does not call self.skipWaiting() -- new deploys would not activate for existing users" >&2
+  exit 1
 fi
 
-# Activate handler patch (idempotent on the exact injected literal)
-if ! grep -qF 'event.waitUntil(self.clients.claim())' "$SW"; then
-  if ! sed -i 's|self\.addEventListener("activate", function(event) {|&\n  event.waitUntil(self.clients.claim());|' "$SW" 2>/dev/null; then
-    sed 's|self\.addEventListener("activate", function(event) {|&\n  event.waitUntil(self.clients.claim());|' "$SW" > "$SW.tmp" && mv "$SW.tmp" "$SW"
-  fi
-  echo "  SW activate: injected event.waitUntil(self.clients.claim())"
+sw_claim_count=$(grep -cF 'self.clients.claim()' "$SW" || true)
+sw_unregister_count=$(grep -cF 'self.registration.unregister()' "$SW" || true)
+sw_recovery_total=$(( ${sw_claim_count:-0} + ${sw_unregister_count:-0} ))
+if [ "$sw_recovery_total" -ge 1 ]; then
+  echo "  SW activate: auto-recovery verified (clients.claim=${sw_claim_count:-0}, unregister=${sw_unregister_count:-0})"
 else
-  echo "  SW activate: event.waitUntil(self.clients.claim()) already present (no-op)"
+  echo "ERROR: SW activate handler lacks auto-recovery -- existing users would not see new builds without manual cache clear" >&2
+  exit 1
 fi
 
 # Step 3: Sync to S3

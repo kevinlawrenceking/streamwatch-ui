@@ -10,14 +10,15 @@ Production URL: https://dpoqt8yacebtf.cloudfront.net
 - **Interactive confirmation** of the commit SHA before deploy
   (override: `-y` / `--yes` for non-interactive runs).
 - **Build SHA embedded** via `flutter build web --release --dart-define=GIT_SHA=<short hash>`.
-- **SW auto-activation patch** injected post-build into
-  `build/web/flutter_service_worker.js`:
-  - `self.skipWaiting()` ensured at the top of the install handler
-    (no-op against current Flutter template — the line is already there).
-  - `event.waitUntil(self.clients.claim())` injected as the FIRST statement of
-    the activate handler body. This augments the existing in-try-block
-    `self.clients.claim()` calls so claim happens even if the inner
-    async cache work throws.
+- **SW auto-activation verified** post-build (read-only assertion against
+  `build/web/flutter_service_worker.js`):
+  - Install handler must call `self.skipWaiting()` (count >= 1) so a new SW
+    activates immediately rather than parking in `waiting` state.
+  - Activate handler must call ONE of `self.clients.claim()` (legacy
+    Flutter pattern) OR `self.registration.unregister()` (modern Flutter
+    3.10+ kill-switch pattern). Either guarantees existing pages see new
+    builds without manual cache clear. Hard-fails the deploy if neither
+    is present.
 - **`main.dart.js` is `Cache-Control: no-cache, no-store, must-revalidate`**
   alongside the existing four files (index.html, flutter_service_worker.js,
   flutter_bootstrap.js, version.json). The whole-app bundle was previously
@@ -86,12 +87,14 @@ Two independent cross-checks:
 Recurring staleness was traced to three structural causes (all fixed as of
 WO-073/LSW-013):
 
-1. **Flutter SW waiting-state activation window** — Flutter's SW installs
-   into `waiting` state and historically only activated when every tab/window
-   for the origin closed. Hard-refresh did not help. Reference:
-   flutter/flutter#96144. The current Flutter template fixed install-side
-   `skipWaiting()`, but activate's `clients.claim()` lives inside a try block
-   and is skipped on cache errors — fixed by the activate-handler injection.
+1. **Flutter SW waiting-state activation window** — Flutter's SW historically
+   installed into `waiting` state and only activated when every tab/window
+   for the origin closed; hard-refresh did not help (flutter/flutter#96144).
+   Modern Flutter (3.10+) ships a kill-switch SW that calls
+   `self.skipWaiting()` on install and `self.registration.unregister()` on
+   activate, then navigates open clients to refetch — this fully resolves
+   the activation window. WO-073 verifies the SW retains these properties
+   on every deploy and hard-fails if Flutter ever regresses.
 2. **`main.dart.js` had no Cache-Control header** — the previous deploy
    script tagged 4 files no-cache but missed the 3.6 MB main bundle.
    CloudFront default TTL applied, layered on top of the SW cache.

@@ -27,6 +27,7 @@ import 'features/type_control/views/type_detail_view.dart';
 import 'features/podcasts/presentation/views/podcast_list_view.dart';
 import 'features/podcasts/presentation/views/podcast_detail_view.dart';
 import 'features/podcasts/presentation/views/episode_list_view.dart';
+import 'features/episode_detail/presentation/views/episode_detail_view.dart';
 
 /// Root application widget.
 ///
@@ -307,6 +308,11 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
         return _shellRoute(
             settings, '/podcasts', EpisodeListView(podcastId: podcastId),
             showBackButton: true, title: 'Episodes');
+      case '/episodes/detail':
+        final episodeId = settings.arguments as String;
+        return _shellRoute(
+            settings, '/podcasts', EpisodeDetailView(episodeId: episodeId),
+            showBackButton: true);
       case '/video':
         final args = settings.arguments as Map<String, String>;
         return _shellRoute(

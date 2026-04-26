@@ -17,6 +17,7 @@ import '../features/job_detail/service_locator.dart' as job_detail;
 import '../features/login/service_locator.dart' as login;
 import '../features/collections/service_locator.dart' as collections;
 import '../features/podcasts/service_locator.dart' as podcasts;
+import '../features/episode_detail/service_locator.dart' as episode_detail;
 import '../features/scheduler/service_locator.dart' as scheduler;
 import '../features/type_control/service_locator.dart' as type_control;
 import '../features/users/service_locator.dart' as users;
@@ -143,6 +144,7 @@ Future<void> initServiceLocator() async {
   type_control.ServiceLocator.init();
   scheduler.ServiceLocator.init();
   podcasts.ServiceLocator.init();
+  episode_detail.ServiceLocator.init();
 }
 
 /// Resets the service locator (useful for testing).

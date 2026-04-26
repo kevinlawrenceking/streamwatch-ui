@@ -100,19 +100,24 @@ class ReportsDrillDownEpisodesView extends StatelessWidget {
                     );
                   }
                   final ep = state.episodes[index];
-                  final isInFlight =
-                      state.inFlightEpisodeIds.contains(ep.id);
-                  return ReportedEpisodeCard(
-                    episode: ep,
-                    reportKey: reportKey,
-                    accentColor: accent,
-                    inFlight: isInFlight,
-                    onMarkReviewed: () => context
-                        .read<ReportedEpisodesBloc>()
-                        .add(MarkReviewedRequestedEvent(ep.id)),
-                    onRequestClip: () => context
-                        .read<ReportedEpisodesBloc>()
-                        .add(RequestClipRequestedEvent(ep.id)),
+                  final isInFlight = state.inFlightEpisodeIds.contains(ep.id);
+                  return InkWell(
+                    onTap: () => Navigator.of(context).pushNamed(
+                      '/episodes/detail',
+                      arguments: ep.id,
+                    ),
+                    child: ReportedEpisodeCard(
+                      episode: ep,
+                      reportKey: reportKey,
+                      accentColor: accent,
+                      inFlight: isInFlight,
+                      onMarkReviewed: () => context
+                          .read<ReportedEpisodesBloc>()
+                          .add(MarkReviewedRequestedEvent(ep.id)),
+                      onRequestClip: () => context
+                          .read<ReportedEpisodesBloc>()
+                          .add(RequestClipRequestedEvent(ep.id)),
+                    ),
                   );
                 },
               ),

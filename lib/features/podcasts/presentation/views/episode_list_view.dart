@@ -137,57 +137,63 @@ class _EpisodeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            const Icon(Icons.headphones, color: AppColors.tmzRed, size: 24),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    episode.title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium!
-                        .copyWith(fontWeight: FontWeight.w600),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      if (episode.source != null) ...[
-                        Text(
-                          episode.source!,
-                          style:
-                              Theme.of(context).textTheme.bodySmall!.copyWith(
-                                    color: AppColors.tmzRed,
-                                    fontSize: 10,
-                                  ),
-                        ),
-                        const SizedBox(width: 8),
+      child: InkWell(
+        onTap: () => Navigator.of(context).pushNamed(
+          '/episodes/detail',
+          arguments: episode.id,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.headphones, color: AppColors.tmzRed, size: 24),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      episode.title,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium!
+                          .copyWith(fontWeight: FontWeight.w600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        if (episode.source != null) ...[
+                          Text(
+                            episode.source!,
+                            style:
+                                Theme.of(context).textTheme.bodySmall!.copyWith(
+                                      color: AppColors.tmzRed,
+                                      fontSize: 10,
+                                    ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        if (episode.publishedAt != null)
+                          Text(
+                            _formatDate(episode.publishedAt!),
+                            style:
+                                Theme.of(context).textTheme.bodySmall!.copyWith(
+                                      color: AppColors.textDim,
+                                      fontSize: 10,
+                                    ),
+                          ),
                       ],
-                      if (episode.publishedAt != null)
-                        Text(
-                          _formatDate(episode.publishedAt!),
-                          style:
-                              Theme.of(context).textTheme.bodySmall!.copyWith(
-                                    color: AppColors.textDim,
-                                    fontSize: 10,
-                                  ),
-                        ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            if (episode.sourceUrl != null)
-              const Icon(Icons.open_in_new,
-                  size: 16, color: AppColors.textGhost),
-          ],
+              if (episode.sourceUrl != null)
+                const Icon(Icons.open_in_new,
+                    size: 16, color: AppColors.textGhost),
+            ],
+          ),
         ),
       ),
     );

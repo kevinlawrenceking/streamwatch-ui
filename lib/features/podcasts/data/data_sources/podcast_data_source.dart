@@ -6,6 +6,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../../data/providers/rest_client.dart';
 import '../../../../data/sources/auth_data_source.dart';
+import '../../../../shared/data/http_helpers.dart';
 import '../../../../shared/errors/exception_handler.dart';
 import '../../../../shared/errors/failures/failure.dart';
 import '../models/podcast.dart';
@@ -764,146 +765,12 @@ class PodcastDataSource implements IPodcastDataSource {
       }).call();
 
   // ---------------------------------------------------------------------------
-  // Internal helpers (WO-077 / LSW-015) -- mirror the ReportsDataSource style
+  // HTTP helpers (WO-077 / LSW-015) were promoted to the static
+  // `HttpHelpers` class at lib/shared/data/http_helpers.dart in
+  // WO-078 / LSW-016 (Plan-Lock #2, Option A-revised) so all DataSources
+  // can share the same auth + ExceptionHandler + status-code idiom.
+  // Callsites below pass `auth: _auth, client: _client` as first-args.
   // ---------------------------------------------------------------------------
-
-  Future<Either<Failure, T>> _getJsonSingle<T>(
-    String endPoint,
-    T Function(Map<String, dynamic>) fromJson,
-  ) =>
-      ExceptionHandler<T>(() async {
-        final tokenResult = await _auth.getAuthToken();
-        return tokenResult.fold(
-          (failure) => Left(failure),
-          (authToken) async {
-            final response = await _client.get(
-              endPoint: endPoint,
-              authToken: authToken,
-            );
-            if (response.statusCode != HttpStatus.ok) {
-              return Left(HttpFailure.fromResponse(response));
-            }
-            final decoded = json.decode(response.body);
-            return Right(fromJson(decoded as Map<String, dynamic>));
-          },
-        );
-      }).call();
-
-  Future<Either<Failure, List<T>>> _getJsonList<T>(
-    String endPoint,
-    T Function(Map<String, dynamic>) fromJson,
-  ) =>
-      ExceptionHandler<List<T>>(() async {
-        final tokenResult = await _auth.getAuthToken();
-        return tokenResult.fold(
-          (failure) => Left(failure),
-          (authToken) async {
-            final response = await _client.get(
-              endPoint: endPoint,
-              authToken: authToken,
-            );
-            if (response.statusCode != HttpStatus.ok) {
-              return Left(HttpFailure.fromResponse(response));
-            }
-            final body = response.body;
-            if (body.isEmpty || body == 'null') return const Right([]);
-            final decoded = json.decode(body);
-            if (decoded is! List) return const Right([]);
-            return Right(decoded
-                .map((e) => fromJson(e as Map<String, dynamic>))
-                .toList());
-          },
-        );
-      }).call();
-
-  Future<Either<Failure, T>> _postJsonSingle<T>(
-    String endPoint,
-    T Function(Map<String, dynamic>) fromJson, {
-    Map<String, dynamic>? body,
-  }) =>
-      ExceptionHandler<T>(() async {
-        final tokenResult = await _auth.getAuthToken();
-        return tokenResult.fold(
-          (failure) => Left(failure),
-          (authToken) async {
-            final response = await _client.post(
-              endPoint: endPoint,
-              authToken: authToken,
-              body: body,
-            );
-            if (response.statusCode != HttpStatus.ok &&
-                response.statusCode != HttpStatus.created) {
-              return Left(HttpFailure.fromResponse(response));
-            }
-            final decoded = json.decode(response.body);
-            return Right(fromJson(decoded as Map<String, dynamic>));
-          },
-        );
-      }).call();
-
-  Future<Either<Failure, T>> _patchJsonSingle<T>(
-    String endPoint,
-    Map<String, dynamic> body,
-    T Function(Map<String, dynamic>) fromJson,
-  ) =>
-      ExceptionHandler<T>(() async {
-        final tokenResult = await _auth.getAuthToken();
-        return tokenResult.fold(
-          (failure) => Left(failure),
-          (authToken) async {
-            final response = await _client.patch(
-              endPoint: endPoint,
-              authToken: authToken,
-              body: body,
-            );
-            if (response.statusCode != HttpStatus.ok) {
-              return Left(HttpFailure.fromResponse(response));
-            }
-            final decoded = json.decode(response.body);
-            return Right(fromJson(decoded as Map<String, dynamic>));
-          },
-        );
-      }).call();
-
-  Future<Either<Failure, void>> _deleteVoid(String endPoint) =>
-      ExceptionHandler<void>(() async {
-        final tokenResult = await _auth.getAuthToken();
-        return tokenResult.fold(
-          (failure) => Left(failure),
-          (authToken) async {
-            final response = await _client.delete(
-              endPoint: endPoint,
-              authToken: authToken,
-            );
-            if (response.statusCode != HttpStatus.ok &&
-                response.statusCode != HttpStatus.noContent) {
-              return Left(HttpFailure.fromResponse(response));
-            }
-            return const Right(null);
-          },
-        );
-      }).call();
-
-  Future<Either<Failure, void>> _postVoidWithStatus(
-    String endPoint,
-    Set<int> acceptedStatusCodes,
-  ) =>
-      ExceptionHandler<void>(() async {
-        final tokenResult = await _auth.getAuthToken();
-        return tokenResult.fold(
-          (failure) => Left(failure),
-          (authToken) async {
-            final response = await _client.post(
-              endPoint: endPoint,
-              authToken: authToken,
-            );
-            if (!acceptedStatusCodes.contains(response.statusCode)) {
-              return Left(HttpFailure.fromResponse(response));
-            }
-            return const Right(null);
-          },
-        );
-      }).call();
 
   // ---------------------------------------------------------------------------
   // Episode operations (LSW-007-A / WO-059) -- WO-077 / LSW-015
@@ -912,26 +779,32 @@ class PodcastDataSource implements IPodcastDataSource {
   @override
   Future<Either<Failure, PodcastEpisodeModel>> updateEpisode(
           String episodeId, Map<String, dynamic> body) =>
-      _patchJsonSingle(
-        '/api/v1/podcast-episodes/$episodeId',
-        body,
-        PodcastEpisodeModel.fromJsonDto,
+      HttpHelpers.patchJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-episodes/$episodeId',
+        body: body,
+        fromJsonDto: PodcastEpisodeModel.fromJsonDto,
       );
 
   @override
   Future<Either<Failure, PodcastEpisodeModel>> markEpisodeReviewed(
           String episodeId) =>
-      _postJsonSingle(
-        '/api/v1/podcast-episodes/$episodeId/mark-reviewed',
-        PodcastEpisodeModel.fromJsonDto,
+      HttpHelpers.postJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-episodes/$episodeId/mark-reviewed',
+        fromJsonDto: PodcastEpisodeModel.fromJsonDto,
       );
 
   @override
   Future<Either<Failure, PodcastEpisodeModel>> requestEpisodeClip(
           String episodeId) =>
-      _postJsonSingle(
-        '/api/v1/podcast-episodes/$episodeId/request-clip',
-        PodcastEpisodeModel.fromJsonDto,
+      HttpHelpers.postJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-episodes/$episodeId/request-clip',
+        fromJsonDto: PodcastEpisodeModel.fromJsonDto,
       );
 
   // ---------------------------------------------------------------------------
@@ -941,47 +814,61 @@ class PodcastDataSource implements IPodcastDataSource {
   @override
   Future<Either<Failure, List<PodcastTranscriptModel>>> listTranscripts(
           String episodeId) =>
-      _getJsonList(
-        '/api/v1/podcast-episodes/$episodeId/transcripts',
-        PodcastTranscriptModel.fromJsonDto,
+      HttpHelpers.getJsonList(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-episodes/$episodeId/transcripts',
+        fromJsonDto: PodcastTranscriptModel.fromJsonDto,
       );
 
   @override
   Future<Either<Failure, PodcastTranscriptModel>> createTranscript(
           String episodeId, Map<String, dynamic> body) =>
-      _postJsonSingle(
-        '/api/v1/podcast-episodes/$episodeId/transcripts',
-        PodcastTranscriptModel.fromJsonDto,
+      HttpHelpers.postJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-episodes/$episodeId/transcripts',
+        fromJsonDto: PodcastTranscriptModel.fromJsonDto,
         body: body,
       );
 
   @override
   Future<Either<Failure, PodcastTranscriptModel>> getTranscript(
           String transcriptId) =>
-      _getJsonSingle(
-        '/api/v1/podcast-transcripts/$transcriptId',
-        PodcastTranscriptModel.fromJsonDto,
+      HttpHelpers.getJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-transcripts/$transcriptId',
+        fromJsonDto: PodcastTranscriptModel.fromJsonDto,
       );
 
   @override
   Future<Either<Failure, PodcastTranscriptModel>> patchTranscript(
           String transcriptId, Map<String, dynamic> body) =>
-      _patchJsonSingle(
-        '/api/v1/podcast-transcripts/$transcriptId',
-        body,
-        PodcastTranscriptModel.fromJsonDto,
+      HttpHelpers.patchJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-transcripts/$transcriptId',
+        body: body,
+        fromJsonDto: PodcastTranscriptModel.fromJsonDto,
       );
 
   @override
   Future<Either<Failure, void>> deleteTranscript(String transcriptId) =>
-      _deleteVoid('/api/v1/podcast-transcripts/$transcriptId');
+      HttpHelpers.deleteVoid(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-transcripts/$transcriptId',
+      );
 
   @override
   Future<Either<Failure, PodcastTranscriptModel>> setPrimaryTranscript(
           String transcriptId) =>
-      _postJsonSingle(
-        '/api/v1/podcast-transcripts/$transcriptId/set-primary',
-        PodcastTranscriptModel.fromJsonDto,
+      HttpHelpers.postJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-transcripts/$transcriptId/set-primary',
+        fromJsonDto: PodcastTranscriptModel.fromJsonDto,
       );
 
   // ---------------------------------------------------------------------------
@@ -990,44 +877,59 @@ class PodcastDataSource implements IPodcastDataSource {
 
   @override
   Future<Either<Failure, List<PodcastHeadlineCandidateModel>>>
-      listHeadlineCandidates(String episodeId) => _getJsonList(
-            '/api/v1/podcast-episodes/$episodeId/headline-candidates',
-            PodcastHeadlineCandidateModel.fromJsonDto,
+      listHeadlineCandidates(String episodeId) => HttpHelpers.getJsonList(
+            auth: _auth,
+            client: _client,
+            path: '/api/v1/podcast-episodes/$episodeId/headline-candidates',
+            fromJsonDto: PodcastHeadlineCandidateModel.fromJsonDto,
           );
 
   @override
   Future<Either<Failure, PodcastHeadlineCandidateModel>>
       createHeadlineCandidate(String episodeId, Map<String, dynamic> body) =>
-          _postJsonSingle(
-            '/api/v1/podcast-episodes/$episodeId/headline-candidates',
-            PodcastHeadlineCandidateModel.fromJsonDto,
+          HttpHelpers.postJsonSingle(
+            auth: _auth,
+            client: _client,
+            path: '/api/v1/podcast-episodes/$episodeId/headline-candidates',
+            fromJsonDto: PodcastHeadlineCandidateModel.fromJsonDto,
             body: body,
           );
 
   @override
   Future<Either<Failure, void>> generateHeadlines(String episodeId) =>
-      _postVoidWithStatus(
-        '/api/v1/podcast-episodes/$episodeId/generate-headlines',
-        const {HttpStatus.accepted},
+      HttpHelpers.postVoidWithStatus(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-episodes/$episodeId/generate-headlines',
+        acceptedStatusCodes: const {HttpStatus.accepted},
       );
 
   @override
   Future<Either<Failure, PodcastHeadlineCandidateModel>> getHeadlineCandidate(
           String candidateId) =>
-      _getJsonSingle(
-        '/api/v1/podcast-headline-candidates/$candidateId',
-        PodcastHeadlineCandidateModel.fromJsonDto,
+      HttpHelpers.getJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-headline-candidates/$candidateId',
+        fromJsonDto: PodcastHeadlineCandidateModel.fromJsonDto,
       );
 
   @override
   Future<Either<Failure, void>> deleteHeadlineCandidate(String candidateId) =>
-      _deleteVoid('/api/v1/podcast-headline-candidates/$candidateId');
+      HttpHelpers.deleteVoid(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-headline-candidates/$candidateId',
+      );
 
   @override
   Future<Either<Failure, PodcastHeadlineCandidateModel>>
-      approveHeadlineCandidate(String candidateId) => _postJsonSingle(
-            '/api/v1/podcast-headline-candidates/$candidateId/approve',
-            PodcastHeadlineCandidateModel.fromJsonDto,
+      approveHeadlineCandidate(String candidateId) =>
+          HttpHelpers.postJsonSingle(
+            auth: _auth,
+            client: _client,
+            path: '/api/v1/podcast-headline-candidates/$candidateId/approve',
+            fromJsonDto: PodcastHeadlineCandidateModel.fromJsonDto,
           );
 
   // ---------------------------------------------------------------------------
@@ -1037,37 +939,49 @@ class PodcastDataSource implements IPodcastDataSource {
   @override
   Future<Either<Failure, List<PodcastNotificationModel>>> listNotifications(
           String episodeId) =>
-      _getJsonList(
-        '/api/v1/podcast-episodes/$episodeId/notifications',
-        PodcastNotificationModel.fromJsonDto,
+      HttpHelpers.getJsonList(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-episodes/$episodeId/notifications',
+        fromJsonDto: PodcastNotificationModel.fromJsonDto,
       );
 
   @override
   Future<Either<Failure, PodcastNotificationModel>> createNotification(
           String episodeId, Map<String, dynamic> body) =>
-      _postJsonSingle(
-        '/api/v1/podcast-episodes/$episodeId/notifications',
-        PodcastNotificationModel.fromJsonDto,
+      HttpHelpers.postJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-episodes/$episodeId/notifications',
+        fromJsonDto: PodcastNotificationModel.fromJsonDto,
         body: body,
       );
 
   @override
   Future<Either<Failure, PodcastNotificationModel>> getNotification(
           String notificationId) =>
-      _getJsonSingle(
-        '/api/v1/podcast-notifications/$notificationId',
-        PodcastNotificationModel.fromJsonDto,
+      HttpHelpers.getJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-notifications/$notificationId',
+        fromJsonDto: PodcastNotificationModel.fromJsonDto,
       );
 
   @override
   Future<Either<Failure, void>> deleteNotification(String notificationId) =>
-      _deleteVoid('/api/v1/podcast-notifications/$notificationId');
+      HttpHelpers.deleteVoid(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-notifications/$notificationId',
+      );
 
   @override
   Future<Either<Failure, PodcastNotificationModel>> sendNotification(
           String notificationId) =>
-      _postJsonSingle(
-        '/api/v1/podcast-notifications/$notificationId/send',
-        PodcastNotificationModel.fromJsonDto,
+      HttpHelpers.postJsonSingle(
+        auth: _auth,
+        client: _client,
+        path: '/api/v1/podcast-notifications/$notificationId/send',
+        fromJsonDto: PodcastNotificationModel.fromJsonDto,
       );
 }

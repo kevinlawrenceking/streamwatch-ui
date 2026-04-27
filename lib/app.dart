@@ -28,6 +28,11 @@ import 'features/podcasts/presentation/views/podcast_list_view.dart';
 import 'features/podcasts/presentation/views/podcast_detail_view.dart';
 import 'features/podcasts/presentation/views/episode_list_view.dart';
 import 'features/episode_detail/presentation/views/episode_detail_view.dart';
+import 'features/watchlist/presentation/bloc/watchlist_bloc.dart';
+import 'features/watchlist/presentation/views/watchlist_view.dart';
+import 'features/jobs/presentation/bloc/detection_bloc.dart';
+import 'features/jobs/presentation/bloc/jobs_bloc.dart';
+import 'features/jobs/presentation/views/jobs_view.dart';
 
 /// Root application widget.
 ///
@@ -227,7 +232,35 @@ class _StreamWatchAppState extends State<StreamWatchApp> {
         return _shellRoute(settings, '/ingest', const UploadView(),
             title: 'Ingest');
       case '/jobs':
-        return _shellRoute(settings, '/', const HomeView());
+        return _shellRoute(
+          settings,
+          '/jobs',
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<JobsBloc>(
+                create: (_) =>
+                    GetIt.instance<JobsBloc>()..add(const LoadJobsEvent()),
+              ),
+              BlocProvider<DetectionBloc>(
+                create: (_) => GetIt.instance<DetectionBloc>()
+                  ..add(const LoadDetectionRunsEvent()),
+              ),
+            ],
+            child: const JobsView(),
+          ),
+          title: 'Jobs',
+        );
+      case '/watchlist':
+        return _shellRoute(
+          settings,
+          '/watchlist',
+          BlocProvider<WatchlistBloc>(
+            create: (_) => GetIt.instance<WatchlistBloc>()
+              ..add(const LoadGuestWatchlistEvent()),
+            child: const WatchlistView(),
+          ),
+          title: 'Watchlist',
+        );
       case '/job':
         final jobId = settings.arguments as String;
         return _shellRoute(settings, null, JobDetailView(jobId: jobId),

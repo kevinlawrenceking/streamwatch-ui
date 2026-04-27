@@ -139,22 +139,16 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     if (after is! WatchlistLoaded) return;
 
     result.fold(
-      (failure) {
-        // Toast L-10: PATCH 400 = forbidden field. Server returns the
-        // field name in the message; surface verbatim, restore prior
-        // state, form stays open.
-        if (failure is HttpFailure && failure.statusCode == 400) {
-          emit(priorState.copyWith(
-            isMutating: false,
-            lastActionError: failure.message,
-          ));
-        } else {
-          emit(priorState.copyWith(
-            isMutating: false,
-            lastActionError: failure.message,
-          ));
-        }
-      },
+      // Toast L-10: PATCH 400 = forbidden field. The server returns the
+      // offending field name in the message ("unknown field \"status\"")
+      // so we surface failure.message verbatim. Generic failures (5xx,
+      // network, etc.) flow through the same emit -- L-10 just dictates
+      // the priorState restore + form-stays-open behavior, which applies
+      // to all PATCH failures uniformly.
+      (failure) => emit(priorState.copyWith(
+        isMutating: false,
+        lastActionError: failure.message,
+      )),
       (updated) => emit(after.copyWith(
         entries:
             after.entries.map((e) => e.id == updated.id ? updated : e).toList(),

@@ -80,6 +80,10 @@ class MainShell extends StatelessWidget {
                     label: 'Podcasts',
                     route: '/podcasts'),
                 TmzNavItem(
+                    icon: Icons.person_search,
+                    label: 'Watchlist',
+                    route: '/watchlist'),
+                TmzNavItem(
                     icon: Icons.category,
                     label: 'Type Control',
                     route: '/type-control'),
@@ -91,6 +95,8 @@ class MainShell extends StatelessWidget {
                 items: [
                   TmzNavItem(
                       icon: Icons.people, label: 'Users', route: '/users'),
+                  TmzNavItem(
+                      icon: Icons.work_outline, label: 'Jobs', route: '/jobs'),
                 ],
               ),
           ],

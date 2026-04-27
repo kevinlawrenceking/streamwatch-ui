@@ -48,9 +48,16 @@ class DetectionBloc extends Bloc<DetectionEvent, DetectionState> {
     Emitter<DetectionState> emit,
   ) async {
     final current = state;
-    // Preserve actions cache across refetches when possible.
+    // Preserve actions cache + pending toast fields across refetches so a
+    // refetch dispatched after a successful trigger / batch close does not
+    // trample lastActionMessage / lastActionError before the view's
+    // BlocConsumer listener has a chance to surface them.
     final preservedActions =
         current is DetectionLoaded ? current.actionsByRunId : null;
+    final preservedMessage =
+        current is DetectionLoaded ? current.lastActionMessage : null;
+    final preservedError =
+        current is DetectionLoaded ? current.lastActionError : null;
 
     if (current is! DetectionLoaded) {
       emit(const DetectionLoading());
@@ -71,6 +78,8 @@ class DetectionBloc extends Bloc<DetectionEvent, DetectionState> {
         episodeFilter: event.episodeId,
         createdFrom: event.createdFrom,
         createdTo: event.createdTo,
+        lastActionMessage: preservedMessage,
+        lastActionError: preservedError,
       )),
     );
   }

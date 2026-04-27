@@ -42,7 +42,18 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     LoadGuestWatchlistEvent event,
     Emitter<WatchlistState> emit,
   ) async {
-    emit(const WatchlistLoading());
+    final current = state;
+    // Preserve pending toast fields across refetch (L-9 dispatches a
+    // load right after emitting lastActionError; we don't want the
+    // refetch to clobber the toast before the view's listener fires).
+    final preservedError =
+        current is WatchlistLoaded ? current.lastActionError : null;
+    final preservedMessage =
+        current is WatchlistLoaded ? current.lastActionMessage : null;
+
+    if (current is! WatchlistLoaded) {
+      emit(const WatchlistLoading());
+    }
     final result = await _dataSource.listGuestWatchlistEntries(
       status: event.status,
     );
@@ -51,6 +62,8 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       (list) => emit(WatchlistLoaded(
         entries: list,
         statusFilter: event.status,
+        lastActionError: preservedError,
+        lastActionMessage: preservedMessage,
       )),
     );
   }

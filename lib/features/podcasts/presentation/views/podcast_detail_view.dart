@@ -183,7 +183,7 @@ class _PodcastDetailBody extends StatelessWidget {
               if (name.isEmpty) return;
               Navigator.of(dialogContext).pop(<String, dynamic>{
                 'name': name,
-                'description': descController.text.trim(),
+                'notes': descController.text.trim(),
               });
             },
             child: const Text('Save'),

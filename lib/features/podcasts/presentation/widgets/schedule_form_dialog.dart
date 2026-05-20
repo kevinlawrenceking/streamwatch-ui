@@ -13,14 +13,6 @@ const _daysOfWeek = [
   'sunday',
 ];
 
-const _timezones = [
-  'America/Los_Angeles',
-  'America/Denver',
-  'America/Chicago',
-  'America/New_York',
-  'UTC',
-];
-
 /// Dialog for creating or editing a podcast schedule slot.
 class ScheduleFormDialog extends StatefulWidget {
   final PodcastScheduleModel? existing;
@@ -35,17 +27,12 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late String _selectedDay;
   late TimeOfDay _startTime;
-  late TimeOfDay _endTime;
-  late String _selectedTimezone;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = widget.existing?.dayOfWeek ?? 'monday';
     _startTime = _parseTime(widget.existing?.startTime ?? '09:00');
-    _endTime = _parseTime(widget.existing?.endTime ?? '10:00');
-    _selectedTimezone =
-        widget.existing?.timezone ?? 'America/Los_Angeles';
   }
 
   TimeOfDay _parseTime(String time) {
@@ -75,16 +62,6 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
     }
   }
 
-  Future<void> _pickEndTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _endTime,
-    );
-    if (picked != null) {
-      setState(() => _endTime = picked);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.existing != null;
@@ -110,52 +87,15 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
               },
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: _pickStartTime,
-                    child: InputDecorator(
-                      decoration:
-                          const InputDecoration(labelText: 'Start Time'),
-                      child: Text(
-                        _formatTime(_startTime),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ),
+            InkWell(
+              onTap: _pickStartTime,
+              child: InputDecorator(
+                decoration: const InputDecoration(labelText: 'Start Time (PT)'),
+                child: Text(
+                  _formatTime(_startTime),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: InkWell(
-                    onTap: _pickEndTime,
-                    child: InputDecorator(
-                      decoration:
-                          const InputDecoration(labelText: 'End Time'),
-                      child: Text(
-                        _formatTime(_endTime),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedTimezone,
-              decoration: const InputDecoration(labelText: 'Timezone'),
-              items: _timezones
-                  .map((tz) => DropdownMenuItem(
-                        value: tz,
-                        child: Text(tz),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedTimezone = value);
-                }
-              },
+              ),
             ),
           ],
         ),
@@ -169,24 +109,9 @@ class _ScheduleFormDialogState extends State<ScheduleFormDialog> {
           style: TextButton.styleFrom(foregroundColor: AppColors.tmzRed),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              final startStr = _formatTime(_startTime);
-              final endStr = _formatTime(_endTime);
-
-              if (startStr.compareTo(endStr) >= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('End time must be after start time'),
-                    backgroundColor: AppColors.error,
-                  ),
-                );
-                return;
-              }
-
               Navigator.of(context).pop(<String, dynamic>{
                 'day_of_week': _selectedDay,
-                'start_time': startStr,
-                'end_time': endStr,
-                'timezone': _selectedTimezone,
+                'start_time_pt': _formatTime(_startTime),
               });
             }
           },

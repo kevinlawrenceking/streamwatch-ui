@@ -26,7 +26,7 @@ class PodcastModel extends Equatable {
     return PodcastModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      description: json['description'] as String?,
+      description: json['notes'] as String? ?? json['description'] as String?,
       isActive: json['is_active'] as bool? ?? true,
       deactivatedAt: json['deactivated_at'] != null
           ? DateTime.parse(json['deactivated_at'] as String)
@@ -39,7 +39,7 @@ class PodcastModel extends Equatable {
   Map<String, dynamic> toJsonDto() {
     return {
       'name': name,
-      if (description != null) 'description': description,
+      if (description != null) 'notes': description,
     };
   }
 
